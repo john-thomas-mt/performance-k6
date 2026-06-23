@@ -1,0 +1,14 @@
+# Exploration artifacts (playwright-cli / playwright-mcp output, captures)
+temp/
+.playwright/
+.playwright-cli/
+.playwright-mcp/
+
+# Credentials (gitignored) — QE accounts, never committed
+source/data/users.data.ts
+
+# Node
+node_modules/
+
+# Local Claude settings
+.claude/settings.local.json
