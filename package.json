@@ -1,0 +1,13 @@
+{
+  "name": "performance-k6",
+  "version": "1.0.0",
+  "private": true,
+  "description": "k6 performance tests for Momentus, generated via playwright-cli exploration",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/k6": "^2.0.0",
+    "typescript": "^6.0.3"
+  }
+}
