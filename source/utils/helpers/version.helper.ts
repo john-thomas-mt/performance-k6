@@ -1,5 +1,5 @@
 import http from 'k6/http';
-import { config } from '../config/env.config.ts';
+import { config } from '../exports/config.exp.ts';
 
 export function fetchServerVersion(): string {
   const res = http.get(`${config.baseUrl}/app85.cshtml`);

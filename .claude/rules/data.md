@@ -27,8 +27,8 @@ Request bodies are **TS object builders**, never `.json`/`.txt` templates loaded
   `copyFormPayload(encUserId, source)`, `searchPayload(searchValue)`.
 - Per-iteration uniqueness is interpolated inside the builder (template literals), not by
   `{{runToken}}` string substitution on opened text.
-- Builders may import from `source/types/<feature>.type.ts` (or `source/types/common.type.ts`) and carry logic. They stay in `source/data/`, not elsewhere in `source/`.
-- Logic shared across a single module's builders lives in a module-local `helpers.ts` (e.g. `source/data/events/helpers.ts` for `todayMidnightUtc`). Once a transform is shared across more than one data module, promote it to `source/helpers/payload.helper.ts` (transport-envelope cell setters/readers, e.g. `setRowValue`) rather than duplicating it per module — see `rules/helpers.md`.
+- Builders may import types from the types barrel and shared transforms from the helpers barrel, and carry logic. They stay in `source/data/`, not elsewhere in `source/`.
+- Logic shared across a single module's builders lives in a module-local `helpers.ts` (e.g. `source/data/events/helpers.ts` for `todayMidnightUtc`). Once a transform is shared across more than one data module, promote it to `source/utils/helpers/payload.helper.ts` (transport-envelope cell setters/readers, e.g. `setRowValue`) rather than duplicating it per module — see `rules/helpers.md`.
 - Callers import and call the builder directly in the VU function — no init-context `open()`.
 
 ## Upload fixtures — `source/data/uploads/<module>/<sub>/`
@@ -39,10 +39,10 @@ Anything passed to `http.file()` goes here, never in the request-body folders:
 
 ## User pool — `source/data/users.data.ts`
 - A TS module exporting `users: User[]`; gitignored — holds QE accounts, never committed.
-- Imported and wrapped in `SharedArray` so it's parsed once and shared across VUs:
-  `import { users as userData } from '../data/users.data.ts';`
+- Imported through the data barrel and wrapped in `SharedArray` so it's parsed once and shared across VUs:
+  `import { users as userData } from '../utils/exports/data.exp.ts';`
   `const users = new SharedArray<User>('users', () => userData);`
-- Picked with `pickUser(users)` from `source/helpers/users.helper.ts`.
+- Picked with `pickUser(users)` from `source/utils/helpers/users.helper.ts`.
 
 ## Loading rules
 - Request-body builders and the user pool are imported as TS modules — no `open()`.

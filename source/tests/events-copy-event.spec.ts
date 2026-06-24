@@ -1,14 +1,12 @@
 import { check, group, sleep } from 'k6';
 import { SharedArray } from 'k6/data';
 import { Options } from 'k6/options';
-import { loginToEvents } from '../flows/login.flow.ts';
-import { pickUser } from '../helpers/users.helper.ts';
-import { searchEvents, openCopyForm, saveEventCopy, openEventDetail } from '../apis/events.api.ts';
-import { fetchServerVersion } from '../helpers/version.helper.ts';
-import { loadProfile, commonThresholds } from '../config/profiles.config.ts';
-import { User, SetupData } from '../types/common.type.ts';
-import { EventRow } from '../types/events.type.ts';
-import { users as userData } from '../data/users.data.ts';
+import { loginToEvents } from '../utils/exports/flows.exp.ts';
+import { pickUser, fetchServerVersion } from '../utils/exports/helpers.exp.ts';
+import { searchEvents, openCopyForm, saveEventCopy, openEventDetail } from '../utils/exports/apis.exp.ts';
+import { loadProfile, commonThresholds } from '../utils/exports/config.exp.ts';
+import { User, SetupData, EventRow } from '../utils/exports/types.exp.ts';
+import { users as userData } from '../utils/exports/data.exp.ts';
 
 const users = new SharedArray<User>('users', () => userData);
 

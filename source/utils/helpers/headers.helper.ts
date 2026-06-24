@@ -1,4 +1,4 @@
-import { config } from '../config/env.config.ts';
+import { config } from '../exports/config.exp.ts';
 
 export function salesAiHeaders(
   salesAiJwt: string,
@@ -13,11 +13,15 @@ export function salesAiHeaders(
 }
 
 export function buildHeaders(token: string | null, version?: string): Record<string, string> {
+  // __VU/__ITER are only defined inside a VU iteration; setup()/teardown() (e.g. the seed script's
+  // login + createEvent) run outside one, so guard them — wsid is only a trace string.
+  const vu = typeof __VU !== 'undefined' ? __VU : 0;
+  const iter = typeof __ITER !== 'undefined' ? __ITER : 0;
   return {
     authorization: token ? `Bearer ${token}` : 'Bearer',
     clientappcategory: '10',
     clientapptype: '2',
-    wsid: `k6-vu${__VU}-iter${__ITER}`,
+    wsid: `k6-vu${vu}-iter${iter}`,
     'x-nonce': crypto.randomUUID(),
     workstationname: 'k6-performance-test',
     ucn: 'en-GB',

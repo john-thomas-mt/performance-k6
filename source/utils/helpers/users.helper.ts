@@ -1,4 +1,4 @@
-import { User } from '../types/common.type.ts';
+import { User } from '../exports/types.exp.ts';
 
 export function pickUser(users: ArrayLike<User>): User {
   if (__ENV.USER_MODE === 'single') return users[0];

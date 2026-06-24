@@ -1,18 +1,12 @@
 import { check, group, sleep } from 'k6';
 import { SharedArray } from 'k6/data';
 import { Options } from 'k6/options';
-import { loginToMomentusAssistant } from '../flows/login.flow.ts';
-import { pickUser } from '../helpers/users.helper.ts';
-import { submitManualEntry } from '../apis/manual-entry.api.ts';
-import { manualEntryPayload } from '../data/sales-ai/manual-entry.data.ts';
-import { pollForOpportunity, openOpportunityDetail } from '../apis/opportunities.api.ts';
-import { getTasks } from '../apis/tasks.api.ts';
-import { fetchServerVersion } from '../helpers/version.helper.ts';
-import { loadProfile, commonThresholds } from '../config/profiles.config.ts';
-import { User, SetupData } from '../types/common.type.ts';
-import { Opportunity } from '../types/opportunities.type.ts';
-import { TasksResponse } from '../types/tasks.type.ts';
-import { users as userData } from '../data/users.data.ts';
+import { loginToMomentusAssistant } from '../utils/exports/flows.exp.ts';
+import { pickUser, fetchServerVersion } from '../utils/exports/helpers.exp.ts';
+import { submitManualEntry, pollForOpportunity, openOpportunityDetail, getTasks } from '../utils/exports/apis.exp.ts';
+import { manualEntryPayload, users as userData } from '../utils/exports/data.exp.ts';
+import { loadProfile, commonThresholds } from '../utils/exports/config.exp.ts';
+import { User, SetupData, Opportunity, TasksResponse } from '../utils/exports/types.exp.ts';
 
 const users = new SharedArray<User>('users', () => userData);
 

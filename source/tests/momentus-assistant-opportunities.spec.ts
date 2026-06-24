@@ -1,13 +1,12 @@
 import { group, sleep } from 'k6';
 import { SharedArray } from 'k6/data';
 import { Options } from 'k6/options';
-import { loginToMomentusAssistant } from '../flows/login.flow.ts';
-import { pickUser } from '../helpers/users.helper.ts';
-import { getOpportunities } from '../apis/opportunities.api.ts';
-import { fetchServerVersion } from '../helpers/version.helper.ts';
-import { loadProfile, commonThresholds } from '../config/profiles.config.ts';
-import { User, SetupData } from '../types/common.type.ts';
-import { users as userData } from '../data/users.data.ts';
+import { loginToMomentusAssistant } from '../utils/exports/flows.exp.ts';
+import { pickUser, fetchServerVersion } from '../utils/exports/helpers.exp.ts';
+import { getOpportunities } from '../utils/exports/apis.exp.ts';
+import { loadProfile, commonThresholds } from '../utils/exports/config.exp.ts';
+import { User, SetupData } from '../utils/exports/types.exp.ts';
+import { users as userData } from '../utils/exports/data.exp.ts';
 
 const users = new SharedArray<User>('users', () => userData);
 

@@ -1,4 +1,4 @@
-import { EventRow } from '../../types/events.type.ts';
+import { EventRow } from '../../utils/exports/types.exp.ts';
 
 export const copyFormPayload = (encUserId: string, source: EventRow) => ([
     [

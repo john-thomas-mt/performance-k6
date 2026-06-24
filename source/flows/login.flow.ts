@@ -1,6 +1,6 @@
 import { group } from 'k6';
-import { signIn, signInSession, maAuthenticate } from '../helpers/auth.helper.ts';
-import { User, MomentusAuth, SessionTokens } from '../types/common.type.ts';
+import { signIn, signInSession, maAuthenticate } from '../utils/exports/helpers.exp.ts';
+import { User, MomentusAuth, SessionTokens } from '../utils/exports/types.exp.ts';
 
 export function loginToMomentusAssistant(user: User, version: string): MomentusAuth {
   let bearerToken: string | null = null;

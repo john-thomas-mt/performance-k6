@@ -1,4 +1,4 @@
-import { TransportTable } from '../types/common.type.ts';
+import { TransportTable } from '../exports/types.exp.ts';
 
 export function setRowValue(table: TransportTable, columnName: string, value: unknown): void {
   const i = table.TransportDataColumns.findIndex((c) => c.ColumnName === columnName);

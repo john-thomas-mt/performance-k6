@@ -1,8 +1,8 @@
 import http, { RefinedResponse, ResponseType } from 'k6/http';
 import { check, sleep } from 'k6';
-import { config } from '../config/env.config.ts';
-import { salesAiHeaders } from '../helpers/headers.helper.ts';
-import { Opportunity } from '../types/opportunities.type.ts';
+import { config } from '../utils/exports/config.exp.ts';
+import { salesAiHeaders } from '../utils/exports/helpers.exp.ts';
+import { Opportunity } from '../utils/exports/types.exp.ts';
 
 type Res = RefinedResponse<ResponseType | undefined>;
 

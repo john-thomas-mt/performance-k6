@@ -1,6 +1,5 @@
-import { setRowValue, setColumnValueAllRows, getColumnValue } from '../../helpers/payload.helper.ts';
-import { ServiceOrderRow } from '../../types/service-orders.type.ts';
-import { TransportTable } from '../../types/common.type.ts';
+import { setRowValue, setColumnValueAllRows, getColumnValue } from '../../utils/exports/helpers.exp.ts';
+import { ServiceOrderRow, TransportTable } from '../../utils/exports/types.exp.ts';
 
 // Captured order-header table (ER100) for the service order being modified.
 // Identity columns are overridden per picked service order in the builder below.

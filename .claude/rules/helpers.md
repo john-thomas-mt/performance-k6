@@ -1,10 +1,10 @@
 ---
-paths: ["source/helpers/**"]
+paths: ["source/utils/helpers/**"]
 ---
 
-# Helper Conventions (`source/helpers/`)
+# Helper Conventions (`source/utils/helpers/`)
 
-`source/helpers/` holds cross-cutting modules that fit none of `apis/` (endpoint wrappers), `flows/`
+`source/utils/helpers/` holds cross-cutting modules that fit none of `apis/` (endpoint wrappers), `flows/`
 (journeys), `types/`, `config/`, or `data/` — a module lives by what it does:
 - `auth.helper.ts` — `signIn()`, `signInSession()`, `maAuthenticate()`: authentication request wrappers that mint the Momentus bearer token / sales-ai JWT
 - `headers.helper.ts` — the only home for header builders (`buildHeaders` for the Momentus core API, `salesAiHeaders` for the sales-ai API); add a new builder here when a new API surface appears

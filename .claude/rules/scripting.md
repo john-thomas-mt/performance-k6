@@ -1,8 +1,8 @@
 ---
-paths: ["source/apis/**", "source/flows/**", "source/helpers/**"]
+paths: ["source/apis/**", "source/flows/**", "source/utils/helpers/**"]
 ---
 
-# Request Scripting Conventions (`source/apis/`, `source/flows/`, `source/helpers/`)
+# Request Scripting Conventions (`source/apis/`, `source/flows/`, `source/utils/helpers/`)
 
 Cross-cutting rules for the request-making layer. `apis/` wrappers and `helpers/auth.helper.ts`
 issue `http.*` directly and follow all of the below. `flows/` compose those wrappers — they don't
@@ -13,7 +13,7 @@ each folder's own rule file (`rules/apis.md`, `rules/flows.md`, `rules/helpers.m
 ## Requests
 - Every `http.*` call carries `tags: { name: 'PascalCaseName' }` — this drives per-endpoint thresholds (`http_req_duration{name:...}`)
 - If a wrapper is reused in different scenario contexts, accept the tag name as a parameter with a default (see `getOpportunities(jwt, name = 'GetOpportunities')`) so metrics stay separately tagged
-- Headers are never inlined: use `buildHeaders(token, version)` for the Momentus core API and `salesAiHeaders(jwt)` for the sales-ai API (both from `source/helpers/headers.helper.ts`)
+- Headers are never inlined: use `buildHeaders(token, version)` for the Momentus core API and `salesAiHeaders(jwt)` for the sales-ai API (both from `source/utils/helpers/headers.helper.ts`)
 - URLs are built from `config` values — never hardcode hosts, tenants, or versions in a wrapper
 
 ## Correlation — never hardcode dynamic values

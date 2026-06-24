@@ -1,7 +1,6 @@
-import { setRowValue } from '../../helpers/payload.helper.ts';
+import { setRowValue } from '../../utils/exports/helpers.exp.ts';
 import { todayMidnightUtc } from './helpers.ts';
-import { EventRow } from '../../types/events.type.ts';
-import { TransportTable } from '../../types/common.type.ts';
+import { EventRow, TransportTable } from '../../utils/exports/types.exp.ts';
 
 export const savePayload = (encUserId: string, source: EventRow, description: string) => {
   const payload = [

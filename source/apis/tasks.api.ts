@@ -1,8 +1,8 @@
 import http, { RefinedResponse, ResponseType } from 'k6/http';
 import { check } from 'k6';
-import { config } from '../config/env.config.ts';
-import { salesAiHeaders } from '../helpers/headers.helper.ts';
-import { TasksResponse } from '../types/tasks.type.ts';
+import { config } from '../utils/exports/config.exp.ts';
+import { salesAiHeaders } from '../utils/exports/helpers.exp.ts';
+import { TasksResponse } from '../utils/exports/types.exp.ts';
 
 export function getTasks(
   salesAiJwt: string,
