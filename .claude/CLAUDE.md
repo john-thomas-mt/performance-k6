@@ -27,6 +27,10 @@ Use relative imports across `source/` and `source/tests/`. An alias scheme would
 step, which the direct `k6 run source/tests/<file>.spec.ts` workflow intentionally avoids.
 All barrels live in `source/utils/exports/` (one `<layer>.exp.ts` per layer); import a layer's members
 through its barrel rather than the individual files (see `rules/exports.md`).
+These constraints are why `tsconfig.json` sets `allowImportingTsExtensions` + `noEmit` (to permit the
+explicit `.ts` import extensions k6 needs) and `moduleResolution: bundler` (mirroring the esbuild
+transpiler k6 actually uses), with no `paths` aliases — those settings are deliberate, not boilerplate
+to "fix" for another toolchain.
 
 ## Directory structure
 - `source/config/` — environment values (`env.config.ts`), load profiles + common thresholds (`profiles.config.ts`)
