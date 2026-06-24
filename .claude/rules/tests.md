@@ -13,7 +13,7 @@ paths: ["source/tests/**"]
 
 ## Data & init context
 - Request-body builders and the user pool are imported as TS modules (see `rules/data.md`); `open()` is only for `source/data/uploads/**` fixtures and is valid only in the init context, never inside the VU function
-- User pool: `source/data/users.data.ts` imported and wrapped in `SharedArray`, picked with `pickUser(users)` from `source/helpers/users.helper.ts` — honors `USER_MODE=single` (every VU uses `users[0]`, one shared login) and `USER_MODE=pool` (default; round-robin `users[__VU % users.length]`)
+- User pool: `source/data/users.data.ts` imported and wrapped in `SharedArray`, picked with `pickUser(users)` from `source/utils/helpers/users.helper.ts` — honors `USER_MODE=single` (every VU uses `users[0]`, one shared login) and `USER_MODE=pool` (default; round-robin `users[__VU % users.length]`)
 - Per-iteration uniqueness comes from a `runToken` (`crypto.randomUUID().split('-')[0]`) passed into the request-body builder
 
 ## Options
@@ -25,12 +25,11 @@ paths: ["source/tests/**"]
 - Authentication uses `loginToMomentusAssistant(user, version)` from `source/flows/login.flow.ts` — it owns groups 1–2 and returns `{ bearerToken, salesAiJwt }`
 
 ## Data provisioning & cleanup
-- A journey provisions its own unique data rather than mutating shared QE records. `setup()` creates a run-scoped **parent** from scratch (e.g. a new event, its description stamped with a `runToken`) and returns its id(s) alongside `version` as JSON — `setup()` may issue HTTP and runs once before any VU.
-- Each iteration creates the **record it will mutate** (e.g. a service order under that event) fresh, then runs the operation under test on it — so concurrent iterations never contend on one row and no single record accumulates state across the run.
-- Provisioning requests carry their own tags (`CreateEvent`, `CreateServiceOrder`) and are left out of the operation-under-test SLO thresholds, so the measured signal stays clean.
-- `teardown()` cleans the run off `setup()`'s return value — delete the seeded parent and let the backend cascade to its children. k6 forbids passing data from `default()` to `teardown()`, so cleanup keys off what `setup()` returned, never what an iteration created. Guard `setup()` so a half-built parent doesn't strand data, and note `teardown()` is skipped entirely if `setup()` throws.
-- A pure **create** flow needs no separate mutation target — the operation under test is the creation; with no parent to cascade from, `teardown()` falls back to a token-sweep (search by the stamped `runToken`, delete the matches).
-- Only when provisioning a fresh record genuinely isn't possible, fall back to selecting a distinct existing record per VU (`candidates[(__VU - 1 + __ITER) % candidates.length]`) and verify against the operation's own response, not list position.
+Cleanup is owned by the environment, not the test: a run targets a fixed baseline restored from a **DB snapshot** and the snapshot is restored again afterwards, so journeys carry **no `teardown()` cleanup** and never delete what they create — the reset wipes it. (Momentus has no reliable hard-delete anyway: removing an event is blocked by its auto-created service/statistic orders and only soft-cancels.)
+- **Prerequisite data is seeded out of band.** Reference/parent records the operation needs to already exist (events, accounts, a pool of service orders) are bulk-created by a separate seed script under `source/seeds/` (see `rules/seeds.md`), run once after the snapshot reset and before the test. Seed scripts reuse the same `source/apis/` wrappers the tests use — one definition per endpoint.
+- **Journeys stay pure.** A spec measures only the operation under test against pre-existing seeded data; no provisioning or cleanup requests pollute the metrics. `setup()` discovers the seeded pool (e.g. `searchEvents` for the seed marker) and returns it alongside `version` as JSON for the VU function to pick from.
+- **Give each VU/iteration its own row.** Pre-seed a pool sized to at least peak concurrent VUs × iterations and pick a distinct record per VU/iteration (`pool[(__VU - 1 + __ITER) % pool.length]`) so concurrent iterations never contend on one row. If the operation under test *is* a create, the test inserts inline and the snapshot reset cleans up — still no `teardown()`.
+- **Create/insert transactions still need runtime-unique keys.** Seeded data covers reads/updates, but any inserted row needs a unique key generated per request (`runToken`, e.g. `ER100_SO_SEARCH`) — see `rules/scripting.md`.
 
 ## Groups & guards
 - Wrap each journey step in a numbered `group('N. Step Name', ...)`; test-specific groups start at 3 (login flow owns 1–2)

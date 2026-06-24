@@ -9,7 +9,7 @@ export interface EventRow {
   orgCode: string;
 }
 
-export interface SaveResult {
+export interface EventSaveResult {
   ResultValue: number;
   AddedRowKeys: string[];
 }

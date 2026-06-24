@@ -28,8 +28,21 @@ export interface ServiceOrderRow {
   ordCatSeq: string;
 }
 
-export interface SaveResult {
+export interface ServiceOrderSaveResult {
   ResultValue: number;
   ModifiedRowKeys: string[] | null;
+  AddedRowKeys: string[] | null;
   AdditionalTableNameAddedRowKeys: Record<string, string[]> | null;
+}
+
+export interface ServiceOrderPoolSetup {
+  version: string;
+  pool: ServiceOrderRow[];
+}
+
+export interface ServiceOrderSeedSetup {
+  version: string;
+  evtId: string;
+  bearerToken: string;
+  encUserId: string;
 }

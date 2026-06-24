@@ -1,12 +1,9 @@
 import http, { RefinedResponse, ResponseType } from 'k6/http';
 import { check } from 'k6';
-import { config } from '../config/env.config.ts';
-import { buildHeaders } from '../helpers/headers.helper.ts';
-import { serviceOrdersGridPayload } from '../data/service-orders/grid.data.ts';
-import { serviceOrderDetailPayload } from '../data/service-orders/detail.data.ts';
-import { serviceOrderItemsSavePayload } from '../data/service-orders/save.data.ts';
-import { EventRow } from '../types/events.type.ts';
-import { ServiceOrderRow, SaveResult } from '../types/service-orders.type.ts';
+import { config } from '../utils/exports/config.exp.ts';
+import { buildHeaders } from '../utils/exports/helpers.exp.ts';
+import { serviceOrdersGridPayload, serviceOrderDetailPayload, serviceOrderItemsSavePayload, createServiceOrderPayload } from '../utils/exports/data.exp.ts';
+import { EventRow, ServiceOrderRow, ServiceOrderSaveResult } from '../utils/exports/types.exp.ts';
 
 type Res = RefinedResponse<ResponseType | undefined>;
 
@@ -107,12 +104,44 @@ export function openServiceOrderDetail(
   return res;
 }
 
+export function createServiceOrder(
+  token: string,
+  version: string,
+  encUserId: string,
+  evtId: string,
+  name = 'CreateServiceOrder'
+): string | null {
+  const res = http.post(
+    `${config.baseUrl}/api/GenericDetailServer/Save2`,
+    JSON.stringify(createServiceOrderPayload(encUserId, evtId)),
+    { headers: buildHeaders(token, version), tags: { name } }
+  );
+
+  const ok = check(res, {
+    [`${name}: status is 201`]: (r) => r.status === 201,
+    [`${name}: ResultValue is 0 (success)`]: (r) => {
+      try { return (r.json() as unknown as ServiceOrderSaveResult[])[0].ResultValue === 0; } catch { return false; }
+    },
+    [`${name}: returns new order row key`]: (r) => {
+      try { const k = (r.json() as unknown as ServiceOrderSaveResult[])[0].AddedRowKeys; return Array.isArray(k) && k.length > 0; } catch { return false; }
+    },
+  });
+
+  if (!ok) {
+    console.error(`[VU ${__VU}] createServiceOrder failed — HTTP ${res.status}: ${String(res.body ?? '').slice(0, 300)}`);
+    return null;
+  }
+
+  const addedKey = (res.json() as unknown as ServiceOrderSaveResult[])[0].AddedRowKeys?.[0];
+  return addedKey ? addedKey.split('|')[1] || null : null;
+}
+
 export function saveServiceOrderItems(
   token: string,
   version: string,
   so: ServiceOrderRow,
   quantity: number
-): SaveResult | null {
+): ServiceOrderSaveResult | null {
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/Save2`,
     JSON.stringify(serviceOrderItemsSavePayload(so, quantity)),
@@ -121,7 +150,7 @@ export function saveServiceOrderItems(
 
   const addedItemCount = (r: Res): number => {
     try {
-      const map = (r.json() as unknown as SaveResult[])[0].AdditionalTableNameAddedRowKeys ?? {};
+      const map = (r.json() as unknown as ServiceOrderSaveResult[])[0].AdditionalTableNameAddedRowKeys ?? {};
       return Object.keys(map).reduce((sum, k) => sum + (map[k]?.length ?? 0), 0);
     } catch {
       return 0;
@@ -131,10 +160,10 @@ export function saveServiceOrderItems(
   const ok = check(res, {
     'SaveServiceOrderItems: status is 201': (r) => r.status === 201,
     'SaveServiceOrderItems: ResultValue is 0 (success)': (r) => {
-      try { return (r.json() as unknown as SaveResult[])[0].ResultValue === 0; } catch { return false; }
+      try { return (r.json() as unknown as ServiceOrderSaveResult[])[0].ResultValue === 0; } catch { return false; }
     },
     'SaveServiceOrderItems: order row was modified': (r) => {
-      try { return (r.json() as unknown as SaveResult[])[0].ModifiedRowKeys?.includes(so.rowKey) ?? false; } catch { return false; }
+      try { return (r.json() as unknown as ServiceOrderSaveResult[])[0].ModifiedRowKeys?.includes(so.rowKey) ?? false; } catch { return false; }
     },
     'SaveServiceOrderItems: items were added to order': (r) => addedItemCount(r) > 0,
   });
@@ -144,5 +173,5 @@ export function saveServiceOrderItems(
     return null;
   }
 
-  return (res.json() as unknown as SaveResult[])[0];
+  return (res.json() as unknown as ServiceOrderSaveResult[])[0];
 }

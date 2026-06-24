@@ -8,7 +8,7 @@ k6 performance test scripts for Momentus, produced via an AI-assisted workflow: 
 - Sales-ai API: `https://momentus-sales-ai-dev.ungerboeck.net` — overridable via `-e SALES_AI_URL=...`
 - Defaults live in `source/config/env.config.ts` (`BASE_URL`, `SALES_AI_URL`, `TENANT_ID`, `APP_VERSION`)
 - Requires VPN — if connections time out, ask the user to check VPN
-- Credentials: `source/data/users.data.ts` (gitignored) holds the QE accounts — never committed
+- Credentials: `source/data/users.data.ts` (gitignored) holds the QE accounts — never committed. The `.gitignore` entry must be the full repo-relative path (`source/data/users.data.ts`); a bare `data/users.data.ts` is root-anchored and silently fails to match the nested file. Verify with `git check-ignore source/data/users.data.ts` before the first commit.
 - Browser exploration: resize to 1920x1080 before interacting; Momentus Assistant features live in the left sidebar under **'Momentus Assistant'** (expand via 'Open Navigation'), URL pattern `#/momentusAssistant/<page>`
 
 ## Running tests
@@ -17,6 +17,7 @@ k6 performance test scripts for Momentus, produced via an AI-assisted workflow: 
 - `k6 run -e PROFILE=load source/tests/<file>.spec.ts` — real load; `stress` also available (see `source/config/profiles.config.ts`)
 - `k6 inspect source/tests/<file>.spec.ts` — validate syntax/imports/options with zero traffic; use after every script change
 - `k6 inspect --execution-requirements -e PROFILE=load source/tests/<file>.spec.ts` — also zero traffic; resolves the `load` stage spread and computes its max VUs / total duration, so a broken stage config is caught without running load
+- Pre-commit compilation gate: `npx tsc --noEmit` (k6 strips types at parse time, so `k6 inspect` never catches a type error — this is the only check that does); lint/format are handled by commit hooks
 
 ## Module imports
 k6 uses browser-like module resolution — only relative/absolute paths with full filenames
@@ -24,12 +25,16 @@ k6 uses browser-like module resolution — only relative/absolute paths with ful
 path aliases (`#alias/*`, `@/*`) fail at `k6 run` / `k6 inspect` even though `tsc` accepts them.
 Use relative imports across `source/` and `source/tests/`. An alias scheme would require a bundler build
 step, which the direct `k6 run source/tests/<file>.spec.ts` workflow intentionally avoids.
+All barrels live in `source/utils/exports/` (one `<layer>.exp.ts` per layer); import a layer's members
+through its barrel rather than the individual files (see `rules/exports.md`).
 
 ## Directory structure
 - `source/config/` — environment values (`env.config.ts`), load profiles + common thresholds (`profiles.config.ts`)
-- `source/apis/<feature>.api.ts` — endpoint wrappers; `source/flows/<flow>.flow.ts` — composed journeys; `source/helpers/` — cross-cutting modules (`auth.helper.ts`, `headers.helper.ts`, `version.helper.ts`, `users.helper.ts`); `source/types/<feature>.type.ts` — per-feature type modules
+- `source/apis/<feature>.api.ts` — endpoint wrappers; `source/flows/<flow>.flow.ts` — composed journeys
 - `source/data/` — user pool, request-body builders, and `uploads/` fixtures
+- `source/utils/` — supporting layers not central to a journey: `utils/helpers/` (cross-cutting modules `auth.helper.ts`, `headers.helper.ts`, `version.helper.ts`, `users.helper.ts`), `utils/types/<feature>.type.ts` (per-feature type modules), and `utils/exports/` (one `<layer>.exp.ts` barrel per layer; all cross-folder imports go through these)
 - `source/tests/` — thin journey scripts (`<feature-area>-<flow>.spec.ts`) composing `source/`
+- `source/seeds/` — bulk prerequisite-data scripts (`<feature>.seed.ts`) run once after a snapshot reset, reusing `source/apis/` wrappers
 - `temp/captures/raw/` — scratch space for oversized payloads during exploration (gitignored); no capture document is produced
 
 ## Workflow: generating a new test
@@ -46,16 +51,19 @@ Fix any failing step and re-run (from step 1 if the fix touched correlation/shar
 
 ## Conventions
 Detailed conventions are in `.claude/rules/` — auto-loaded by file path scope:
-- `rules/scripting.md` — request-making layer (source/apis, source/flows, source/helpers): tagging, headers, correlation, checks, return contract, polling
+- `rules/exports.md` — source/**: barrels in `source/utils/exports/`; import via the barrel, never your own layer's
+- `rules/scripting.md` — request-making layer (source/apis, source/flows, source/utils/helpers): tagging, headers, correlation, checks, return contract, polling
 - `rules/apis.md` — source/apis/: one module per endpoint surface, thin wrappers
 - `rules/flows.md` — source/flows/: composed journeys, login owns groups 1–2, session return
-- `rules/helpers.md` — source/helpers/: cross-cutting auth/headers/version/users modules
-- `rules/types.md` — source/types/: per-feature type modules, no cycles, no barrel
+- `rules/helpers.md` — source/utils/helpers/: cross-cutting auth/headers/version/users modules
+- `rules/types.md` — source/utils/types/: per-feature type modules, no cycles, unique export names, layer barrel
 - `rules/config.md` — source/config/: env values, profiles + common thresholds
 - `rules/data.md` — source/data/: module layout, builders vs upload fixtures, user pool
-- `rules/tests.md` — source/tests/: profiles, thresholds, groups, guards, data loading
+- `rules/tests.md` — source/tests/: profiles, thresholds, groups, guards, data loading, snapshot-based cleanup
+- `rules/seeds.md` — source/seeds/: bulk prerequisite-data scripts that reuse api wrappers, seed-marker discovery
 
 ## Git conventions
-- Branch: `<change-type>-<jira-id>-<change-description>` (kebab-case); change types: `test` | `deps` | `ref` | `docs` | `feat` | `build` | `config`
-- Commit / PR title: `<change-type>(perf): <change-description> (<jira-id>)` — description lowercase
+- Branch: `<change-type>-<jira-id>-<change-description>` (kebab-case); change types: `test` | `deps` | `ref` | `docs` | `feat` | `build` | `config` | `review`
+- Commit / PR title: `<change-type>(perf): <change-description> (<jira-id>)` — description lowercase; name files with their extension (`README.md`, not `README`)
+- Change-type picks that bite: `build` is for CI/CD pipeline (yaml) changes only — project scaffolding is not `build`. Dependency manifests (`package.json`, `package-lock.json`) → `deps`; tooling/config files (`tsconfig.json`, `.gitignore`) → `config`.
 - Jira base URL: `https://ungerboeck.atlassian.net/browse/` — hyperlink Jira IDs in PR bodies

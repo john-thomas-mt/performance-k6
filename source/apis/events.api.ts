@@ -1,12 +1,9 @@
 import http, { RefinedResponse, ResponseType } from 'k6/http';
 import { check } from 'k6';
-import { config } from '../config/env.config.ts';
-import { buildHeaders } from '../helpers/headers.helper.ts';
-import { searchPayload } from '../data/events/search.data.ts';
-import { copyFormPayload } from '../data/events/copy-form.data.ts';
-import { savePayload } from '../data/events/save.data.ts';
-import { detailPayload } from '../data/events/detail.data.ts';
-import { EventRow, SaveResult } from '../types/events.type.ts';
+import { config } from '../utils/exports/config.exp.ts';
+import { buildHeaders } from '../utils/exports/helpers.exp.ts';
+import { searchPayload, copyFormPayload, savePayload, detailPayload, createEventPayload } from '../utils/exports/data.exp.ts';
+import { EventRow, EventSaveResult } from '../utils/exports/types.exp.ts';
 
 type Res = RefinedResponse<ResponseType | undefined>;
 
@@ -99,10 +96,10 @@ export function saveEventCopy(
   const ok = check(res, {
     'SaveEventCopy: status is 201': (r) => r.status === 201,
     'SaveEventCopy: ResultValue is 0 (success)': (r) => {
-      try { return (r.json() as unknown as SaveResult[])[0].ResultValue === 0; } catch { return false; }
+      try { return (r.json() as unknown as EventSaveResult[])[0].ResultValue === 0; } catch { return false; }
     },
     'SaveEventCopy: returns new event row key': (r) => {
-      try { const k = (r.json() as unknown as SaveResult[])[0].AddedRowKeys; return Array.isArray(k) && k.length > 0; } catch { return false; }
+      try { const k = (r.json() as unknown as EventSaveResult[])[0].AddedRowKeys; return Array.isArray(k) && k.length > 0; } catch { return false; }
     },
   });
 
@@ -111,7 +108,38 @@ export function saveEventCopy(
     return null;
   }
 
-  const addedKey = (res.json() as unknown as SaveResult[])[0].AddedRowKeys[0];
+  const addedKey = (res.json() as unknown as EventSaveResult[])[0].AddedRowKeys[0];
+  return addedKey.split('|')[1] || null;
+}
+
+export function createEvent(
+  token: string,
+  version: string,
+  description: string,
+  name = 'CreateEvent'
+): string | null {
+  const res = http.post(
+    `${config.baseUrl}/api/GenericDetailServer/Save2`,
+    JSON.stringify(createEventPayload(description)),
+    { headers: buildHeaders(token, version), tags: { name } }
+  );
+
+  const ok = check(res, {
+    [`${name}: status is 201`]: (r) => r.status === 201,
+    [`${name}: ResultValue is 0 (success)`]: (r) => {
+      try { return (r.json() as unknown as EventSaveResult[])[0].ResultValue === 0; } catch { return false; }
+    },
+    [`${name}: returns new event row key`]: (r) => {
+      try { const k = (r.json() as unknown as EventSaveResult[])[0].AddedRowKeys; return Array.isArray(k) && k.length > 0; } catch { return false; }
+    },
+  });
+
+  if (!ok) {
+    console.error(`[VU ${__VU}] createEvent failed — HTTP ${res.status}: ${String(res.body ?? '').slice(0, 300)}`);
+    return null;
+  }
+
+  const addedKey = (res.json() as unknown as EventSaveResult[])[0].AddedRowKeys[0];
   return addedKey.split('|')[1] || null;
 }
 

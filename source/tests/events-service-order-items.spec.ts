@@ -1,20 +1,15 @@
 import { check, group, sleep } from 'k6';
 import { SharedArray } from 'k6/data';
 import { Options } from 'k6/options';
-import { loginToEvents } from '../flows/login.flow.ts';
-import { pickUser } from '../helpers/users.helper.ts';
-import { searchEvents } from '../apis/events.api.ts';
-import { loadServiceOrders, openServiceOrderDetail, saveServiceOrderItems } from '../apis/service-orders.api.ts';
-import { fetchServerVersion } from '../helpers/version.helper.ts';
-import { loadProfile, commonThresholds } from '../config/profiles.config.ts';
-import { User, SetupData } from '../types/common.type.ts';
-import { EventRow } from '../types/events.type.ts';
-import { ServiceOrderRow } from '../types/service-orders.type.ts';
-import { users as userData } from '../data/users.data.ts';
+import { loginToEvents } from '../utils/exports/flows.exp.ts';
+import { pickUser, fetchServerVersion } from '../utils/exports/helpers.exp.ts';
+import { searchEvents, loadServiceOrders, openServiceOrderDetail, saveServiceOrderItems } from '../utils/exports/apis.exp.ts';
+import { loadProfile, commonThresholds, config } from '../utils/exports/config.exp.ts';
+import { User, ServiceOrderPoolSetup } from '../utils/exports/types.exp.ts';
+import { users as userData } from '../utils/exports/data.exp.ts';
 
 const users = new SharedArray<User>('users', () => userData);
 
-const SOURCE_EVENT = __ENV.SOURCE_EVENT || 'Manual Test Event 1';
 const ITEM_QUANTITY = Number(__ENV.ITEM_QUANTITY || 2);
 
 export const options: Options = {
@@ -22,67 +17,56 @@ export const options: Options = {
   thresholds: {
     ...commonThresholds,
     'http_req_duration{name:SignIn}': ['p(95)<2000'],
-    'http_req_duration{name:SearchEvents}': ['p(95)<3000'],
-    'http_req_duration{name:LoadServiceOrders}': ['p(95)<5000'],
     'http_req_duration{name:OpenServiceOrderDetail}': ['p(95)<5000'],
     'http_req_duration{name:SaveServiceOrderItems}': ['p(95)<5000'],
     checks: ['rate>0.95'],
   },
 };
 
-export function setup(): SetupData {
+// Discover the pre-seeded service-order pool (created by source/seeds/service-orders.seed.ts
+// after the snapshot reset). Cleanup is owned by the snapshot, so the journey itself stays
+// pure — it only measures the add-items save against a distinct seeded order per VU/iteration.
+export function setup(): ServiceOrderPoolSetup {
   if (users.length === 0) {
-    throw new Error('data/users.ts is empty — add at least one user entry');
+    throw new Error('data/users.data.ts is empty — add at least one user entry');
   }
   const version = fetchServerVersion();
+  const { bearerToken } = loginToEvents(users[0], version);
+  if (!bearerToken) {
+    throw new Error('setup login failed — cannot discover the seeded pool');
+  }
+
+  const seedEvent =
+    searchEvents(bearerToken, version, config.seedEventDesc).find((e) => e.desc === config.seedEventDesc) || null;
+  if (!seedEvent) {
+    throw new Error(
+      `seed event "${config.seedEventDesc}" not found — run source/seeds/service-orders.seed.ts after the snapshot reset`
+    );
+  }
+
+  const pool = loadServiceOrders(bearerToken, version, seedEvent);
+  if (pool.length === 0) {
+    throw new Error(`seed event "${config.seedEventDesc}" has no service orders — reseed with a larger SEED_COUNT`);
+  }
+
   console.log(`Server version: ${version}`);
-  console.log(`Test starting with ${users.length} user(s) in pool`);
-  return { version };
+  console.log(`Discovered ${pool.length} seeded service order(s) under "${config.seedEventDesc}"`);
+  return { version, pool };
 }
 
-// An addable service order: a standard SO on the same price list as the
-// templated items, with a billing contact (matches the explored save shape).
-function isAddable(so: ServiceOrderRow): boolean {
-  return so.orderType === 'SO' && so.priceList === '2022SPL' && so.btoContact.length > 0;
-}
-
-export default function serviceOrderItemsTest(data: SetupData) {
+export default function serviceOrderItemsTest(data: ServiceOrderPoolSetup) {
   const user = pickUser(users);
+  const { bearerToken } = loginToEvents(user, data.version);
+  if (!bearerToken) return;
 
-  const { bearerToken, encUserId } = loginToEvents(user, data.version);
-  if (!bearerToken || !encUserId) return;
+  // Distinct seeded order per VU/iteration so concurrent saves never contend on one row.
+  const serviceOrder = data.pool[(__VU - 1 + __ITER) % data.pool.length];
 
-  let sourceRef: EventRow | null = null;
-  group('3. Search Source Event', () => {
-    const rows = searchEvents(bearerToken, data.version, SOURCE_EVENT);
-    sourceRef = rows.find((r) => r.desc === SOURCE_EVENT) || null;
-    check(null, {
-      'Source event found': () => Boolean(sourceRef && sourceRef.evtId),
-    });
-  });
-  const event = sourceRef as EventRow | null;
-  if (!event || !event.evtId) return;
-
-  let serviceOrderRef: ServiceOrderRow | null = null;
-  group('4. Load Service Orders', () => {
-    const orders = loadServiceOrders(bearerToken, data.version, event);
-    const candidates = orders.filter(isAddable);
-    // Distinct order per VU/iteration to keep concurrent saves off the same order.
-    if (candidates.length > 0) {
-      serviceOrderRef = candidates[(__VU - 1 + __ITER) % candidates.length];
-    }
-    check(null, {
-      'Addable service order found': () => Boolean(serviceOrderRef && serviceOrderRef.orderNbr),
-    });
-  });
-  const serviceOrder = serviceOrderRef as ServiceOrderRow | null;
-  if (!serviceOrder || !serviceOrder.orderNbr) return;
-
-  group('5. Edit Service Order', () => {
+  group('3. Edit Service Order', () => {
     openServiceOrderDetail(bearerToken, data.version, serviceOrder);
   });
 
-  group('6. Add & Save Service Order Items', () => {
+  group('4. Add & Save Service Order Items', () => {
     const result = saveServiceOrderItems(bearerToken, data.version, serviceOrder, ITEM_QUANTITY);
     if (result) console.log(`[VU ${__VU}] Added items to service order ${serviceOrder.orderNbr}`);
     check(null, {
@@ -91,8 +75,4 @@ export default function serviceOrderItemsTest(data: SetupData) {
   });
 
   sleep(1);
-}
-
-export function teardown() {
-  console.log('Service order items test complete');
 }
