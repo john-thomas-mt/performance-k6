@@ -6,7 +6,7 @@ k6 performance test scripts for Momentus, produced via an AI-assisted workflow: 
 ## Environment
 - App: `https://qe.ungerboeck.com/AutomatedUITesting/26_2/app85.cshtml` (QE) — overridable via `-e BASE_URL=...`
 - Sales-ai API: `https://momentus-sales-ai-dev.ungerboeck.net` — overridable via `-e SALES_AI_URL=...`
-- Defaults live in `source/config/env.config.ts` (`BASE_URL`, `SALES_AI_URL`, `TENANT_ID`, `APP_VERSION`)
+- Defaults live in `source/config/env.config.ts`; every value is `-e`-overridable — the file's own `__ENV.X || default` lines are the authoritative list
 - Requires VPN — if connections time out, ask the user to check VPN
 - Credentials: `source/data/users.data.ts` (gitignored) holds the QE accounts — never committed. The `.gitignore` entry must be the full repo-relative path (`source/data/users.data.ts`); a bare `data/users.data.ts` is root-anchored and silently fails to match the nested file. Verify with `git check-ignore source/data/users.data.ts` before the first commit.
 - Browser exploration: resize to 1920x1080 before interacting; Momentus Assistant features live in the left sidebar under **'Momentus Assistant'** (expand via 'Open Navigation'), URL pattern `#/momentusAssistant/<page>`
@@ -36,7 +36,7 @@ to "fix" for another toolchain.
 - `source/config/` — environment values (`env.config.ts`), load profiles + common thresholds (`profiles.config.ts`)
 - `source/apis/<feature>.api.ts` — endpoint wrappers; `source/flows/<flow>.flow.ts` — composed journeys
 - `source/data/` — user pool, request-body builders, and `uploads/` fixtures
-- `source/utils/` — supporting layers not central to a journey: `utils/helpers/` (cross-cutting modules `auth.helper.ts`, `headers.helper.ts`, `version.helper.ts`, `users.helper.ts`), `utils/types/<feature>.type.ts` (per-feature type modules), and `utils/exports/` (one `<layer>.exp.ts` barrel per layer; all cross-folder imports go through these)
+- `source/utils/` — supporting layers not central to a journey: `utils/helpers/` (cross-cutting modules that fit none of the other layers), `utils/types/<feature>.type.ts` (per-feature type modules), and `utils/exports/` (one `<layer>.exp.ts` barrel per layer; all cross-folder imports go through these)
 - `source/tests/` — thin journey scripts (`<feature-area>-<flow>.spec.ts`) composing `source/`
 - `source/seeds/` — bulk prerequisite-data scripts (`<feature>.seed.ts`) run once after a snapshot reset, reusing `source/apis/` wrappers
 - `temp/captures/raw/` — scratch space for oversized payloads during exploration (gitignored); no capture document is produced

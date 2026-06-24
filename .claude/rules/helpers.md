@@ -5,11 +5,11 @@ paths: ["source/utils/helpers/**"]
 # Helper Conventions (`source/utils/helpers/`)
 
 `source/utils/helpers/` holds cross-cutting modules that fit none of `apis/` (endpoint wrappers), `flows/`
-(journeys), `types/`, `config/`, or `data/` — a module lives by what it does:
-- `auth.helper.ts` — `signIn()`, `signInSession()`, `maAuthenticate()`: authentication request wrappers that mint the Momentus bearer token / sales-ai JWT
-- `headers.helper.ts` — the only home for header builders (`buildHeaders` for the Momentus core API, `salesAiHeaders` for the sales-ai API); add a new builder here when a new API surface appears
-- `version.helper.ts` — `fetchServerVersion()`: extracts the app `version` from `app85.cshtml`
-- `users.helper.ts` — `pickUser()`: selects from the `SharedArray` user pool, honoring `USER_MODE`
-- `payload.helper.ts` — transport-envelope transforms shared across `source/data/` builders (`setRowValue`, `setColumnValueAllRows`, `getColumnValue`): set/read `TransportTable` cells by column name rather than positional index. Lives here, not in a module-local `data/<module>/helpers.ts`, once a transform is used by more than one data module
+(journeys), `types/`, `config/`, or `data/`. One module per concern, named `<concern>.helper.ts`; a module
+lives by what it does (authentication wrappers, header building, version discovery, user selection, shared
+payload transforms, and the like).
 
-Helpers that issue `http.*` (`auth.helper.ts`) follow the request-authoring rules in `rules/scripting.md`. Helpers that don't issue `http.*` (`users.helper.ts`, `payload.helper.ts`) are pure utilities.
+Placement conventions:
+- Header builders have exactly one home here — add a new builder when a new API surface appears, and never inline headers at a call site.
+- A transport-envelope transform (set/read cells by column name rather than positional index) is promoted here once it is shared by more than one `source/data/` builder, rather than duplicated in a module-local `data/<module>/helpers.ts`.
+- Helpers that issue `http.*` follow the request-authoring rules in `rules/scripting.md`; helpers that don't are pure utilities.
