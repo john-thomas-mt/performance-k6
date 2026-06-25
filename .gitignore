@@ -4,9 +4,6 @@ temp/
 .playwright-cli/
 .playwright-mcp/
 
-# Credentials (gitignored) — QE accounts, never committed
-source/data/users.data.ts
-
 # Node
 node_modules/
 
