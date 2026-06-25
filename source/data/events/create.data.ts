@@ -1,4 +1,4 @@
-import { setRowValue } from '../../utils/exports/helpers.exp.ts';
+import { setRowValue, todayMidnightUtc } from '../../utils/exports/helpers.exp.ts';
 import { TransportTable } from '../../utils/exports/types.exp.ts';
 
 // Captured create-event Save2 request (GenericDetailServer/Save2, window EB8073, from-scratch
@@ -1289,12 +1289,13 @@ const TEMPLATE: unknown[] = [
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
 
-// Event date range (2024-01-01 .. 2024-01-03), matching the items-save template's item date/times.
-// The capture was taken with 2027 dates typed during exploration; the auto-created event function
-// inherits the event range, and the items-save warns if item date/times fall outside it. Aligning
-// the seeded event to the items' range keeps event -> function -> item dates consistent.
-const EVT_START = 1704067200000; // 2024-01-01
-const EVT_END = 1704240000000;   // 2024-01-03
+// Event date range opening 30 days out and running ~1 year ahead, relative to run time so it never
+// goes stale. The seeded event's auto-created function inherits this range; the items-save dates the
+// order (and thus the added item) 60 days out (see service-orders/save.data.ts), which sits inside
+// this window so the save stays clear of the "date/time outside the order function's range" warning.
+const DAY = 24 * 60 * 60 * 1000;
+const EVT_START = todayMidnightUtc() + 30 * DAY; // 30 days ahead
+const EVT_END = todayMidnightUtc() + 365 * DAY; // ~1 year ahead
 
 export const createEventPayload = (description: string) => {
   const payload = clone(TEMPLATE);

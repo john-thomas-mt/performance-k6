@@ -1,41 +1,16 @@
 import { check, group, sleep } from 'k6';
-import { SharedArray } from 'k6/data';
-import { Options } from 'k6/options';
-import { loginToMomentusAssistant } from '../utils/exports/flows.exp.ts';
-import { pickUser, fetchServerVersion } from '../utils/exports/helpers.exp.ts';
+import { loginToMomentusAssistant } from './login.flow.ts';
 import { submitManualEntry, pollForOpportunity, openOpportunityDetail, getTasks } from '../utils/exports/apis.exp.ts';
-import { manualEntryPayload, users as userData } from '../utils/exports/data.exp.ts';
-import { loadProfile, commonThresholds } from '../utils/exports/config.exp.ts';
+import { manualEntryPayload } from '../utils/exports/data.exp.ts';
 import { User, SetupData, Opportunity, TasksResponse } from '../utils/exports/types.exp.ts';
 
-const users = new SharedArray<User>('users', () => userData);
-
-export const options: Options = {
-  ...loadProfile(),
-  thresholds: {
-    ...commonThresholds,
-    'http_req_duration{name:SignIn}': ['p(95)<2000'],
-    'http_req_duration{name:MAAuthenticate}': ['p(95)<2000'],
-    'http_req_duration{name:ManualEntry}': ['p(95)<3000'],
-    'http_req_duration{name:GetOpportunityDetail}': ['p(95)<3000'],
-    'http_req_duration{name:GetTasks}': ['p(95)<3000'],
-    checks: ['rate>0.95'],
-  },
+export const introductoryEmailThresholds: Record<string, string[]> = {
+  'http_req_duration{name:ManualEntry}': ['p(95)<3000'],
+  'http_req_duration{name:GetOpportunityDetail}': ['p(95)<3000'],
+  'http_req_duration{name:GetTasks}': ['p(95)<3000'],
 };
 
-export function setup(): SetupData {
-  if (users.length === 0) {
-    throw new Error('data/users.ts is empty — add at least one user entry');
-  }
-  const version = fetchServerVersion();
-  console.log(`Server version: ${version}`);
-  console.log(`Test starting with ${users.length} user(s) in pool`);
-  return { version };
-}
-
-export default function opportunityIntroductoryEmailTest(data: SetupData) {
-  const user = pickUser(users);
-
+export function introductoryEmailJourney(user: User, data: SetupData): void {
   const runToken = crypto.randomUUID().split('-')[0];
   const entry = manualEntryPayload(runToken);
 
@@ -57,7 +32,6 @@ export default function opportunityIntroductoryEmailTest(data: SetupData) {
 
   group('4. Poll for Created Opportunity', () => {
     opportunity = pollForOpportunity(salesAiJwt, runToken, 60);
-
     check(null, {
       'Opportunity appears in list after manual entry': () => Boolean(opportunity),
     });
@@ -71,7 +45,6 @@ export default function opportunityIntroductoryEmailTest(data: SetupData) {
 
   group('6. Verify Introduce Yourself Task', () => {
     const res = getTasks(salesAiJwt, opportunity!.id);
-
     check(res, {
       'Introduce Yourself task auto-created': (r) => {
         try {
@@ -85,8 +58,4 @@ export default function opportunityIntroductoryEmailTest(data: SetupData) {
   });
 
   sleep(1);
-}
-
-export function teardown() {
-  console.log('Create opportunity test complete');
 }

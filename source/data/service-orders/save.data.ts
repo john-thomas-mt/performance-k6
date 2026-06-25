@@ -1,4 +1,4 @@
-import { setRowValue, setColumnValueAllRows, getColumnValue } from '../../utils/exports/helpers.exp.ts';
+import { setRowValue, setColumnValueAllRows, getColumnValue, todayMidnightUtc } from '../../utils/exports/helpers.exp.ts';
 import { ServiceOrderRow, TransportTable } from '../../utils/exports/types.exp.ts';
 
 // Captured order-header table (ER100) for the service order being modified.
@@ -1035,6 +1035,14 @@ export const serviceOrderItemsSavePayload = (so: ServiceOrderRow, quantity: numb
   setRowValue(orderHeader, 'ER100_NEW_STS', so.status);
   setRowValue(orderHeader, 'ER100_RES_PHASE', so.resPhase);
   setRowValue(orderHeader, 'ER100_ORG_CODE', so.orgCode);
+
+  // The captured order header pins the order date to 2024; the added item inherits it and the server
+  // rejects it as outside the seeded function's range. Re-date the order 60 days out so it falls
+  // inside the seeded event/function window (which opens 30 days out — see events/create.data.ts).
+  const DAY = 24 * 60 * 60 * 1000;
+  const orderDate = todayMidnightUtc() + 60 * DAY;
+  setRowValue(orderHeader, 'cSTART_DATE_TIME', orderDate);
+  setRowValue(orderHeader, 'cEND_DATE_TIME', orderDate + DAY);
 
   const items = clone(ITEM_TABLE);
   items.TableName = 'ObjectID_457';

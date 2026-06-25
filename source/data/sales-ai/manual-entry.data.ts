@@ -1,4 +1,5 @@
 export const manualEntryPayload = (runToken: string) => ({
+  eventName: `Perf Event ${runToken}`,
   companyName: 'NB Events Global Inc.',
   contactName: 'Michelle Venture',
   contactEmail: `michelle.venture.${runToken}@nbevents.com`,

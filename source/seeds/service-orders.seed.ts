@@ -1,20 +1,17 @@
 import { check } from 'k6';
-import { SharedArray } from 'k6/data';
 import { Options } from 'k6/options';
 import { loginToEvents } from '../utils/exports/flows.exp.ts';
 import { createEvent, createServiceOrder } from '../utils/exports/apis.exp.ts';
-import { fetchServerVersion } from '../utils/exports/helpers.exp.ts';
+import { fetchServerVersion, decryptUsers } from '../utils/exports/helpers.exp.ts';
 import { config } from '../utils/exports/config.exp.ts';
-import { User, ServiceOrderSeedSetup } from '../utils/exports/types.exp.ts';
-import { users as userData } from '../utils/exports/data.exp.ts';
+import { ServiceOrderSeedSetup } from '../utils/exports/types.exp.ts';
+import { userCredentials } from '../utils/exports/data.exp.ts';
 
 // Bulk prerequisite-data seeder for the service-order-items test. Run once after a snapshot
 // reset and before the test: it creates one marker event and SEED_COUNT service orders under it.
 // The snapshot owns cleanup, so this script never deletes. SEED_COUNT must be >= the test's peak
 // concurrent VUs x iterations so every iteration gets its own order.
 //   k6 run -e SEED_COUNT=50 source/seeds/service-orders.seed.ts
-
-const users = new SharedArray<User>('users', () => userData);
 
 const SEED_COUNT = Number(__ENV.SEED_COUNT || 20);
 const SEED_VUS = Number(__ENV.SEED_VUS || 5);
@@ -30,7 +27,12 @@ export const options: Options = {
   },
 };
 
-export function setup(): ServiceOrderSeedSetup {
+export async function setup(): Promise<ServiceOrderSeedSetup> {
+  const cryptoKey = config.cryptoKey;
+  if (!cryptoKey) {
+    throw new Error('No decryption key — write temp/secret.json (npm run secret -- --key <pass>) or pass -e CRYPTO_KEY=...');
+  }
+  const users = await decryptUsers(userCredentials, cryptoKey);
   if (users.length === 0) {
     throw new Error('data/users.data.ts is empty — add at least one user entry');
   }
@@ -40,13 +42,14 @@ export function setup(): ServiceOrderSeedSetup {
     throw new Error('seed login failed — cannot create the marker event');
   }
 
-  const evtId = createEvent(bearerToken, version, config.seedEventDesc);
+  const seedEventDesc = `${config.seedEventDesc} ${crypto.randomUUID().split('-')[0]}`;
+  const evtId = createEvent(bearerToken, version, seedEventDesc);
   if (!evtId) {
     throw new Error('createEvent failed — aborting seed');
   }
 
   console.log(`Server version: ${version}`);
-  console.log(`Seed event "${config.seedEventDesc}" created: ${evtId}`);
+  console.log(`Seed event "${seedEventDesc}" created: ${evtId}`);
   console.log(`Creating ${SEED_COUNT} service order(s) with ${SEED_VUS} VU(s)`);
   return { version, evtId, bearerToken, encUserId };
 }

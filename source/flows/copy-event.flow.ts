@@ -1,43 +1,19 @@
 import { check, group, sleep } from 'k6';
-import { SharedArray } from 'k6/data';
-import { Options } from 'k6/options';
-import { loginToEvents } from '../utils/exports/flows.exp.ts';
-import { pickUser, fetchServerVersion } from '../utils/exports/helpers.exp.ts';
+import { loginToEvents } from './login.flow.ts';
 import { searchEvents, openCopyForm, saveEventCopy, openEventDetail } from '../utils/exports/apis.exp.ts';
-import { loadProfile, commonThresholds } from '../utils/exports/config.exp.ts';
 import { User, SetupData, EventRow } from '../utils/exports/types.exp.ts';
-import { users as userData } from '../utils/exports/data.exp.ts';
-
-const users = new SharedArray<User>('users', () => userData);
 
 const SOURCE_EVENT = __ENV.SOURCE_EVENT || 'Manual Test Event 1';
 
-export const options: Options = {
-  ...loadProfile(),
-  thresholds: {
-    ...commonThresholds,
-    'http_req_duration{name:SignIn}': ['p(95)<2000'],
-    'http_req_duration{name:SearchEvents}': ['p(95)<3000'],
-    'http_req_duration{name:OpenCopyForm}': ['p(95)<5000'],
-    'http_req_duration{name:SaveEventCopy}': ['p(95)<5000'],
-    'http_req_duration{name:SearchNewEvent}': ['p(95)<3000'],
-    'http_req_duration{name:OpenEventDetail}': ['p(95)<5000'],
-    checks: ['rate>0.95'],
-  },
+export const copyEventThresholds: Record<string, string[]> = {
+  'http_req_duration{name:SearchEvents}': ['p(95)<3000'],
+  'http_req_duration{name:OpenCopyForm}': ['p(95)<5000'],
+  'http_req_duration{name:SaveEventCopy}': ['p(95)<5000'],
+  'http_req_duration{name:SearchNewEvent}': ['p(95)<3000'],
+  'http_req_duration{name:OpenEventDetail}': ['p(95)<5000'],
 };
 
-export function setup(): SetupData {
-  if (users.length === 0) {
-    throw new Error('data/users.ts is empty — add at least one user entry');
-  }
-  const version = fetchServerVersion();
-  console.log(`Server version: ${version}`);
-  console.log(`Test starting with ${users.length} user(s) in pool`);
-  return { version };
-}
-
-export default function eventsCopyEventTest(data: SetupData) {
-  const user = pickUser(users);
+export function copyEventJourney(user: User, data: SetupData): void {
   const runToken = crypto.randomUUID().split('-')[0];
   const newDescription = `Manual Event Perf Test - ${runToken}`;
 
@@ -84,8 +60,4 @@ export default function eventsCopyEventTest(data: SetupData) {
   });
 
   sleep(1);
-}
-
-export function teardown() {
-  console.log('Copy event test complete');
 }

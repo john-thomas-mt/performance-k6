@@ -1,3 +1,5 @@
+import { User } from './common.type.ts';
+
 export interface ServiceOrderRow {
   orderNbr: string;
   soSearch: string;
@@ -38,6 +40,7 @@ export interface ServiceOrderSaveResult {
 export interface ServiceOrderPoolSetup {
   version: string;
   pool: ServiceOrderRow[];
+  users: User[];
 }
 
 export interface ServiceOrderSeedSetup {
