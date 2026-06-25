@@ -26,6 +26,8 @@ k6 performance test scripts for Momentus, produced via an AI-assisted workflow: 
 k6 uses browser-like module resolution — only relative/absolute paths with full filenames
 (`'../config/env.config.ts'`) resolve. It ignores `package.json` `imports` and `tsconfig` `paths`, so
 path aliases (`#alias/*`, `@/*`) fail at `k6 run` / `k6 inspect` even though `tsc` accepts them.
+k6 also has no JSON module import — load data files (e.g. `temp/setup.json`) with `open()` + `JSON.parse()`,
+never `import x from './f.json'`.
 Use relative imports across `source/` and its entry-point folders. An alias scheme would require a bundler build
 step, which the direct `k6 run source/scenarios/<file>.scn.ts` workflow intentionally avoids.
 All barrels live in `source/utils/exports/` (one `<layer>.exp.ts` per layer); import a layer's members
