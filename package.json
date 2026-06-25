@@ -4,10 +4,16 @@
   "private": true,
   "description": "k6 performance tests for Momentus, generated via playwright-cli exploration",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "secret": "ts-node .config/yargs/secret.ts",
+    "setup": "ts-node .config/yargs/setup.ts"
   },
   "devDependencies": {
     "@types/k6": "^2.0.0",
-    "typescript": "^6.0.3"
+    "@types/node": "^20.19.37",
+    "@types/yargs": "^17.0.33",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3",
+    "yargs": "^17.7.2"
   }
 }
