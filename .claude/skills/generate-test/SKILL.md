@@ -54,7 +54,7 @@ Classify every dynamic value:
 | server-generated | first appears in a response | extract at runtime (regex/JSON path); never hardcode |
 | client-generated | UUIDs, nonces, timestamps the browser made up | regenerate per request (`crypto.randomUUID()`, `new Date()`) |
 | user/data | usernames, payload content | parameterize via `source/data/` + `SharedArray` |
-| environment | host, tenant, version fallback | `source/config/env.config.ts` (`__ENV` overridable) |
+| environment | host, tenant, version fallback | `source/config/env.config.ts` (sourced from `temp/setup.json`/`temp/secret.json`) |
 
 Correlated correctly = the script still works after every session-scoped value rotates (new login, new server version, new traceId).
 

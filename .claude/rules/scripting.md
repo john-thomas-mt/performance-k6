@@ -14,13 +14,14 @@ each folder's own rule file (`rules/apis.md`, `rules/flows.md`, `rules/helpers.m
 - Every `http.*` call carries `tags: { name: 'PascalCaseName' }` — this drives per-endpoint thresholds (`http_req_duration{name:...}`)
 - If a wrapper is reused in different scenario contexts, accept the tag name as a parameter with a default (see `getOpportunities(jwt, name = 'GetOpportunities')`) so metrics stay separately tagged
 - Headers are never inlined: use `buildHeaders(token, version)` for the Momentus core API and `salesAiHeaders(jwt)` for the sales-ai API (both from `source/utils/helpers/headers.helper.ts`)
-- URLs are built from `config` values — never hardcode hosts, tenants, or versions in a wrapper
+- URLs are built from `config` values — never hardcode hosts or versions in a wrapper; the sales-ai `tenantId` is correlated from the session JWT (see Correlation), not `config`
 
 ## Correlation — never hardcode dynamic values
 Every value the server generates must be extracted at runtime from a prior response:
-- App `version` header → `fetchServerVersion()` (regex on `app85.cshtml`)
+- App `version` header → `fetchServerVersion()` (regex on `app85.cshtml`); throws if the page fetch fails or the `?v=` token is missing (no static fallback)
 - Momentus bearer token (`<id>|<hex>`) → `signIn()` response
 - Sales-ai JWT → `maAuthenticate()` response
+- Sales-ai `tenantId` → decoded from the sales-ai JWT's `tenant_id` claim via `tenantIdFromJwt()`; throws if the claim is absent (no static fallback)
 - `traceId` → upload/submit responses; reuse it for follow-up status requests
 Client-generated values (`x-nonce`, `wsid`, sessionIds, timestamps) are produced fresh per request with `crypto.randomUUID()` / `new Date()`, never copied from a capture.
 

@@ -43,9 +43,9 @@ Anything passed to `http.file()` goes here, never in the request-body folders:
   AES key is `SHA-256(passphrase)` with no salt or KDF stretching: these are low-value QE accounts and the only
   goal is keeping passwords out of the repo — don't reuse this scheme for anything sensitive.
 - Decrypted once at runtime in a scenario/seed `setup()` via `decryptUsers(userCredentials, config.cryptoKey)`
-  (`source/utils/helpers/crypto.helper.ts`), returning `User[]`. The passphrase is `config.cryptoKey` — `-e CRYPTO_KEY=`
-  (override) or a gitignored `temp/secret.json` (`npm run secret -- --key '<passphrase>'`), never committed; `setup()`
-  throws if neither supplies one.
+  (`source/utils/helpers/crypto.helper.ts`), returning `User[]`. The passphrase is `config.cryptoKey`, sourced from a
+  gitignored `temp/secret.json` (`npm run secret -- --key '<passphrase>'`; in CI, injected from a masked pipeline
+  secret), never committed; `setup()` throws if it is missing.
 - Decryption is async (WebCrypto `crypto.subtle`), so it lives in `setup()` — never a `SharedArray`/init context. The
   decrypted `User[]` is returned in the `setup()` data and picked with `pickUser(data.users)` from
   `source/utils/helpers/users.helper.ts` (see `rules/scenarios.md`).

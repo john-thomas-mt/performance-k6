@@ -29,7 +29,7 @@ The entry-point layer k6 runs directly. A scenario file drives one or more journ
 - Per-iteration uniqueness comes from a `runToken` passed into the request-body builder
 
 ## Lifecycle
-- `setup()` is `async`: it decrypts the user pool (passphrase from `config.cryptoKey` — `-e CRYPTO_KEY=` or `temp/secret.json`; throws if neither) and fetches the server version once via `fetchServerVersion()`, returning both (plus any discovered seed pool) for the VU functions to read
+- `setup()` is `async`: it decrypts the user pool (passphrase from `config.cryptoKey`, sourced from `temp/secret.json`; throws if missing) and fetches the server version once via `fetchServerVersion()`, returning both (plus any discovered seed pool) for the VU functions to read
 - Authentication is owned by the relevant `source/flows/login.flow.ts` entry, which owns groups 1–2 (see `rules/flows.md`)
 - Numbered groups, guards, and the closing `sleep` live in the flow, not here (see `rules/flows.md`)
 
