@@ -1,13 +1,23 @@
 {
+  "ts-node": {
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "node16",
+      "moduleResolution": "node16",
+      "rootDir": "."
+    }
+  },
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
+    "esModuleInterop": true,
+    "types": ["k6", "node"],
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["source/**/*.ts"]
+  "include": ["source/**/*.ts", ".config/yargs/**/*.ts"]
 }
