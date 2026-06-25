@@ -10,7 +10,7 @@ mirroring `source/apis/` and the app nav (`#/momentusAssistant/<page>`), then by
 
 ```
 source/data/
-  users.data.ts                     # cross-cutting user pool — root, never module-scoped
+  users.data.ts                     # cross-cutting user pool (encrypted, committed) — root, never module-scoped
   <module>/*.data.ts                # request-body data for that module's flows
   <module>/<sub>/*.data.ts          # add a sub-module level only when a module needs it
   <module>/helpers.ts               # optional module-local helper shared by that module's builders
@@ -38,13 +38,27 @@ Anything passed to `http.file()` goes here, never in the request-body folders:
 - Name fixtures for their content, not the consuming test (e.g. `sample-opportunity.txt`)
 
 ## User pool — `source/data/users.data.ts`
-- A TS module exporting `users: User[]`; gitignored — holds QE accounts, never committed.
-- Imported through the data barrel and wrapped in `SharedArray` so it's parsed once and shared across VUs:
-  `import { users as userData } from '../utils/exports/data.exp.ts';`
-  `const users = new SharedArray<User>('users', () => userData);`
-- Picked with `pickUser(users)` from `source/utils/helpers/users.helper.ts`.
+- A TS module exporting `userCredentials: User[]` — **committed**, an array of `{ username, password }` pairs
+  where the `password` is AES-GCM-encrypted (base64 of `iv | ciphertext`) and the username stays plaintext. The
+  AES key is `SHA-256(passphrase)` with no salt or KDF stretching: these are low-value QE accounts and the only
+  goal is keeping passwords out of the repo — don't reuse this scheme for anything sensitive.
+- Decrypted once at runtime in a scenario/seed `setup()` via `decryptUsers(userCredentials, config.cryptoKey)`
+  (`source/utils/helpers/crypto.helper.ts`), returning `User[]`. The passphrase is `config.cryptoKey` — `-e CRYPTO_KEY=`
+  (override) or a gitignored `temp/secret.json` (`npm run secret -- --key '<passphrase>'`), never committed; `setup()`
+  throws if neither supplies one.
+- Decryption is async (WebCrypto `crypto.subtle`), so it lives in `setup()` — never a `SharedArray`/init context. The
+  decrypted `User[]` is returned in the `setup()` data and picked with `pickUser(data.users)` from
+  `source/utils/helpers/users.helper.ts` (see `rules/scenarios.md`).
+- **Rotate/add accounts** by re-minting the encrypted values and pasting them into `users.data.ts`. The snippet
+  reads the passphrase from `temp/secret.json` (write it first with `npm run secret -- --key '<passphrase>'`),
+  takes a `{ username: plaintext-password }` map as its argument, and prints the `{ username, password }` array to
+  paste; its encrypt path mirrors `crypto.helper.ts` (same UTF-16 bytes, `SHA-256` key, 12-byte IV prepended):
+  ```bash
+  node -e "const c=require('crypto').webcrypto,fs=require('fs');(async()=>{const pass=JSON.parse(fs.readFileSync('temp/secret.json')).key;const users=JSON.parse(process.argv[1]);const u16=s=>Buffer.from(s,'utf16le');const key=await c.subtle.importKey('raw',await c.subtle.digest('SHA-256',u16(pass)),'AES-GCM',false,['encrypt']);const out=[];for(const[n,p]of Object.entries(users)){const iv=c.getRandomValues(new Uint8Array(12));const ct=Buffer.from(await c.subtle.encrypt({name:'AES-GCM',iv},key,u16(p)));out.push({username:n,password:Buffer.concat([Buffer.from(iv),ct]).toString('base64')});}console.log(JSON.stringify(out,null,2));})()" '{"username":"plaintext-password"}'
+  ```
 
 ## Loading rules
-- Request-body builders and the user pool are imported as TS modules — no `open()`.
+- Request-body builders are imported as TS modules — no `open()`.
+- The user pool ships as `userCredentials` (encrypted) in `users.data.ts` and is decrypted in `setup()` (see User pool), keyed by `config.cryptoKey`.
 - `open()` is reserved for `source/data/uploads/**` fixtures and is init-context only — never inside
-  the VU function (see `rules/tests.md`).
+  the VU function (see `rules/scenarios.md`).

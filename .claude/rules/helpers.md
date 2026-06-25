@@ -6,8 +6,8 @@ paths: ["source/utils/helpers/**"]
 
 `source/utils/helpers/` holds cross-cutting modules that fit none of `apis/` (endpoint wrappers), `flows/`
 (journeys), `types/`, `config/`, or `data/`. One module per concern, named `<concern>.helper.ts`; a module
-lives by what it does (authentication wrappers, header building, version discovery, user selection, shared
-payload transforms, and the like).
+lives by what it does (authentication wrappers, header building, version discovery, user selection, user-pool
+decryption, shared payload transforms, and the like).
 
 Placement conventions:
 - Header builders have exactly one home here — add a new builder when a new API surface appears, and never inline headers at a call site.
