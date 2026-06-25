@@ -5,14 +5,12 @@ export function fetchServerVersion(): string {
   const res = http.get(`${config.baseUrl}/app85.cshtml`);
 
   if (res.status !== 200) {
-    console.warn(`fetchServerVersion: status ${res.status}, falling back to ${config.appVersion}`);
-    return config.appVersion;
+    throw new Error(`fetchServerVersion: GET app85.cshtml returned ${res.status}`);
   }
 
   const match = String(res.body).match(/[?&]v=([\d.]+)/);
   if (!match) {
-    console.warn(`fetchServerVersion: version not found in page, falling back to ${config.appVersion}`);
-    return config.appVersion;
+    throw new Error('fetchServerVersion: version token (?v=) not found in app85.cshtml');
   }
 
   return match[1];

@@ -1,14 +1,15 @@
 import http, { RefinedResponse, ResponseType } from 'k6/http';
 import { check, sleep } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
-import { salesAiHeaders } from '../utils/exports/helpers.exp.ts';
+import { salesAiHeaders, tenantIdFromJwt } from '../utils/exports/helpers.exp.ts';
 import { Opportunity } from '../utils/exports/types.exp.ts';
 
 type Res = RefinedResponse<ResponseType | undefined>;
 
 export function getOpportunities(salesAiJwt: string, name = 'GetOpportunities'): Res {
+  const tenantId = tenantIdFromJwt(salesAiJwt);
   const res = http.get(
-    `${config.salesAiUrl}/api/opportunities?tenantId=${config.tenantId}`,
+    `${config.salesAiUrl}/api/opportunities?tenantId=${tenantId}`,
     {
       headers: salesAiHeaders(salesAiJwt),
       tags: { name },

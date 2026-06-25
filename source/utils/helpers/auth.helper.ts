@@ -1,5 +1,6 @@
 import http, { RefinedResponse, ResponseType } from "k6/http";
 import { check } from "k6";
+import encoding from "k6/encoding";
 import { config } from "../../config/env.config.ts";
 import { buildHeaders } from "./headers.helper.ts";
 import { SessionTokens } from "../types/common.type.ts";
@@ -122,4 +123,13 @@ export function maAuthenticate(
   }
 
   return (res.json() as string[])[0];
+}
+
+export function tenantIdFromJwt(salesAiJwt: string): string {
+  const payload = encoding.b64decode(salesAiJwt.split(".")[1], "rawurl", "s");
+  const tenantId = (JSON.parse(payload) as { tenant_id?: string }).tenant_id;
+  if (!tenantId) {
+    throw new Error("tenantIdFromJwt: tenant_id claim missing from sales-ai JWT");
+  }
+  return tenantId;
 }

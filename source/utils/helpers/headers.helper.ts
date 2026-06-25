@@ -1,5 +1,3 @@
-import { config } from '../exports/config.exp.ts';
-
 export function salesAiHeaders(
   salesAiJwt: string,
   contentType: string | null = null
@@ -12,7 +10,7 @@ export function salesAiHeaders(
   return headers;
 }
 
-export function buildHeaders(token: string | null, version?: string): Record<string, string> {
+export function buildHeaders(token: string | null, version: string): Record<string, string> {
   // __VU/__ITER are only defined inside a VU iteration; setup()/teardown() (e.g. the seed script's
   // login + createEvent) run outside one, so guard them — wsid is only a trace string.
   const vu = typeof __VU !== 'undefined' ? __VU : 0;
@@ -31,7 +29,7 @@ export function buildHeaders(token: string | null, version?: string): Record<str
     utmf: 'HH:mm:ss.fff',
     uldf: 'dd%20MMMM%20yyyy',
     showactionid: 'false',
-    version: version || config.appVersion,
+    version,
     'content-type': 'application/json',
     accept: 'application/json',
   };
