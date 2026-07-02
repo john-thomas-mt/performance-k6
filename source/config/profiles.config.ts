@@ -9,9 +9,9 @@ const profiles: Record<string, Profile> = {
   },
   load: {
     stages: [
-      { duration: '30s', target: 5 },
-      { duration: '1m', target: 5 },
-      { duration: '30s', target: 0 },
+      { duration: '5m', target: 10 },
+      { duration: '10m', target: 10 },
+      { duration: '2m', target: 0 },
     ],
   },
   stress: {
@@ -23,8 +23,8 @@ const profiles: Record<string, Profile> = {
   },
 };
 
-export function loadProfile(): Profile {
-  const name = __ENV.PROFILE || 'smoke';
+export function loadProfile(defaultName = 'smoke'): Profile {
+  const name = __ENV.PROFILE || defaultName;
   const profile = profiles[name];
   if (!profile) {
     throw new Error(`Unknown PROFILE "${name}" — valid: ${Object.keys(profiles).join(', ')}`);

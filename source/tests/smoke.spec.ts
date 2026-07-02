@@ -11,6 +11,8 @@ import {
   fileUploadThresholds,
   introductoryEmailJourney,
   introductoryEmailThresholds,
+  navigationJourney,
+  navigationThresholds,
   loginThresholds,
 } from '../utils/exports/flows.exp.ts';
 import { pickUser, fetchServerVersion, decryptUsers } from '../utils/exports/helpers.exp.ts';
@@ -36,6 +38,7 @@ const allScenarios: Record<string, Scenario> = {
   introductoryEmail: once('introductoryEmail'),
   copyEvent: once('copyEvent'),
   serviceOrderItems: once('serviceOrderItems'),
+  navigation: once('navigation'),
 };
 
 const allThresholds: Record<string, Record<string, string[]>> = {
@@ -44,6 +47,7 @@ const allThresholds: Record<string, Record<string, string[]>> = {
   introductoryEmail: introductoryEmailThresholds,
   copyEvent: copyEventThresholds,
   serviceOrderItems: serviceOrderItemsThresholds,
+  navigation: navigationThresholds,
 };
 
 const selected = __ENV.SCENARIO;
@@ -99,4 +103,8 @@ export function copyEvent(data: SmokeSetup) {
 
 export function serviceOrderItems(data: SmokeSetup) {
   serviceOrderItemsJourney(pickUser(data.users), data);
+}
+
+export function navigation(data: SmokeSetup) {
+  navigationJourney(pickUser(data.users), data);
 }

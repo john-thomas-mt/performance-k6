@@ -8,4 +8,5 @@ export * from '../../data/service-orders/detail.data.ts';
 export * from '../../data/service-orders/grid.data.ts';
 export * from '../../data/service-orders/save.data.ts';
 export * from '../../data/sales-ai/manual-entry.data.ts';
+export * from '../../data/navigation/navigation.data.ts';
 export * from '../../data/users.data.ts';
