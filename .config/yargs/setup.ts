@@ -12,7 +12,7 @@ const argv = yargs(hideBin(process.argv))
   .option('site', {
     alias: 's',
     type: 'string',
-    choices: ['QE', 'AT', 'RC'],
+    choices: ['QE', 'AT', 'RC', 'PERF'],
     default: 'AT',
     description: 'Target site',
   })
