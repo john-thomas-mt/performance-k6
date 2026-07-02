@@ -7,7 +7,7 @@ import {
   saveServiceOrderItems,
 } from '../utils/exports/apis.exp.ts';
 import { config } from '../utils/exports/config.exp.ts';
-import { User, ServiceOrderPoolSetup, ServiceOrderRow, EventRow } from '../utils/exports/types.exp.ts';
+import { User, ServiceOrderSetup, ServiceOrderRow, EventRow } from '../utils/exports/types.exp.ts';
 
 const ITEM_QUANTITY = Number(__ENV.ITEM_QUANTITY || 2);
 
@@ -40,11 +40,11 @@ export const serviceOrderItemsThresholds: Record<string, string[]> = {
   'http_req_duration{name:SaveServiceOrderItems}': ['p(95)<5000'],
 };
 
-export function serviceOrderItemsJourney(user: User, data: ServiceOrderPoolSetup): void {
+export function serviceOrderItemsJourney(user: User, data: ServiceOrderSetup): void {
   const { bearerToken } = loginToEvents(user, data.version);
   if (!bearerToken) return;
 
-  const serviceOrder = data.pool[(__VU - 1 + __ITER) % data.pool.length];
+  const serviceOrder = data.soPool[(__VU - 1 + __ITER) % data.soPool.length];
 
   group('3. Edit Service Order', () => {
     openServiceOrderDetail(bearerToken, data.version, serviceOrder);

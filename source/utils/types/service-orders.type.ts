@@ -1,4 +1,4 @@
-import { User } from './common.type.ts';
+import { SetupData, User } from './common.type.ts';
 
 export interface ServiceOrderRow {
   orderNbr: string;
@@ -37,9 +37,11 @@ export interface ServiceOrderSaveResult {
   AdditionalTableNameAddedRowKeys: Record<string, string[]> | null;
 }
 
-export interface ServiceOrderPoolSetup {
-  version: string;
-  pool: ServiceOrderRow[];
+export interface ServiceOrderSetup extends SetupData {
+  soPool: ServiceOrderRow[];
+}
+
+export interface SmokeSetup extends ServiceOrderSetup {
   users: User[];
 }
 
