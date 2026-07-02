@@ -1,5 +1,5 @@
 import { b64decode } from 'k6/encoding';
-import { User } from '../types/common.type.ts';
+import { User } from '../exports/types.exp.ts';
 
 function stringToArrayBuffer(str: string): ArrayBuffer {
   const buf = new ArrayBuffer(str.length * 2);

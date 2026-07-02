@@ -1,9 +1,9 @@
 import http, { RefinedResponse, ResponseType } from "k6/http";
 import { check } from "k6";
 import encoding from "k6/encoding";
-import { config } from "../../config/env.config.ts";
+import { config } from "../exports/config.exp.ts";
 import { buildHeaders } from "./headers.helper.ts";
-import { SessionTokens } from "../types/common.type.ts";
+import { SessionTokens } from "../exports/types.exp.ts";
 
 type Res = RefinedResponse<ResponseType | undefined>;
 

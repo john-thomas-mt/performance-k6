@@ -1,4 +1,4 @@
-import { setRowValue } from '../../utils/exports/helpers.exp.ts';
+import { setRowValue, clone } from '../../utils/exports/helpers.exp.ts';
 import { TransportTable } from '../../utils/exports/types.exp.ts';
 
 // Captured create-service-order Save2 request (GenericDetailServer/Save2, window EM9131). Embedded
@@ -626,8 +626,6 @@ const TEMPLATE: unknown[] = [
     "ConvertToUserDisplayTimeZone": false
   }
 ];
-
-const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
 
 const setParam = (params: { Key: string; Value: unknown }[], key: string, value: unknown): void => {
   const p = params.find((x) => x.Key === key);

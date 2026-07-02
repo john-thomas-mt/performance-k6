@@ -20,3 +20,7 @@ export function getColumnValue(table: TransportTable, row: number, columnName: s
   const i = table.TransportDataColumns.findIndex((c) => c.ColumnName === columnName);
   return i >= 0 ? table.TransportDataRows[row]?.Values[String(i)] : undefined;
 }
+
+export function clone<T>(v: T): T {
+  return JSON.parse(JSON.stringify(v));
+}

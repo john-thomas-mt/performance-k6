@@ -1,4 +1,4 @@
-import { setRowValue, todayMidnightUtc } from '../../utils/exports/helpers.exp.ts';
+import { setRowValue, todayMidnightUtc, clone } from '../../utils/exports/helpers.exp.ts';
 import { TransportTable } from '../../utils/exports/types.exp.ts';
 
 // Captured create-event Save2 request (GenericDetailServer/Save2, window EB8073, from-scratch
@@ -1286,8 +1286,6 @@ const TEMPLATE: unknown[] = [
     "ConvertToUserDisplayTimeZone": false
   }
 ];
-
-const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
 
 // Event date range opening 30 days out and running ~1 year ahead, relative to run time so it never
 // goes stale. The seeded event's auto-created function inherits this range; the items-save dates the

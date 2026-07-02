@@ -1,4 +1,4 @@
-import { setRowValue, setColumnValueAllRows, getColumnValue, todayMidnightUtc } from '../../utils/exports/helpers.exp.ts';
+import { setRowValue, setColumnValueAllRows, getColumnValue, todayMidnightUtc, clone } from '../../utils/exports/helpers.exp.ts';
 import { ServiceOrderRow, TransportTable } from '../../utils/exports/types.exp.ts';
 
 // Captured order-header table (ER100) for the service order being modified.
@@ -1012,8 +1012,6 @@ const ITEM_TABLE: TransportTable = {
       }
     ]
   };
-
-const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
 
 export const serviceOrderItemsSavePayload = (so: ServiceOrderRow, quantity: number) => {
   const orderHeader = clone(ORDER_HEADER_TABLE);
