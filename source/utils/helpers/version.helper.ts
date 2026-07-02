@@ -17,3 +17,7 @@ export function fetchServerVersion(): string {
 
   return match[1];
 }
+
+export function majorMinor(version: string): string {
+  return version.split('.').slice(0, 2).join('.');
+}

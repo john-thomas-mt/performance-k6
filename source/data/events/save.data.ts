@@ -1,7 +1,7 @@
-import { setRowValue, todayMidnightUtc } from '../../utils/exports/helpers.exp.ts';
+import { setRowValue, todayMidnightUtc, majorMinor } from '../../utils/exports/helpers.exp.ts';
 import { EventRow, TransportTable } from '../../utils/exports/types.exp.ts';
 
-export const savePayload = (encUserId: string, source: EventRow, description: string) => {
+export const savePayload = (encUserId: string, source: EventRow, description: string, version: string) => {
   const payload = [
     1,
     "10",
@@ -19,7 +19,7 @@ export const savePayload = (encUserId: string, source: EventRow, description: st
       { "Key": "DetailsClass", "Value": "" },
       { "Key": "WdwType", "Value": 12 },
       { "Key": "EncUserID", "Value": encUserId },
-      { "Key": "Version", "Value": "26.2" },
+      { "Key": "Version", "Value": majorMinor(version) },
       { "Key": "EditWdwID", "Value": "EB2212" },
       { "Key": "panel", "Value": "N" },
       { "Key": "modal", "Value": "Y" },

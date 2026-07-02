@@ -1,4 +1,4 @@
-import { setRowValue, clone } from '../../utils/exports/helpers.exp.ts';
+import { setRowValue, clone, majorMinor } from '../../utils/exports/helpers.exp.ts';
 import { TransportTable } from '../../utils/exports/types.exp.ts';
 
 // Captured create-service-order Save2 request (GenericDetailServer/Save2, window EM9131). Embedded
@@ -639,10 +639,11 @@ const setParam = (params: { Key: string; Value: unknown }[], key: string, value:
 const FUNC_START = 1704099600000;
 const FUNC_END = 1704304800000;
 
-export const createServiceOrderPayload = (encUserId: string, evtId: string) => {
+export const createServiceOrderPayload = (encUserId: string, evtId: string, version: string) => {
   const payload = clone(TEMPLATE);
   const params = payload[7] as { Key: string; Value: unknown }[];
   setParam(params, 'EncUserID', encUserId);
+  setParam(params, 'Version', majorMinor(version));
   setParam(params, 'EvtID', Number(evtId));
   setParam(params, 'PrvEvtId', Number(evtId));
   setParam(params, 'RowKeyList', `10|${evtId}`);

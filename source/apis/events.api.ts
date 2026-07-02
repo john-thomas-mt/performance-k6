@@ -63,7 +63,7 @@ export function openCopyForm(
 ): Res | null {
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/GetInitialData2`,
-    JSON.stringify(copyFormPayload(encUserId, source)),
+    JSON.stringify(copyFormPayload(encUserId, source, version)),
     { headers: buildHeaders(token, version), tags: { name: 'OpenCopyForm' } }
   );
 
@@ -89,7 +89,7 @@ export function saveEventCopy(
 ): string | null {
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/Save2`,
-    JSON.stringify(savePayload(encUserId, source, description)),
+    JSON.stringify(savePayload(encUserId, source, description, version)),
     { headers: buildHeaders(token, version), tags: { name: 'SaveEventCopy' } }
   );
 

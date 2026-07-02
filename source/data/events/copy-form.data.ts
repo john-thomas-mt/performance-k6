@@ -1,6 +1,7 @@
+import { majorMinor } from '../../utils/exports/helpers.exp.ts';
 import { EventRow } from '../../utils/exports/types.exp.ts';
 
-export const copyFormPayload = (encUserId: string, source: EventRow) => ([
+export const copyFormPayload = (encUserId: string, source: EventRow, version: string) => ([
     [
       { "Key": "wdwid", "Value": "EB2212" },
       { "Key": "WindowObjectID", "Value": 1 },
@@ -10,7 +11,7 @@ export const copyFormPayload = (encUserId: string, source: EventRow) => ([
       { "Key": "DetailsClass", "Value": "" },
       { "Key": "WdwType", "Value": 12 },
       { "Key": "EncUserID", "Value": encUserId },
-      { "Key": "Version", "Value": "26.2" },
+      { "Key": "Version", "Value": majorMinor(version) },
       { "Key": "EditWdwID", "Value": "EB2212" },
       { "Key": "panel", "Value": "N" },
       { "Key": "modal", "Value": "Y" },

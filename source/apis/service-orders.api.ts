@@ -113,7 +113,7 @@ export function createServiceOrder(
 ): string | null {
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/Save2`,
-    JSON.stringify(createServiceOrderPayload(encUserId, evtId)),
+    JSON.stringify(createServiceOrderPayload(encUserId, evtId, version)),
     { headers: buildHeaders(token, version), tags: { name } }
   );
 
