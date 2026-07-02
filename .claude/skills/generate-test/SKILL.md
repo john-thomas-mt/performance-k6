@@ -14,7 +14,7 @@ One continuous flow: drive the app, build an in-context correlation picture, wri
 1. Confirm the target flow with the user if ambiguous (which page, which actions, which data).
 2. **Tell the user before opening the browser** — exploration sends real traffic to the environment.
 3. Get **approval once, upfront, for the whole sequence** (exploration + the three verification runs). With that approval, run all three steps and any re-runs without prompting again.
-4. Read `source/config/env.config.ts` for the app URL and tenant; credentials for **exploration** come from `source/data/users.data.ts` (first user) — the generated test draws from the full pool via `pickUser` (see §3).
+4. Read `source/config/env.config.ts` for the app URL (`baseUrl`; the sales-ai `tenantId` is not stored — it's correlated at runtime). For **exploration** you need a live login: `source/data/users.data.ts` ships usernames plaintext but passwords **AES-GCM-encrypted**, so decrypt the first user with the `temp/secret.json` passphrase (via `decryptUsers`) — you can't read a usable password straight from the file. The generated test draws from the full pool via `pickUser` (see §3).
 5. `playwright-cli list` — if any session shows `[incompatible please re-open]`, `playwright-cli kill-all` first.
 
 ## 1. Explore & observe (in-context)
@@ -53,8 +53,9 @@ Classify every dynamic value:
 |---|---|---|
 | server-generated | first appears in a response | extract at runtime (regex/JSON path); never hardcode |
 | client-generated | UUIDs, nonces, timestamps the browser made up | regenerate per request (`crypto.randomUUID()`, `new Date()`) |
-| user/data | usernames, payload content | parameterize via `source/data/` + `SharedArray` |
-| environment | host, tenant, version fallback | `source/config/env.config.ts` (sourced from `temp/setup.json`/`temp/secret.json`) |
+| user/data | usernames, payload content | parameterize via `source/data/` modules — the user pool is decrypted in `setup()` (never a `SharedArray`; decryption is async), payload bodies are TS builders interpolating a `runToken` |
+| server-reported | sales-ai `tenantId`, app `version` | correlate at runtime (`tenantIdFromJwt()` / `fetchServerVersion()`) and throw on failure — never stored in config, never a stale fallback |
+| environment | host / base URL | `source/config/env.config.ts` (`baseUrl` derived from `temp/setup.json`; `cryptoKey` from `temp/secret.json`) |
 
 Correlated correctly = the script still works after every session-scoped value rotates (new login, new server version, new traceId).
 
@@ -62,11 +63,11 @@ Correlated correctly = the script still works after every session-scoped value r
 
 - Grep `source/` for each endpoint path — reuse existing wrappers before writing new ones.
 - Auth chain already exists: `loginToMomentusAssistant` from `source/flows/login.flow.ts`.
-- New endpoints get a thin wrapper in `source/apis/<feature>.api.ts`; add its `export *` line to the layer barrel (`source/utils/exports/apis.exp.ts`) and import through the per-folder barrels in the flow/scenario (the apis and exports rules auto-load when you edit those files).
-- Decide the data-setup strategy before scripting the journey. Cleanup is owned by an out-of-band **DB snapshot reset**, not by the test — so journeys stay pure (measure only the operation under test) and carry no `teardown()` cleanup. Prerequisite data the operation needs to already exist is bulk-created by a separate seed script under `source/seeds/` that reuses the same `source/apis/` wrappers; the scenario's `setup()` discovers the seeded pool and the VU function picks a distinct record per VU/iteration. (The seed and scenarios rules auto-load when you edit those files.)
+- New endpoints get a thin wrapper in `source/apis/<feature>.api.ts`; add its `export *` line to the layer barrel (`source/utils/exports/apis.exp.ts`) and import through the per-folder barrels in the flow/test spec (the apis and exports rules auto-load when you edit those files).
+- Decide the data-setup strategy before scripting the journey — whether the operation needs prerequisite records seeded out of band (via `source/seeds/`) or creates them inline. How provisioning and cleanup actually work (snapshot-owned cleanup, pure journeys with no `teardown()`, `setup()` pool discovery, per-VU record selection) is defined in the seed and tests rules, which auto-load when you edit those files.
 - Pick the VU's user with `pickUser(users)` from `source/utils/helpers/users.helper.ts` (honors `USER_MODE`), not an inline `users[__VU % users.length]`.
 - Write the journey body in `source/flows/<journey>.flow.ts` as one `<journey>Journey(user, data, ...)` function (login + numbered groups + checks + closing `sleep`), and export its per-endpoint SLAs as `<journey>Thresholds`; add the flow's `export *` line to `source/utils/exports/flows.exp.ts` (the flows and exports rules auto-load when you edit those files).
-- Register the journey in the smoke gate: in `source/scenarios/smoke.scn.ts` add a scenario entry (via the `once()` helper), its `exec` wrapper, and its `<journey>Thresholds` to the threshold map, extending `setup()` if the journey needs data the others don't. A journey not registered there is invisible to the smoke run and the `validate-payload-drift` skill.
+- Register the journey in the smoke gate: in `source/tests/smoke.spec.ts` add a k6 scenario entry (via the `once()` helper), its `exec` wrapper, and its `<journey>Thresholds` to the threshold map, extending `setup()` if the journey needs data the others don't. A journey not registered there is invisible to the smoke run and the `validate-payload-drift` skill.
 - Unique per-iteration payloads: add a `source/data/` builder that interpolates a `runToken` (a TS function returning the payload, not an `open()`'d template). This gives **identity** uniqueness (a new id/token to correlate), not **structural** variety — every iteration still sends the same shape. So: assert on shape, never a fixed count or exploration-only value (`result.length > 0`, not `=== 1`; "field present", not its captured value). And if the flow's downstream genuinely branches on input content (e.g. an upload whose extraction count varies by file), one token-swapped builder won't exercise that — add representative variants to `source/data/`, since the run ladder only ever sends the exploration shape.
 
 ## 4. Verify — 3-step progressive run
@@ -74,15 +75,15 @@ Correlated correctly = the script still works after every session-scoped value r
 Three pre-flight checks first (all zero traffic — they only parse/typecheck, never run VUs):
 
 - `npx tsc --noEmit` — typecheck the `.ts` you generated (data builders, `source/`, test). k6 strips types at parse time, so `k6 inspect` never catches a type error — this is the only check that does.
-- `k6 inspect source/scenarios/smoke.scn.ts` — fix until syntax/imports/options resolve clean and the journey's new scenario entry resolves in the aggregate gate.
+- `k6 inspect source/tests/smoke.spec.ts` — fix until syntax/imports/options resolve clean and the journey's new k6 scenario entry resolves in the aggregate gate.
 
 Then run the escalation:
 
 | Step | Command | Proves |
 |---|---|---|
-| 1 | `k6 run -e SCENARIO=<journey> source/scenarios/smoke.scn.ts` | 1 VU / 1 iter — journey runs and correlates at all |
-| 2 | `k6 run -e SCENARIO=<journey> -e VUS=2 -e ITERS=2 -e USER_MODE=single source/scenarios/smoke.scn.ts` | 2 VUs, 1 iter each, one shared login — concurrency + data isolation (shared list exposes wrong-row matching) |
-| 3 | `k6 run -e SCENARIO=<journey> -e VUS=2 -e ITERS=2 -e USER_MODE=pool source/scenarios/smoke.scn.ts` | 2 VUs, 1 iter each, different logins — per-user data & correlation |
+| 1 | `k6 run -e SCENARIO=<journey> source/tests/smoke.spec.ts` | 1 VU / 1 iter — journey runs and correlates at all |
+| 2 | `k6 run -e SCENARIO=<journey> -e VUS=2 -e ITERS=2 -e USER_MODE=single source/tests/smoke.spec.ts` | 2 VUs, 1 iter each, one shared login — concurrency + data isolation (shared list exposes wrong-row matching) |
+| 3 | `k6 run -e SCENARIO=<journey> -e VUS=2 -e ITERS=2 -e USER_MODE=pool source/tests/smoke.spec.ts` | 2 VUs, 1 iter each, different logins — per-user data & correlation |
 
 Loop rules:
 - Run steps in order. Read each summary and confirm concrete signals, not just a green glance: `checks` = 100%, `http_req_failed` = 0, `dropped_iterations` = 0, no threshold crossed, no `WARN`/`ERRO`. (`dropped_iterations` > 0 means data/VU starvation even when every check passes.) A failed check usually means a missed correlation — re-check where the value really comes from.

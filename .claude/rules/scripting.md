@@ -4,8 +4,8 @@ paths: ["source/apis/**", "source/flows/**", "source/utils/helpers/**"]
 
 # Request Scripting Conventions (`source/apis/`, `source/flows/`, `source/utils/helpers/`)
 
-Cross-cutting rules for the request-making layer. `apis/` wrappers and `helpers/auth.helper.ts`
-issue `http.*` directly and follow all of the below. `flows/` compose those wrappers — they don't
+Cross-cutting rules for the request-making layer. `apis/` wrappers and the `http.*`-issuing helpers
+(`auth.helper.ts`, `version.helper.ts`) follow all of the below. `flows/` compose those wrappers — they don't
 call `http.*` themselves, but they thread correlated values through and guard on wrapper return
 values, so the Correlation and Return-contract sections apply to them too. Per-folder layout lives in
 each folder's own rule file (`rules/apis.md`, `rules/flows.md`, `rules/helpers.md`).

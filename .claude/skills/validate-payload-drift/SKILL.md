@@ -1,6 +1,6 @@
 ---
 name: validate-payload-drift
-description: Detect whether captured Save2 payloads embedded in the data builders have drifted from what the live Momentus API now expects — by running the smoke scenario (all scripts, one iteration) and triaging failures. Use after a Momentus upgrade or config change, or when a test fails with server-side validation errors rather than correlation bugs.
+description: Detect whether captured Save2 payloads embedded in the data builders have drifted from what the live Momentus API now expects — by running the smoke test (all scripts, one iteration) and triaging failures. Use after a Momentus upgrade or config change, or when a test fails with server-side validation errors rather than correlation bugs.
 ---
 
 # Validate payload drift
@@ -25,11 +25,11 @@ where a save returns HTTP 200 with an error body.
 This sends real traffic to QE (VPN required). Tell the user before running, and take run approval
 once for the whole sequence.
 
-## 1. Run the smoke scenario
+## 1. Run the smoke test
 ```
-k6 run source/scenarios/smoke.scn.ts
+k6 run source/tests/smoke.spec.ts
 ```
-Every journey runs once (one iteration per scenario). Read the end-of-test summary:
+Every journey runs once (one iteration per k6 scenario). Read the end-of-test summary:
 - **All checks pass** → no drift. Done.
 - **A check fails** → note which one. Check names are unique per journey, so a failure identifies the
   journey and step even though scenario logs interleave.
@@ -64,7 +64,7 @@ Update the affected `source/data/**.data.ts` builder:
 - Reconcile the overrides: if an override references a column that was renamed/removed, fix the
   override too — and add an override for any new per-record-unique (identity) field.
 
-Then re-run `npx tsc --noEmit`, `k6 inspect source/scenarios/smoke.scn.ts`, and the smoke run again until
+Then re-run `npx tsc --noEmit`, `k6 inspect source/tests/smoke.spec.ts`, and the smoke run again until
 the checks pass.
 
 ## Notes

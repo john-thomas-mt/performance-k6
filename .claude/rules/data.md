@@ -42,13 +42,13 @@ Anything passed to `http.file()` goes here, never in the request-body folders:
   where the `password` is AES-GCM-encrypted (base64 of `iv | ciphertext`) and the username stays plaintext. The
   AES key is `SHA-256(passphrase)` with no salt or KDF stretching: these are low-value QE accounts and the only
   goal is keeping passwords out of the repo — don't reuse this scheme for anything sensitive.
-- Decrypted once at runtime in a scenario/seed `setup()` via `decryptUsers(userCredentials, config.cryptoKey)`
+- Decrypted once at runtime in a test/seed `setup()` via `decryptUsers(userCredentials, config.cryptoKey)`
   (`source/utils/helpers/crypto.helper.ts`), returning `User[]`. The passphrase is `config.cryptoKey`, sourced from a
   gitignored `temp/secret.json` (`npm run secret -- --key '<passphrase>'`; in CI, injected from a masked pipeline
   secret), never committed; `setup()` throws if it is missing.
 - Decryption is async (WebCrypto `crypto.subtle`), so it lives in `setup()` — never a `SharedArray`/init context. The
   decrypted `User[]` is returned in the `setup()` data and picked with `pickUser(data.users)` from
-  `source/utils/helpers/users.helper.ts` (see `rules/scenarios.md`).
+  `source/utils/helpers/users.helper.ts` (see `rules/tests.md`).
 - **Rotate/add accounts** by re-minting the encrypted values and pasting them into `users.data.ts`. The snippet
   reads the passphrase from `temp/secret.json` (write it first with `npm run secret -- --key '<passphrase>'`),
   takes a `{ username: plaintext-password }` map as its argument, and prints the `{ username, password }` array to
@@ -61,4 +61,4 @@ Anything passed to `http.file()` goes here, never in the request-body folders:
 - Request-body builders are imported as TS modules — no `open()`.
 - The user pool ships as `userCredentials` (encrypted) in `users.data.ts` and is decrypted in `setup()` (see User pool), keyed by `config.cryptoKey`.
 - `open()` is reserved for `source/data/uploads/**` fixtures and is init-context only — never inside
-  the VU function (see `rules/scenarios.md`).
+  the VU function (see `rules/tests.md`).

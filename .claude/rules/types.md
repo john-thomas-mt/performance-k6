@@ -6,5 +6,6 @@ paths: ["source/utils/types/**"]
 
 - `source/utils/types/<feature>.type.ts` — one type module per `source/apis/<feature>` surface
 - `source/utils/types/common.type.ts` holds cross-cutting types (auth/session/setup, the core-API transport envelope)
+- The setup data contract is composed as slices: `SetupData` (in `common.type.ts`) is the base (`version` only); a feature that seeds a pool defines `<Feature>Setup extends SetupData` with a feature-prefixed pool field (`soPool`) in its own `<feature>.type.ts`; the smoke aggregate `SmokeSetup` composes the slices plus the user pool. This keeps feature-row types out of `common.type.ts` (which would cycle, since feature modules import `common`) and lets each journey depend on just its slice. The aggregate currently lives in the feature module owning the only pool; when a second feature pool is added, move it to its own home rather than cross-importing feature-row types.
 - Types live here only — never co-located in `source/apis/<feature>.api.ts`. Co-locating would create a cycle, since `source/data/` imports types and `source/apis/` imports `source/data/`
 - Re-exported through `source/utils/exports/types.exp.ts` and consumed from it; export names stay unique across the layer so `export *` never drops one (see `rules/exports.md`)
