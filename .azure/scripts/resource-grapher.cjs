@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const [, , csvPath = 'temp/resource-usage.csv', htmlPath = 'temp/resource-usage.html'] = process.argv;
 
 const raw = fs.existsSync(csvPath) ? fs.readFileSync(csvPath, 'utf8').trim() : '';
-const lines = raw ? raw.split('\n') : [];
+const lines = raw ? raw.split(/\r?\n/) : [];
 const header = lines.length ? lines[0].split(',') : [];
 const rows = lines.slice(1).map((l) => l.split(','));
 
@@ -74,7 +74,7 @@ const charts = [
   svgChart('RAM used', column('ram_used_mb'), ' MB'),
   svgChart('Network received', column('net_rx_kBps'), ' KB/s'),
   svgChart('Network transmitted', column('net_tx_kBps'), ' KB/s'),
-  svgChart('Load average (1m)', column('load1'), ''),
+  svgChart('Load avg 1m (Linux) / processor queue (Windows)', column('load1'), ''),
 ].join('\n');
 
 const summary = `<p>Samples: ${rows.length} &middot; Duration: ${elapsed[elapsed.length - 1].toFixed(0)}s &middot; Source: ${csvPath.split(/[\\/]/).pop()}</p>`;
