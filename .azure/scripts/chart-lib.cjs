@@ -176,6 +176,9 @@ function svgChart(title, elapsed, series, unit, stages) {
     legend = `<div style="margin:2px 0 4px">${legend}</div>`;
   }
 
+  const yLabel = (unit || '').trim() || 'count';
+  const cy = (padT + (H - padB)) / 2;
+
   return `<section>
   <h2>${title}${head}</h2>
   ${legend}
@@ -185,6 +188,7 @@ function svgChart(title, elapsed, series, unit, stages) {
     ${phases}
     <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H - padB}" stroke="#999"/>
     <line x1="${padL}" y1="${H - padB}" x2="${W - padR}" y2="${H - padB}" stroke="#999"/>
+    <text x="13" y="${cy.toFixed(1)}" transform="rotate(-90 13 ${cy.toFixed(1)})" text-anchor="middle" font-size="11" fill="#666">${esc(yLabel)}</text>
     ${polys}
     <text x="${(W / 2).toFixed(0)}" y="${H - 8}" text-anchor="middle" font-size="11" fill="#666">elapsed (mm:ss)</text>
   </svg>
