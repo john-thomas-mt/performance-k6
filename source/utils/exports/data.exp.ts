@@ -4,6 +4,8 @@ export * from '../../data/events/detail.data.ts';
 export * from '../../data/events/save.data.ts';
 export * from '../../data/events/search.data.ts';
 export * from '../../data/service-orders/create.data.ts';
+export * from '../../data/service-orders/edit-general.data.ts';
+export * from '../../data/service-orders/document.data.ts';
 export * from '../../data/service-orders/detail.data.ts';
 export * from '../../data/service-orders/grid.data.ts';
 export * from '../../data/service-orders/save.data.ts';

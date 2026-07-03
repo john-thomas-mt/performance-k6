@@ -2,6 +2,8 @@ import { Options, Scenario } from 'k6/options';
 import {
   serviceOrderItemsJourney,
   serviceOrderItemsThresholds,
+  editServiceOrdersJourney,
+  editServiceOrdersThresholds,
   discoverServiceOrderPool,
   copyEventJourney,
   copyEventThresholds,
@@ -21,6 +23,7 @@ import { SmokeSetup } from '../utils/exports/types.exp.ts';
 import { userCredentials } from '../utils/exports/data.exp.ts';
 
 const opportunityTemplate = open('../data/uploads/momentus-assistant/file-upload/sample-opportunity.txt');
+const sampleDocument = open('../data/uploads/service-orders/sample-document.txt', 'b');
 
 const VUS = Number(__ENV.VUS) || 1;
 const ITERS = Number(__ENV.ITERS) || 1;
@@ -38,6 +41,7 @@ const allScenarios: Record<string, Scenario> = {
   introductoryEmail: once('introductoryEmail'),
   copyEvent: once('copyEvent'),
   serviceOrderItems: once('serviceOrderItems'),
+  editServiceOrders: once('editServiceOrders'),
   navigation: once('navigation'),
 };
 
@@ -47,6 +51,7 @@ const allThresholds: Record<string, Record<string, string[]>> = {
   introductoryEmail: introductoryEmailThresholds,
   copyEvent: copyEventThresholds,
   serviceOrderItems: serviceOrderItemsThresholds,
+  editServiceOrders: editServiceOrdersThresholds,
   navigation: navigationThresholds,
 };
 
@@ -103,6 +108,10 @@ export function copyEvent(data: SmokeSetup) {
 
 export function serviceOrderItems(data: SmokeSetup) {
   serviceOrderItemsJourney(pickUser(data.users), data);
+}
+
+export function editServiceOrders(data: SmokeSetup) {
+  editServiceOrdersJourney(pickUser(data.users), data, sampleDocument);
 }
 
 export function navigation(data: SmokeSetup) {

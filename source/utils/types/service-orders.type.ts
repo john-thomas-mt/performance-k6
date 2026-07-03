@@ -30,6 +30,12 @@ export interface ServiceOrderRow {
   ordCatSeq: string;
 }
 
+export interface DocumentFields {
+  fileKey: string;
+  fileName: string;
+  docDesc: string;
+}
+
 export interface ServiceOrderSaveResult {
   ResultValue: number;
   ModifiedRowKeys: string[] | null;
