@@ -28,6 +28,17 @@ Request bodies are **TS object builders**, never `.json`/`.txt` templates loaded
   `copyFormPayload(encUserId, source)`, `searchPayload(searchValue)`.
 - Per-iteration uniqueness is interpolated inside the builder (template literals), not by
   `{{runToken}}` string substitution on opened text.
+- Build the payload literal **inside** the builder function (assign it to a local and `return` it, or
+  return it directly) so each call yields a fresh object — never hoist a captured body to a
+  module-level `const` and `clone()` it per call, which adds shared mutable state and a per-iteration
+  deep copy the inline form doesn't need.
+- Weave each varying value into the literal at its own cell so the builder stays one self-contained
+  object. A value that is fixed for the builder (a run marker, a computed date) goes inline at its
+  position — including inside a columnar transport table, where the cell is the numeric `Values` key
+  matching that column's `ColumnID` (`"0": description`), not a post-build mutation. Reserve
+  `setRowValue`/`setColumnValueAllRows` (write by column name) for what those helpers exist for:
+  re-correlating **per-record** identity fields from a runtime `source` row onto a reused capture (see
+  `rules/scripting.md`) — not as the default way to populate a from-scratch body.
 - Builders may import types from the types barrel and shared transforms from the helpers barrel, and carry logic. They stay in `source/data/payloads/`, not elsewhere in `source/`.
 - Logic shared across a single module's builders lives in a module-local `helpers.ts` (e.g. `source/data/payloads/events/helpers.ts` for `todayMidnightUtc`). Once a transform is shared across more than one data module, promote it to `source/utils/helpers/payload.helper.ts` (transport-envelope cell setters/readers, e.g. `setRowValue`) rather than duplicating it per module — see `rules/helpers.md`.
 - Callers import and call the builder directly in the VU function — no init-context `open()`.

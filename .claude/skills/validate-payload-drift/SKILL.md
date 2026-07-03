@@ -49,13 +49,13 @@ the usual culprit — but the same reasoning applies to any write wrapper carryi
 than assuming `Save2`.
 
 ## 3. (Optional) Pinpoint the structural change
-When the save returns 200-with-error and the body doesn't say which field is wrong, diff the embedded
-template against a fresh recording. Re-capture the current payload for that action (drive the app via
+When the save returns 200-with-error and the body doesn't say which field is wrong, diff the builder's
+emitted body against a fresh recording. Re-capture the current payload for that action (drive the app via
 the `generate-test` flow's exploration and save the request body to `temp/captures/raw/<name>.json`),
 then:
 ```
-# extract the committed template literal as JSON (use the const name from the .data.ts)
-node .claude/skills/validate-payload-drift/scripts/materialize-template.cjs source/data/payloads/<module>/<file>.data.ts <ConstName> > temp/object.json
+# run the committed builder and print its emitted payload as JSON (use the exported builder name)
+node .claude/skills/validate-payload-drift/scripts/materialize-template.cjs source/data/payloads/<module>/<file>.data.ts <builderName> > temp/object.json
 
 # shape-diff it against the fresh recording (exit 0 = clean, 1 = drift)
 node .claude/skills/validate-payload-drift/scripts/compare-payload.cjs temp/object.json temp/captures/raw/<name>.json
@@ -65,10 +65,11 @@ changes — naming the drifted column where the array carries a stable id field.
 
 ## 4. Fix the builder and re-verify
 Update the affected `source/data/**.data.ts` builder:
-- For a changed/added/removed field, re-embed the fresh capture as the template via `JSON.stringify`
-  (never hand-transcribe a large payload), preserving the visible override calls.
-- Reconcile the overrides: if an override references a column that was renamed/removed, fix the
-  override too — and add an override for any new per-record-unique (identity) field.
+- For a changed/added/removed field, regenerate the body from the fresh capture (never hand-transcribe
+  a large payload), keeping each varying cell parameterized the way the builder already had it.
+- Reconcile the parameterization: if a varying cell's column was renamed/removed, move it to the new
+  column — and parameterize any new per-record-unique (identity) field, writing it by column name
+  (`setRowValue`) when it's re-correlated from a runtime `source` row.
 
 Then re-run `npx tsc --noEmit`, `k6 inspect source/tests/smoke.spec.ts`, and the smoke run again until
 the checks pass.
