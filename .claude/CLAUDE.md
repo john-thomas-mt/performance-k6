@@ -60,6 +60,9 @@ rather than a change that bends the k6 semantics above.
 
 Fix any failing step and re-run (from step 1 if the fix touched correlation/shared state) until all three pass; then a final refactor check against the rules. Approval for the run sequence is taken once, upfront.
 
+## Workflow: converting a NeoLoad script
+`/neoload-to-k6 <path to NeoLoad VU>` — port an existing NeoLoad virtual-user script to a k6 journey. Static-first: the NeoLoad tree (its request XMLs and `<variable-extractor>` correlation) is the source of truth, so there's no browser exploration — parse the tree, distill the transaction spine (drop asset/telemetry/UI-chrome, keep writes and the reads that feed them), translate NeoLoad's solved correlation into k6, reuse existing `source/` wrappers, then verify with the same 3-step progressive run. Live `playwright-cli` is a targeted fallback only when a verify step fails on drift, never a full re-record.
+
 ## Tooling
 - `@playwright/cli` is installed globally (`npm i -g @playwright/cli`) — always invoke the bare `playwright-cli` binary, never `npx playwright-cli` (a second npx-resolved version corrupts browser sessions with "incompatible please re-open")
 - The `.claude/skills/playwright-cli/` skill is the official one shipped with the CLI — after upgrading the global package, refresh it with `playwright-cli install --skills=claude` (never hand-edit it)
