@@ -1,11 +1,13 @@
 ---
 name: validate-payload-drift
-description: Detect whether captured Save2 payloads embedded in the data builders have drifted from what the live Momentus API now expects — by running the smoke test (all scripts, one iteration) and triaging failures. Use after a Momentus upgrade or config change, or when a test fails with server-side validation errors rather than correlation bugs.
+description: Detect whether captured save payloads embedded in the data builders (today all `Save2`, but any captured write body applies) have drifted from what the live Momentus API now expects — by running the smoke test (all scripts, one iteration) and triaging failures. Use after a Momentus upgrade or config change, or when a test fails with server-side validation errors rather than correlation bugs.
 ---
 
 # Validate payload drift
 
-The committed `source/data/**.data.ts` builders embed captured `Save2` payload templates. When the QE
+The committed `source/data/**.data.ts` builders embed captured save-payload templates. Every write in
+the suite currently funnels through the one generic `GenericDetailServer/Save2` endpoint, so those
+templates are `Save2` bodies today — but the same drift can hit any captured write body. When the QE
 environment changes — a Momentus release, or a config change (UDF sets, layouts, price lists) — the
 live API can start expecting a differently-shaped payload, and the embedded template goes stale.
 
@@ -39,8 +41,12 @@ A failed save-success check (e.g. `New event created`, `Service order items save
 whose login and reads passed points at **payload drift** in that journey's builder. A failure in the
 login/read steps instead points at auth/correlation/env — out of scope here.
 
-Confirm it's the payload: look at the failing wrapper's logged `HTTP <status>` and response body. A
-non-2xx, or a 200 whose body carries a `ResultValue` error, on the `Save2` is the drift signal.
+Confirm it's the payload: look at the failing write wrapper's logged `HTTP <status>` and response
+body. A non-2xx, or a 200 whose body carries a `ResultValue` error, on the save request is the drift
+signal. Today every write funnels through the generic `GenericDetailServer/Save2` endpoint, so that's
+the usual culprit — but the same reasoning applies to any write wrapper carrying a captured payload
+(e.g. a sales-ai manual-entry or file-upload post), so read the failing wrapper's own request rather
+than assuming `Save2`.
 
 ## 3. (Optional) Pinpoint the structural change
 When the save returns 200-with-error and the body doesn't say which field is wrong, diff the embedded
@@ -69,5 +75,6 @@ the checks pass.
 
 ## Notes
 - This only works if each script asserts **body-level** save success, not just HTTP 200 — Momentus
-  returns 200 on a failed `Save2`. A status-only check lets drift pass green; fix the check first.
+  returns 200 on a failed save (`Save2` and its siblings alike). A status-only check lets drift pass
+  green; fix the check first.
 - `temp/` (captures, extracted JSON) is disposable scratch — wipe it freely afterward.
