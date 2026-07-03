@@ -1,11 +1,19 @@
-import { setRowValue, todayMidnightUtc, clone } from '../../../utils/exports/helpers.exp.ts';
-import { TransportTable } from '../../../utils/exports/types.exp.ts';
+import { todayMidnightUtc } from '../../../utils/exports/helpers.exp.ts';
+
+// Event date range opening 30 days out and running ~1 year ahead, relative to run time so it never
+// goes stale. The seeded event's auto-created function inherits this range; the items-save dates the
+// order (and thus the added item) 60 days out (see service-orders/save.data.ts), which sits inside
+// this window so the save stays clear of the "date/time outside the order function's range" warning.
+const DAY = 24 * 60 * 60 * 1000;
+const EVT_START = todayMidnightUtc() + 30 * DAY; // 30 days ahead
+const EVT_END = todayMidnightUtc() + 365 * DAY; // ~1 year ahead
 
 // Captured create-event Save2 request (GenericDetailServer/Save2, window EB8073, from-scratch
-// add-event). Embedded verbatim; the builder clones it and rewrites only the description columns
-// to the seed marker so the seeded event is discoverable. Account/dates/status stay as captured —
-// the seeded service orders inherit that context, matching the create-SO template.
-const TEMPLATE: unknown[] = [
+// add-event) built inline per call; the builder rewrites only the description columns to the seed
+// marker so the seeded event is discoverable. Account/dates/status stay as captured — the seeded
+// service orders inherit that context, matching the create-SO template.
+export const createEventPayload = (description: string) => {
+  const payload: unknown[] = [
   1,
   "10",
   1,
@@ -1093,22 +1101,22 @@ const TEMPLATE: unknown[] = [
         "TransportDataRows": [
           {
             "Values": {
-              "0": "ZZ Perf New Event DELETE ME",
+              "0": description,
               "1": "00159220",
               "2": "26",
               "3": "00167764",
               "4": "*EVTYR",
-              "5": 1798761600000,
+              "5": EVT_START,
               "6": -2208956400000,
-              "7": 1798934400000,
+              "7": EVT_END,
               "8": -2208924000000,
               "9": "00154232",
               "10": null,
               "11": null,
               "12": null,
               "13": null,
-              "14": 1798761600000,
-              "15": 1798934400000,
+              "14": EVT_START,
+              "15": EVT_END,
               "16": "N",
               "17": -2208924000000,
               "18": "N",
@@ -1153,17 +1161,17 @@ const TEMPLATE: unknown[] = [
               "57": 0,
               "58": 0,
               "59": 0,
-              "60": "ZZ Perf New Event DELETE ME",
-              "61": "ZZ Perf New Event DELETE ME",
-              "62": "ZZ Perf New Event DELETE ME",
-              "63": "ZZ Perf New Event DELETE ME",
-              "64": "ZZ Perf New Event DELETE ME",
-              "65": "ZZ Perf New Event DELETE ME",
-              "66": "ZZ Perf New Event DELETE ME",
-              "67": "ZZ Perf New Event DELETE ME",
+              "60": description,
+              "61": description,
+              "62": description,
+              "63": description,
+              "64": description,
+              "65": description,
+              "66": description,
+              "67": description,
               "68": "2022SPL",
-              "69": "ZZ Perf New Event DE",
-              "70": "ZZ Perf New Event DELETE ME",
+              "69": description.slice(0, 20),
+              "70": description,
               "71": null,
               "72": null,
               "73": "",
@@ -1176,8 +1184,8 @@ const TEMPLATE: unknown[] = [
               "80": "",
               "81": null,
               "82": null,
-              "83": 1797552000000,
-              "84": 1798156800000,
+              "83": EVT_START,
+              "84": EVT_START,
               "85": null,
               "86": "1",
               "87": "",
@@ -1196,10 +1204,10 @@ const TEMPLATE: unknown[] = [
               "100": null,
               "101": "00159220",
               "102": "00167764",
-              "103": "ZZ Perf New Event DELETE ME",
-              "104": "ZZ Perf New Event DELETE ME",
+              "103": description,
+              "104": description,
               "105": "1",
-              "106": 1783063546000,
+              "106": EVT_START,
               "107": "",
               "108": "",
               "109": "N",
@@ -1285,39 +1293,6 @@ const TEMPLATE: unknown[] = [
     "SourceUSIID": 0,
     "ConvertToUserDisplayTimeZone": false
   }
-];
-
-// Event date range opening 30 days out and running ~1 year ahead, relative to run time so it never
-// goes stale. The seeded event's auto-created function inherits this range; the items-save dates the
-// order (and thus the added item) 60 days out (see service-orders/save.data.ts), which sits inside
-// this window so the save stays clear of the "date/time outside the order function's range" warning.
-const DAY = 24 * 60 * 60 * 1000;
-const EVT_START = todayMidnightUtc() + 30 * DAY; // 30 days ahead
-const EVT_END = todayMidnightUtc() + 365 * DAY; // ~1 year ahead
-
-export const createEventPayload = (description: string) => {
-  const payload = clone(TEMPLATE);
-  const table = (payload[9] as { TransportDataTables: TransportTable[] }).TransportDataTables[0];
-  setRowValue(table, 'EV200_EVT_DESC', description);
-  setRowValue(table, 'EV200_ALT_EVT_DESC', description);
-  setRowValue(table, 'EV200_ALT_EVT_DESC2', description);
-  setRowValue(table, 'EV200_ALT_EVT_DESC3', description);
-  setRowValue(table, 'EV200_ALT_EVT_DESC4', description);
-  setRowValue(table, 'EV200_ALT_LEGAL_NAME', description);
-  setRowValue(table, 'EV200_ALT_LEGAL_NAME2', description);
-  setRowValue(table, 'EV200_ALT_LEGAL_NAME3', description);
-  setRowValue(table, 'EV200_ALT_LEGAL_NAME4', description);
-  setRowValue(table, 'EV200_EVT_LEGAL_NAME', description);
-  setRowValue(table, 'EV200_ALT_LEGAL_NAME5', description);
-  setRowValue(table, 'EV200_ALT_EVT_DESC5', description);
-  setRowValue(table, 'EV200_EVT_ABBREV_NAME', description.slice(0, 20));
-  setRowValue(table, 'EV200_EVT_START_DATE', EVT_START);
-  setRowValue(table, 'EV200_EVT_END_DATE', EVT_END);
-  setRowValue(table, 'EV200_EVT_IN_DATE', EVT_START);
-  setRowValue(table, 'EV200_EVT_OUT_DATE', EVT_END);
-  // Release and cutoff dates must not fall after the event range, or the save is rejected.
-  setRowValue(table, 'EV200_RELEASE_DATE', EVT_START);
-  setRowValue(table, 'EV200_ADV_CUTOFF_DATE', EVT_START);
-  setRowValue(table, 'EV200_STD_CUTOFF_DATE', EVT_START);
+  ];
   return payload;
 };
