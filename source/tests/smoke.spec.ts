@@ -22,7 +22,7 @@ import { commonThresholds, config } from '../utils/exports/config.exp.ts';
 import { SmokeSetup } from '../utils/exports/types.exp.ts';
 import { userCredentials } from '../utils/exports/data.exp.ts';
 
-const opportunityTemplate = open('../data/uploads/momentus-assistant/file-upload/sample-opportunity.txt');
+const opportunityTemplate = open('../data/uploads/opportunities/sample-opportunity.txt');
 const sampleDocument = open('../data/uploads/service-orders/sample-document.txt', 'b');
 
 const VUS = Number(__ENV.VUS) || 1;
@@ -81,7 +81,7 @@ export async function setup(): Promise<SmokeSetup> {
   }
   const users = await decryptUsers(userCredentials, cryptoKey);
   if (users.length === 0) {
-    throw new Error('data/users.data.ts is empty — add at least one user entry');
+    throw new Error('data/creds/users.data.ts is empty — add at least one user entry');
   }
   const version = fetchServerVersion();
   const soPool = discoverServiceOrderPool(version, users[0]);

@@ -1,4 +1,4 @@
-import { User } from '../utils/exports/types.exp.ts';
+import { User } from '../../utils/exports/types.exp.ts';
 
 export const userCredentials: User[] = [
   { username: 'johnt', password: 'E3CUmbaJ5LdCMHd09CQ6b+/jt516hQae7xAmvnKIGOhmG+smUwc=' },

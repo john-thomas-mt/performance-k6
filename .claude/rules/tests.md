@@ -25,7 +25,7 @@ The entry-point layer k6 runs directly. A test spec drives one or more journeys 
 
 ## Data & init context
 - Request-body builders and the user pool are imported as TS modules (see `rules/data.md`); `open()` is only for `source/data/uploads/**` fixtures and is valid only in the init context, never inside the VU function
-- User pool: `source/data/users.data.ts` ships the accounts password-encrypted; `setup()` decrypts them once via `decryptUsers(userCredentials, config.cryptoKey)` and returns the `User[]` in its data. VU wrappers pick with `pickUser(data.users)` from `source/utils/helpers/users.helper.ts` — honoring `USER_MODE=single` (every VU uses `users[0]`, one shared login) and `USER_MODE=pool` (default; round-robin). See `rules/data.md`
+- User pool: `source/data/creds/users.data.ts` ships the accounts password-encrypted; `setup()` decrypts them once via `decryptUsers(userCredentials, config.cryptoKey)` and returns the `User[]` in its data. VU wrappers pick with `pickUser(data.users)` from `source/utils/helpers/users.helper.ts` — honoring `USER_MODE=single` (every VU uses `users[0]`, one shared login) and `USER_MODE=pool` (default; round-robin). See `rules/data.md`
 - Per-iteration uniqueness comes from a `runToken` passed into the request-body builder
 
 ## Lifecycle

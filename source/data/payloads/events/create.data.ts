@@ -1,5 +1,5 @@
-import { setRowValue, todayMidnightUtc, clone } from '../../utils/exports/helpers.exp.ts';
-import { TransportTable } from '../../utils/exports/types.exp.ts';
+import { setRowValue, todayMidnightUtc, clone } from '../../../utils/exports/helpers.exp.ts';
+import { TransportTable } from '../../../utils/exports/types.exp.ts';
 
 // Captured create-event Save2 request (GenericDetailServer/Save2, window EB8073, from-scratch
 // add-event). Embedded verbatim; the builder clones it and rewrites only the description columns

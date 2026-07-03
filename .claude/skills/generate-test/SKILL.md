@@ -14,7 +14,7 @@ One continuous flow: drive the app, build an in-context correlation picture, wri
 1. Confirm the target flow with the user if ambiguous (which page, which actions, which data).
 2. **Tell the user before opening the browser** — exploration sends real traffic to the environment.
 3. Get **approval once, upfront, for the whole sequence** (exploration + the three verification runs). With that approval, run all three steps and any re-runs without prompting again.
-4. Read `source/config/env.config.ts` for the app URL (`baseUrl`; the sales-ai `tenantId` is not stored — it's correlated at runtime). For **exploration** you need a live login: `source/data/users.data.ts` ships usernames plaintext but passwords **AES-GCM-encrypted**, so decrypt the first user with the `temp/secret.json` passphrase (via `decryptUsers`) — you can't read a usable password straight from the file. The generated test draws from the full pool via `pickUser` (see §3).
+4. Read `source/config/env.config.ts` for the app URL (`baseUrl`; the sales-ai `tenantId` is not stored — it's correlated at runtime). For **exploration** you need a live login: `source/data/creds/users.data.ts` ships usernames plaintext but passwords **AES-GCM-encrypted**, so decrypt the first user with the `temp/secret.json` passphrase (via `decryptUsers`) — you can't read a usable password straight from the file. The generated test draws from the full pool via `pickUser` (see §3).
 5. `playwright-cli list` — if any session shows `[incompatible please re-open]`, `playwright-cli kill-all` first.
 
 ## 1. Explore & observe (in-context)

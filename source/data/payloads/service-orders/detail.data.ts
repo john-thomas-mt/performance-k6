@@ -1,4 +1,4 @@
-import { ServiceOrderRow } from '../../utils/exports/types.exp.ts';
+import { ServiceOrderRow } from '../../../utils/exports/types.exp.ts';
 
 export const serviceOrderDetailPayload = (so: ServiceOrderRow) => ([
   [

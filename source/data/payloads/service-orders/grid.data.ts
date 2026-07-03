@@ -1,4 +1,4 @@
-import { EventRow } from '../../utils/exports/types.exp.ts';
+import { EventRow } from '../../../utils/exports/types.exp.ts';
 
 export const serviceOrdersGridPayload = (event: EventRow) => ([
   '10',

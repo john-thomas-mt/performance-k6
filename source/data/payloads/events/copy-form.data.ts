@@ -1,5 +1,5 @@
-import { majorMinor } from '../../utils/exports/helpers.exp.ts';
-import { EventRow } from '../../utils/exports/types.exp.ts';
+import { majorMinor } from '../../../utils/exports/helpers.exp.ts';
+import { EventRow } from '../../../utils/exports/types.exp.ts';
 
 export const copyFormPayload = (encUserId: string, source: EventRow, version: string) => ([
     [

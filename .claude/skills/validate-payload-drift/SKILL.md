@@ -49,7 +49,7 @@ the `generate-test` flow's exploration and save the request body to `temp/captur
 then:
 ```
 # extract the committed template literal as JSON (use the const name from the .data.ts)
-node .claude/skills/validate-payload-drift/scripts/materialize-template.cjs source/data/<module>/<file>.data.ts <ConstName> > temp/object.json
+node .claude/skills/validate-payload-drift/scripts/materialize-template.cjs source/data/payloads/<module>/<file>.data.ts <ConstName> > temp/object.json
 
 # shape-diff it against the fresh recording (exit 0 = clean, 1 = drift)
 node .claude/skills/validate-payload-drift/scripts/compare-payload.cjs temp/object.json temp/captures/raw/<name>.json

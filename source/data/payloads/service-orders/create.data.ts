@@ -1,5 +1,5 @@
-import { setRowValue, clone, majorMinor } from '../../utils/exports/helpers.exp.ts';
-import { TransportTable } from '../../utils/exports/types.exp.ts';
+import { setRowValue, clone, majorMinor } from '../../../utils/exports/helpers.exp.ts';
+import { TransportTable } from '../../../utils/exports/types.exp.ts';
 
 // Captured create-service-order Save2 request (GenericDetailServer/Save2, window EM9131). Embedded
 // verbatim; the builder clones it and overrides the session user and the event-id references so the

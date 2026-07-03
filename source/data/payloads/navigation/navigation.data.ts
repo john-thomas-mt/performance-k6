@@ -1,4 +1,4 @@
-import { NavScreen } from '../../utils/exports/types.exp.ts';
+import { NavScreen } from '../../../utils/exports/types.exp.ts';
 
 // Org the pool accounts belong to; the same for every user in users.data.ts. GetWindowInfo does
 // not report it, so it is a shared constant rather than a correlated value.

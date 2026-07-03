@@ -36,7 +36,7 @@ export async function setup(): Promise<NavLoadSetup> {
   }
   const users = await decryptUsers(userCredentials, cryptoKey);
   if (users.length === 0) {
-    throw new Error('data/users.data.ts is empty — add at least one user entry');
+    throw new Error('data/creds/users.data.ts is empty — add at least one user entry');
   }
   const version = fetchServerVersion();
   console.log(`Server version: ${version}`);

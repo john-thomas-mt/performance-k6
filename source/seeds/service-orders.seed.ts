@@ -34,7 +34,7 @@ export async function setup(): Promise<ServiceOrderSeedSetup> {
   }
   const users = await decryptUsers(userCredentials, cryptoKey);
   if (users.length === 0) {
-    throw new Error('data/users.data.ts is empty — add at least one user entry');
+    throw new Error('data/creds/users.data.ts is empty — add at least one user entry');
   }
   const version = fetchServerVersion();
   const { bearerToken, encUserId } = loginToEvents(users[0], version);
