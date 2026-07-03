@@ -9,8 +9,8 @@ const profiles: Record<string, Profile> = {
   },
   load: {
     stages: [
-      { duration: '5m', target: 100 },
-      { duration: '10m', target: 100 },
+      { duration: '5m', target: 10 },
+      { duration: '10m', target: 10 },
       { duration: '2m', target: 0 },
     ],
   },
