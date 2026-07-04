@@ -40,8 +40,12 @@ Request bodies are **TS object builders**, never `.json`/`.txt` templates loaded
 - Extract each nested transport table (`TransportDataColumns` + `TransportDataRows`) into its own
   module-level builder that takes the correlated values and returns a fresh `TransportTable` —
   `orderTable(so, orderDate)`, `itemsTable(so, quantity)` — so the payload arrow plugs the builders in
-  and reads as a skeleton. Annotate each builder `: TransportTable` so a structurally malformed table
-  is caught at the builder. Non-varying cells stay as captured constants; a captured constant that is
+  and reads as a skeleton. Put the exported payload builder at the top of the module, directly under
+  the imports, with the table builders and any module-local plumbing (constants, `helpers.ts` calls)
+  below it, so a reader meets the payload shape first and the long column tables as supporting detail
+  (the arrow references builders declared lower in the file, which is safe — they're only called at VU
+  runtime, never at module load). Annotate each builder `: TransportTable` so a structurally malformed
+  table is caught at the builder. Non-varying cells stay as captured constants; a captured constant that is
   load-bearing (the server rejects the save without it) gets a short why-comment at the cell (see
   `rules/comments.md`).
 - Builders may import types from the types barrel and shared transforms from the helpers barrel, and carry logic. They stay in `source/data/payloads/`, not elsewhere in `source/`.
