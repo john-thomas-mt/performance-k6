@@ -1,5 +1,7 @@
-import { setRowValue } from '../../../utils/exports/helpers.exp.ts';
-import { ServiceOrderRow, TransportTable } from '../../../utils/exports/types.exp.ts';
+import {
+  ServiceOrderRow,
+  TransportTable,
+} from "../../../utils/exports/types.exp.ts";
 
 // CacheFiles uploads the raw bytes; the server returns a session ref like ["<n>|<filename>"].
 // NeoLoad hardcoded a stale FileKey here instead of correlating it — we use the runtime ref.
@@ -9,409 +11,420 @@ export const cacheFilesPayload = (filename: string, base64: string) => [
 
 // Open the document detail form (object 26) for the cached file. The response carries the
 // server-allocated FileKey plus the generated document description and filename.
-export const documentFormPayload = (so: ServiceOrderRow, fileKey: string, fileName: string) => [
+export const documentFormPayload = (
+  so: ServiceOrderRow,
+  fileKey: string,
+  fileName: string,
+) => [
   [
-    { Key: 'OrgCode', Value: so.orgCode },
-    { Key: 'WindowObjectID', Value: 26 },
-    { Key: 'wdwid', Value: 'AA9031' },
-    { Key: 'WdwType', Value: 4 },
-    { Key: 'wdwMode', Value: 2 },
-    { Key: 'RemoveEditLayoutLink', Value: false },
-    { Key: 'ContextObjectID', Value: 0 },
-    { Key: 'MenuType', Value: 4 },
-    { Key: 'OrdAcct', Value: so.ordAcct },
-    { Key: 'EvtID', Value: Number(so.evtId) },
-    { Key: 'OrdBillTo', Value: so.billTo },
-    { Key: 'ExhibitorID', Value: Number(so.exhibitorId) },
-    { Key: 'FuncID', Value: Number(so.funcId) },
-    { Key: 'InvoiceNbr', Value: Number(so.invoice) },
-    { Key: 'OrderType', Value: so.orderType },
-    { Key: 'PriceList', Value: so.priceList },
-    { Key: 'OrdReq', Value: so.reqCust },
-    { Key: 'OrderPhase', Value: so.resPhase },
-    { Key: 'OrdShipTo', Value: so.shipTo },
-    { Key: 'RowKeyList', Value: so.rowKey },
-    { Key: 'RefreshDependentKey', Value: Date.now() },
-    { Key: 'OrderNbr', Value: Number(so.orderNbr) },
-    { Key: 'Status', Value: so.status },
-    { Key: 'documentSubject', Value: 'ORD' },
-    { Key: 'Mode', Value: 'IMPORT' },
-    { Key: 'FileKey', Value: fileKey },
-    { Key: 'FileName', Value: fileName },
-    { Key: 'IsExternalDropFile', Value: false },
-    { Key: 'IsWebAddinInstalled', Value: false },
+    { Key: "OrgCode", Value: so.orgCode },
+    { Key: "WindowObjectID", Value: 26 },
+    { Key: "wdwid", Value: "AA9031" },
+    { Key: "WdwType", Value: 4 },
+    { Key: "wdwMode", Value: 2 },
+    { Key: "RemoveEditLayoutLink", Value: false },
+    { Key: "ContextObjectID", Value: 0 },
+    { Key: "MenuType", Value: 4 },
+    { Key: "OrdAcct", Value: so.ordAcct },
+    { Key: "EvtID", Value: Number(so.evtId) },
+    { Key: "OrdBillTo", Value: so.billTo },
+    { Key: "ExhibitorID", Value: Number(so.exhibitorId) },
+    { Key: "FuncID", Value: Number(so.funcId) },
+    { Key: "InvoiceNbr", Value: Number(so.invoice) },
+    { Key: "OrderType", Value: so.orderType },
+    { Key: "PriceList", Value: so.priceList },
+    { Key: "OrdReq", Value: so.reqCust },
+    { Key: "OrderPhase", Value: so.resPhase },
+    { Key: "OrdShipTo", Value: so.shipTo },
+    { Key: "RowKeyList", Value: so.rowKey },
+    { Key: "RefreshDependentKey", Value: Date.now() },
+    { Key: "OrderNbr", Value: Number(so.orderNbr) },
+    { Key: "Status", Value: so.status },
+    { Key: "documentSubject", Value: "ORD" },
+    { Key: "Mode", Value: "IMPORT" },
+    { Key: "FileKey", Value: fileKey },
+    { Key: "FileName", Value: fileName },
+    { Key: "IsExternalDropFile", Value: false },
+    { Key: "IsWebAddinInstalled", Value: false },
   ],
-  'AA9031', 1, 26, 4, 0, '', '', null,
-  { TransportDataColumns: [], TransportDataRows: [], TableName: '' },
-  [], true,
+  "AA9031",
+  1,
+  26,
+  4,
+  0,
+  "",
+  "",
+  null,
+  { TransportDataColumns: [], TransportDataRows: [], TableName: "" },
+  [],
+  true,
 ];
 
 // Import Save2: create the document row (AddedRowKeys ["10|S|-1"]) linked to the order.
 // The captured MM446 document table is built inline per call; order identity and the correlated
 // file fields (key/name/description) are overridden below.
-export const documentSavePayload = (
+const documentTable = (
   so: ServiceOrderRow,
-  doc: { fileKey: string; fileName: string; docDesc: string }
-) => {
-  const table: TransportTable = {
-  "TableName": String(Date.now()),
-  "TransportDataColumns": [
+  doc: { fileKey: string; fileName: string; docDesc: string },
+): TransportTable => ({
+  TableName: String(Date.now()),
+  TransportDataColumns: [
     {
-      "ColumnName": "MM446_DOC_DESC",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 0
+      ColumnName: "MM446_DOC_DESC",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 0,
     },
     {
-      "ColumnName": "MM446_EVENT",
-      "DataType": "System.Int32",
-      "DefaultValue": null,
-      "ColumnID": 1
+      ColumnName: "MM446_EVENT",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 1,
     },
     {
-      "ColumnName": "MM446_EV_FUNC",
-      "DataType": "System.Int32",
-      "DefaultValue": null,
-      "ColumnID": 2
+      ColumnName: "MM446_EV_FUNC",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 2,
     },
     {
-      "ColumnName": "MM446_INDEX",
-      "DataType": "System.Int32",
-      "DefaultValue": null,
-      "ColumnID": 3
+      ColumnName: "MM446_INDEX",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 3,
     },
     {
-      "ColumnName": "POContracts_PO250_DESC",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 4
+      ColumnName: "POContracts_PO250_DESC",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 4,
     },
     {
-      "ColumnName": "MM446_ENT_STAMP",
-      "DataType": "System.DateTime",
-      "DefaultValue": null,
-      "ColumnID": 5
+      ColumnName: "MM446_ENT_STAMP",
+      DataType: "System.DateTime",
+      DefaultValue: null,
+      ColumnID: 5,
     },
     {
-      "ColumnName": "MM446_UPD_STAMP",
-      "DataType": "System.DateTime",
-      "DefaultValue": null,
-      "ColumnID": 6
+      ColumnName: "MM446_UPD_STAMP",
+      DataType: "System.DateTime",
+      DefaultValue: null,
+      ColumnID: 6,
     },
     {
-      "ColumnName": "cCOMP_ENT_BY_NAME",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 7
+      ColumnName: "cCOMP_ENT_BY_NAME",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 7,
     },
     {
-      "ColumnName": "cCOMP_UPD_BY_NAME",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 8
+      ColumnName: "cCOMP_UPD_BY_NAME",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 8,
     },
     {
-      "ColumnName": "MM446_BASE_DOC_CLASS",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 9
+      ColumnName: "MM446_BASE_DOC_CLASS",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 9,
     },
     {
-      "ColumnName": "MM446_DOC_CLASS",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 10
+      ColumnName: "MM446_DOC_CLASS",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 10,
     },
     {
-      "ColumnName": "MM446_PUBLISH",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 11
+      ColumnName: "MM446_PUBLISH",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 11,
     },
     {
-      "ColumnName": "MM446_DEPT",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 12
+      ColumnName: "MM446_DEPT",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 12,
     },
     {
-      "ColumnName": "MM446_HEADING_SEQ_1",
-      "DataType": "System.Int32",
-      "DefaultValue": null,
-      "ColumnID": 13
+      ColumnName: "MM446_HEADING_SEQ_1",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 13,
     },
     {
-      "ColumnName": "MM446_HEADING_SEQ_2",
-      "DataType": "System.Int32",
-      "DefaultValue": null,
-      "ColumnID": 14
+      ColumnName: "MM446_HEADING_SEQ_2",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 14,
     },
     {
-      "ColumnName": "MM446_DOC_CATEGORY",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 15
+      ColumnName: "MM446_DOC_CATEGORY",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 15,
     },
     {
-      "ColumnName": "MM446_STOCK_ID",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 16
+      ColumnName: "MM446_STOCK_ID",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 16,
     },
     {
-      "ColumnName": "MM446_SENSITIVITY",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 17
+      ColumnName: "MM446_SENSITIVITY",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 17,
     },
     {
-      "ColumnName": "MM446_DOC_STS",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 18
+      ColumnName: "MM446_DOC_STS",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 18,
     },
     {
-      "ColumnName": "cDOC_STS_DESC",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 19
+      ColumnName: "cDOC_STS_DESC",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 19,
     },
     {
-      "ColumnName": "MM446_TIMES_VIEW",
-      "DataType": "System.Int32",
-      "DefaultValue": null,
-      "ColumnID": 20
+      ColumnName: "MM446_TIMES_VIEW",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 20,
     },
     {
-      "ColumnName": "MM446_ACCOUNT",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 21
+      ColumnName: "MM446_ACCOUNT",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 21,
     },
     {
-      "ColumnName": "MM446_AC_CONTACT",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 22
+      ColumnName: "MM446_AC_CONTACT",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 22,
     },
     {
-      "ColumnName": "MM446_ECP_CATEGORY",
-      "DataType": "System.Int32",
-      "DefaultValue": null,
-      "ColumnID": 23
+      ColumnName: "MM446_ECP_CATEGORY",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 23,
     },
     {
-      "ColumnName": "MM446_ESIGN_PROFILE_ID",
-      "DataType": "System.Int32",
-      "DefaultValue": null,
-      "ColumnID": 24
+      ColumnName: "MM446_ESIGN_PROFILE_ID",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 24,
     },
     {
-      "ColumnName": "MM446_ORG_CODE",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 25
+      ColumnName: "MM446_ORG_CODE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 25,
     },
     {
-      "ColumnName": "MM446_DOC_SUBJ",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 26
+      ColumnName: "MM446_DOC_SUBJ",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 26,
     },
     {
-      "ColumnName": "MM446_SEND_REC_FLAG",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 27
+      ColumnName: "MM446_SEND_REC_FLAG",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 27,
     },
     {
-      "ColumnName": "MM446_MULTI_ORG_ACCT",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 28
+      ColumnName: "MM446_MULTI_ORG_ACCT",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 28,
     },
     {
-      "ColumnName": "MM446_STS_USER_ID",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 29
+      ColumnName: "MM446_STS_USER_ID",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 29,
     },
     {
-      "ColumnName": "DocAccount_EV870_CLASS",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 30
+      ColumnName: "DocAccount_EV870_CLASS",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 30,
     },
     {
-      "ColumnName": "MM446_INVOICE",
-      "DataType": "System.Int32",
-      "DefaultValue": null,
-      "ColumnID": 31
+      ColumnName: "MM446_INVOICE",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 31,
     },
     {
-      "ColumnName": "MM446_ASSET_CODE",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 32
+      ColumnName: "MM446_ASSET_CODE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 32,
     },
     {
-      "ColumnName": "MM446_DIGITAL_REQUEST_ID",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 33
+      ColumnName: "MM446_DIGITAL_REQUEST_ID",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 33,
     },
     {
-      "ColumnName": "MM446_DIGITAL_STATUS",
-      "DataType": "System.Int32",
-      "DefaultValue": null,
-      "ColumnID": 34
+      ColumnName: "MM446_DIGITAL_STATUS",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 34,
     },
     {
-      "ColumnName": "MM446_AC_ISSUE",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 35
+      ColumnName: "MM446_AC_ISSUE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 35,
     },
     {
-      "ColumnName": "MM446_BASE_DOC_SEQ_KEY",
-      "DataType": "System.Int32",
-      "DefaultValue": null,
-      "ColumnID": 36
+      ColumnName: "MM446_BASE_DOC_SEQ_KEY",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 36,
     },
     {
-      "ColumnName": "MM446_RPT_SEQ",
-      "DataType": "System.Int32",
-      "DefaultValue": null,
-      "ColumnID": 37
+      ColumnName: "MM446_RPT_SEQ",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 37,
     },
     {
-      "ColumnName": "MM446_USER_ID",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 38
+      ColumnName: "MM446_USER_ID",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 38,
     },
     {
-      "ColumnName": "MM446_ESIGN_ENVELOPE_ID",
-      "DataType": "System.Int32",
-      "DefaultValue": null,
-      "ColumnID": 39
+      ColumnName: "MM446_ESIGN_ENVELOPE_ID",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 39,
     },
     {
-      "ColumnName": "MM446_STATUS",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 40
+      ColumnName: "MM446_STATUS",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 40,
     },
     {
-      "ColumnName": "MM446_PROJ_ID",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 41
+      ColumnName: "MM446_PROJ_ID",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 41,
     },
     {
-      "ColumnName": "MM446_ACCT_DESIG",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 42
+      ColumnName: "MM446_ACCT_DESIG",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 42,
     },
     {
-      "ColumnName": "MM446_DOC_SEQ_KEY",
-      "DataType": "System.Int32",
-      "DefaultValue": null,
-      "ColumnID": 43
+      ColumnName: "MM446_DOC_SEQ_KEY",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 43,
     },
     {
-      "ColumnName": "cHEADING",
-      "DataType": "System.Int32",
-      "DefaultValue": null,
-      "ColumnID": 44
+      ColumnName: "cHEADING",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 44,
     },
     {
-      "ColumnName": "cACCESS_RADIO",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 45
+      ColumnName: "cACCESS_RADIO",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 45,
     },
     {
-      "ColumnName": "cDOC_ROLES",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 46
+      ColumnName: "cDOC_ROLES",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 46,
     },
     {
-      "ColumnName": "cACCESS_USER_ROLES_COMB",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 47
+      ColumnName: "cACCESS_USER_ROLES_COMB",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 47,
     },
     {
-      "ColumnName": "cORDERINVOICE_SUBJECT_FILTER",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 48
+      ColumnName: "cORDERINVOICE_SUBJECT_FILTER",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 48,
     },
     {
-      "ColumnName": "cESIGN_ENVELOPE_STATUS",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 49
+      ColumnName: "cESIGN_ENVELOPE_STATUS",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 49,
     },
     {
-      "ColumnName": "cDOC_BYTES",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 50
+      ColumnName: "cDOC_BYTES",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 50,
     },
     {
-      "ColumnName": "cDOC_FILE_NAME",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 51
+      ColumnName: "cDOC_FILE_NAME",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 51,
     },
     {
-      "ColumnName": "cUPDATED",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 52
+      ColumnName: "cUPDATED",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 52,
     },
     {
-      "ColumnName": "cFILE_KEY",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 53
+      ColumnName: "cFILE_KEY",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 53,
     },
     {
-      "ColumnName": "cDOC_STS_DESC__SORT",
-      "DataType": "System.Decimal",
-      "DefaultValue": null,
-      "ColumnID": 54
+      ColumnName: "cDOC_STS_DESC__SORT",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 54,
     },
     {
-      "ColumnName": "COMP_ROW_ACCESS",
-      "DataType": "System.Int32",
-      "DefaultValue": null,
-      "ColumnID": 55
+      ColumnName: "COMP_ROW_ACCESS",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 55,
     },
     {
-      "ColumnName": "COMP_MM446_INDEX",
-      "DataType": "System.Int32",
-      "DefaultValue": null,
-      "ColumnID": 56
+      ColumnName: "COMP_MM446_INDEX",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 56,
     },
     {
-      "ColumnName": "COMP_MM446_DOC_STS",
-      "DataType": "System.String",
-      "DefaultValue": null,
-      "ColumnID": 57
-    }
+      ColumnName: "COMP_MM446_DOC_STS",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 57,
+    },
   ],
-  "TransportDataRows": [
+  TransportDataRows: [
     {
-      "Values": {
-        "0": "SampleDocument_0_0_1757868280151",
-        "1": 66503,
+      Values: {
+        "0": doc.docDesc,
+        "1": Number(so.evtId),
         "2": 2,
-        "3": 283224,
+        "3": Number(so.orderNbr),
         "4": "",
         "5": null,
         "6": null,
@@ -429,11 +442,11 @@ export const documentSavePayload = (
         "18": "CI",
         "19": "Checked In",
         "20": 0,
-        "21": "00041563",
+        "21": so.ordAcct,
         "22": null,
         "23": null,
         "24": null,
-        "25": "10",
+        "25": so.orgCode,
         "26": "ORD",
         "27": "",
         "28": "",
@@ -459,75 +472,86 @@ export const documentSavePayload = (
         "48": null,
         "49": null,
         "50": null,
-        "51": "SampleDocument.docx",
+        "51": doc.fileName,
         "52": "Created:  on",
-        "53": "6739|SampleDocument.docx",
+        "53": doc.fileKey,
         "54": 0,
         "55": 1,
-        "56": 283224,
-        "57": "CI"
-      }
-    }
-  ]
-};
-  // Order identity.
-  setRowValue(table, 'MM446_EVENT', Number(so.evtId));
-  setRowValue(table, 'MM446_INDEX', Number(so.orderNbr));
-  setRowValue(table, 'MM446_ACCOUNT', so.ordAcct);
-  setRowValue(table, 'MM446_ORG_CODE', so.orgCode);
-  setRowValue(table, 'COMP_MM446_INDEX', Number(so.orderNbr));
-  // Correlated file fields.
-  setRowValue(table, 'MM446_DOC_DESC', doc.docDesc);
-  setRowValue(table, 'cDOC_FILE_NAME', doc.fileName);
-  setRowValue(table, 'cFILE_KEY', doc.fileKey);
+        "56": Number(so.orderNbr),
+        "57": "CI",
+      },
+    },
+  ],
+});
 
-  return [
-    1, '10', 26, 4, 0, 4, 1,
-    [
-      { Key: 'OrgCode', Value: so.orgCode },
-      { Key: 'WindowObjectID', Value: 26 },
-      { Key: 'wdwid', Value: 'AA9031' },
-      { Key: 'WdwType', Value: 4 },
-      { Key: 'wdwMode', Value: 2 },
-      { Key: 'RemoveEditLayoutLink', Value: false },
-      { Key: 'ContextObjectID', Value: 0 },
-      { Key: 'MenuType', Value: 4 },
-      { Key: 'OrdAcct', Value: so.ordAcct },
-      { Key: 'EvtID', Value: Number(so.evtId) },
-      { Key: 'FuncID', Value: Number(so.funcId) },
-      { Key: 'OrderType', Value: so.orderType },
-      { Key: 'PriceList', Value: so.priceList },
-      { Key: 'RowKeyList', Value: so.rowKey },
-      { Key: 'RefreshDependentKey', Value: Date.now() },
-      { Key: 'OrderNbr', Value: Number(so.orderNbr) },
-      { Key: 'Status', Value: so.status },
-      { Key: 'documentSubject', Value: 'ORD' },
-      { Key: 'Mode', Value: 'IMPORT' },
-      { Key: 'FileKey', Value: doc.fileKey },
-      { Key: 'FileName', Value: doc.fileName },
-    ],
-    {
-      SaveMode: 0,
-      Delete: false,
-      Tag: {},
-      MessageInfoList: [],
-      WorkflowToolbarButtonID: 0,
-      AddedRowKeys: ['10|S|-1'],
-      ModifiedRowKeys: [],
-      DeletedRowKeys: [],
-      UnchangedRowKeys: [],
-      AdditionalTableKeyAddedRowKeys: [],
-      AdditionalTableKeyModifiedRowKeys: [],
-      AdditionalTableKeyDeletedRowKeys: [],
-      AdditionalTableKeyUnchangedRowKeys: [],
-    },
-    { TransportDataTables: [table] },
-    { TransportDataTables: [] },
-    {
-      AutoRefresh: 'Y', EnterUserID: '', FilterCriteria: '', ID: 0, ObjectID: 0,
-      OrgCode: null, ResultsCount: 0, ResultsLimit: 0, ResultsTime: 0, SearchDesc: '',
-      SearchFilters: [], ThemeID: 0, USIID: 0, UpdateUserID: '', UserID: '',
-      SourceUSIID: 0, ConvertToUserDisplayTimeZone: false,
-    },
-  ];
-};
+export const documentSavePayload = (
+  so: ServiceOrderRow,
+  doc: { fileKey: string; fileName: string; docDesc: string },
+) => [
+  1,
+  "10",
+  26,
+  4,
+  0,
+  4,
+  1,
+  [
+    { Key: "OrgCode", Value: so.orgCode },
+    { Key: "WindowObjectID", Value: 26 },
+    { Key: "wdwid", Value: "AA9031" },
+    { Key: "WdwType", Value: 4 },
+    { Key: "wdwMode", Value: 2 },
+    { Key: "RemoveEditLayoutLink", Value: false },
+    { Key: "ContextObjectID", Value: 0 },
+    { Key: "MenuType", Value: 4 },
+    { Key: "OrdAcct", Value: so.ordAcct },
+    { Key: "EvtID", Value: Number(so.evtId) },
+    { Key: "FuncID", Value: Number(so.funcId) },
+    { Key: "OrderType", Value: so.orderType },
+    { Key: "PriceList", Value: so.priceList },
+    { Key: "RowKeyList", Value: so.rowKey },
+    { Key: "RefreshDependentKey", Value: Date.now() },
+    { Key: "OrderNbr", Value: Number(so.orderNbr) },
+    { Key: "Status", Value: so.status },
+    { Key: "documentSubject", Value: "ORD" },
+    { Key: "Mode", Value: "IMPORT" },
+    { Key: "FileKey", Value: doc.fileKey },
+    { Key: "FileName", Value: doc.fileName },
+  ],
+  {
+    SaveMode: 0,
+    Delete: false,
+    Tag: {},
+    MessageInfoList: [],
+    WorkflowToolbarButtonID: 0,
+    AddedRowKeys: ["10|S|-1"],
+    ModifiedRowKeys: [],
+    DeletedRowKeys: [],
+    UnchangedRowKeys: [],
+    AdditionalTableKeyAddedRowKeys: [],
+    AdditionalTableKeyModifiedRowKeys: [],
+    AdditionalTableKeyDeletedRowKeys: [],
+    AdditionalTableKeyUnchangedRowKeys: [],
+  },
+  { TransportDataTables: [documentTable(so, doc)] },
+  { TransportDataTables: [] },
+  {
+    AutoRefresh: "Y",
+    EnterUserID: "",
+    FilterCriteria: "",
+    ID: 0,
+    ObjectID: 0,
+    OrgCode: null,
+    ResultsCount: 0,
+    ResultsLimit: 0,
+    ResultsTime: 0,
+    SearchDesc: "",
+    SearchFilters: [],
+    ThemeID: 0,
+    USIID: 0,
+    UpdateUserID: "",
+    UserID: "",
+    SourceUSIID: 0,
+    ConvertToUserDisplayTimeZone: false,
+  },
+];

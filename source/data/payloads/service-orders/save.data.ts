@@ -1,1142 +1,1130 @@
-import { setRowValue, setColumnValueAllRows, getColumnValue, todayMidnightUtc } from '../../../utils/exports/helpers.exp.ts';
-import { ServiceOrderRow, TransportTable } from '../../../utils/exports/types.exp.ts';
+import { todayMidnightUtc } from "../../../utils/exports/helpers.exp.ts";
+import {
+  ServiceOrderRow,
+  TransportTable,
+} from "../../../utils/exports/types.exp.ts";
 
-export const serviceOrderItemsSavePayload = (so: ServiceOrderRow, quantity: number) => {
-  // Captured order-header table (ER100) for the service order being modified.
-  // Identity columns are overridden per picked service order below.
-  const orderHeader: TransportTable = {
-    "TableName": String(Date.now()),
-    "TransportDataColumns": [
-      {
-        "ColumnName": "ER100_EVT_ID",
-        "DataType": "System.Int32",
-        "DefaultValue": null,
-        "ColumnID": 0
-      },
-      {
-        "ColumnName": "ER100_FUNC_ID",
-        "DataType": "System.Int32",
-        "DefaultValue": null,
-        "ColumnID": 1
-      },
-      {
-        "ColumnName": "ER100_ORD_ACCT",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 2
-      },
-      {
-        "ColumnName": "ER100_NG_ORD_CONTACT",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 3
-      },
-      {
-        "ColumnName": "ER100_NEW_STS",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 4
-      },
-      {
-        "ColumnName": "OrderFunc_EV700_SPACE",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 5
-      },
-      {
-        "ColumnName": "OrderFunc_cFUNC_SPACE",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 6
-      },
-      {
-        "ColumnName": "ER100_PRICE_LIST",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 7
-      },
-      {
-        "ColumnName": "ER100_BILL_TO_CUST",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 8
-      },
-      {
-        "ColumnName": "ER100_NG_BTO_CONTACT",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 9
-      },
-      {
-        "ColumnName": "OrderUDF_10_C_25_CR073_TXT_01",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 10
-      },
-      {
-        "ColumnName": "OrderUDF_10_C_25_CR073_TXT_03",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 11
-      },
-      {
-        "ColumnName": "OrderUDF_10_C_25_CR073_TXT_02",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 12
-      },
-      {
-        "ColumnName": "ER100_COMM_ORDER",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 13
-      },
-      {
-        "ColumnName": "ER100_EXHIBITOR_ID",
-        "DataType": "System.Int32",
-        "DefaultValue": null,
-        "ColumnID": 14
-      },
-      {
-        "ColumnName": "ER100_NG_REQ_CONTACT",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 15
-      },
-      {
-        "ColumnName": "ER100_OCCURRENCE",
-        "DataType": "System.Int32",
-        "DefaultValue": null,
-        "ColumnID": 16
-      },
-      {
-        "ColumnName": "ER100_ORD_STS",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 17
-      },
-      {
-        "ColumnName": "ER100_ORD_TYPE",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 18
-      },
-      {
-        "ColumnName": "ER100_PAY_PLAN_ID",
-        "DataType": "System.Int32",
-        "DefaultValue": null,
-        "ColumnID": 19
-      },
-      {
-        "ColumnName": "ER100_REQ_CUST",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 20
-      },
-      {
-        "ColumnName": "ER100_RES_PHASE",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 21
-      },
-      {
-        "ColumnName": "ER100_SHIPTO_ACCT",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 22
-      },
-      {
-        "ColumnName": "ER100_SHIPTO_CONT",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 23
-      },
-      {
-        "ColumnName": "ER100_TAXABLE",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 24
-      },
-      {
-        "ColumnName": "ER100_BKG_ORDER",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 25
-      },
-      {
-        "ColumnName": "ER100_SO_SEARCH",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 26
-      },
-      {
-        "ColumnName": "ER100_CURRENCY",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 27
-      },
-      {
-        "ColumnName": "ER100_PRJ_ID",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 28
-      },
-      {
-        "ColumnName": "ER100_ORDER_DESIG",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 29
-      },
-      {
-        "ColumnName": "ER100_ACCT_DESIG",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 30
-      },
-      {
-        "ColumnName": "ER100_ORD_CAT_SEQ",
-        "DataType": "System.Int32",
-        "DefaultValue": null,
-        "ColumnID": 31
-      },
-      {
-        "ColumnName": "ER100_SERVICE_CHARGE_EXEMPT",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 32
-      },
-      {
-        "ColumnName": "OrderEvent_EV200_EVT_DESIGNATION",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 33
-      },
-      {
-        "ColumnName": "ER100_EVENT_SUITE_ID",
-        "DataType": "System.Int32",
-        "DefaultValue": null,
-        "ColumnID": 34
-      },
-      {
-        "ColumnName": "OrderEvent_EV200_EVT_STATUS",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 35
-      },
-      {
-        "ColumnName": "OrderEvent_EV200_SLSPER",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 36
-      },
-      {
-        "ColumnName": "OrderEvent_EV200_COORD_1",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 37
-      },
-      {
-        "ColumnName": "OrderEvent_EV200_COORD_2",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 38
-      },
-      {
-        "ColumnName": "OrderEvent_EV200_EVT_COORD3",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 39
-      },
-      {
-        "ColumnName": "OrderEvent_EV200_EVT_COORD4",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 40
-      },
-      {
-        "ColumnName": "ER100_ORD_NBR",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 41
-      },
-      {
-        "ColumnName": "ER100_ORG_CODE",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 42
-      },
-      {
-        "ColumnName": "cRATE",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 43
-      },
-      {
-        "ColumnName": "cUSE_FUNC_DATE",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 44
-      },
-      {
-        "ColumnName": "cACCOUNT_CONTACT_MAPPINGS",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 45
-      },
-      {
-        "ColumnName": "cSTART_END_DATETIME",
-        "DataType": "System.DateTime",
-        "DefaultValue": null,
-        "ColumnID": 46
-      },
-      {
-        "ColumnName": "cSTART_DATE_TIME",
-        "DataType": "System.DateTime",
-        "DefaultValue": null,
-        "ColumnID": 47
-      },
-      {
-        "ColumnName": "cEND_DATE_TIME",
-        "DataType": "System.DateTime",
-        "DefaultValue": null,
-        "ColumnID": 48
-      },
-      {
-        "ColumnName": "OrderFunc_cFUNC_SPACE__SORT",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 49
-      },
-      {
-        "ColumnName": "COMP_ROW_ACCESS",
-        "DataType": "System.Int32",
-        "DefaultValue": null,
-        "ColumnID": 50
-      },
-      {
-        "ColumnName": "COMP_OrderFunc_EV700_SPACE",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 51
-      }
-    ],
-    "TransportDataRows": [
-      {
-        "Values": {
-          "0": 63363,
-          "1": 1,
-          "2": "00159220",
-          "3": "00167764",
-          "4": "T",
-          "5": "",
-          "6": "",
-          "7": "2022SPL",
-          "8": "00159220",
-          "9": "00167764",
-          "10": null,
-          "11": "",
-          "12": null,
-          "13": "N",
-          "14": 0,
-          "15": "00167764",
-          "16": 0,
-          "17": "A",
-          "18": "SO",
-          "19": 0,
-          "20": "00159220",
-          "21": "1",
-          "22": "00159220",
-          "23": "00167764",
-          "24": "Y",
-          "25": "N",
-          "26": "428144",
-          "27": "***",
-          "28": null,
-          "29": "C",
-          "30": null,
-          "31": 0,
-          "32": "N",
-          "33": "X",
-          "34": 0,
-          "35": "28",
-          "36": "00154232",
-          "37": "",
-          "38": "",
-          "39": null,
-          "40": null,
-          "41": "428144",
-          "42": "10",
-          "43": "LT",
-          "44": "Y",
-          "45": null,
-          "46": -2208988800000,
-          "47": 1704099600000,
-          "48": 1704304800000,
-          "49": -1,
-          "50": 1,
-          "51": ""
-        }
-      }
-    ]
-  };
+const DAY = 24 * 60 * 60 * 1000;
 
-  // Captured price-list item lines (cheesecake + cherry pie). cQUANTITY and the
-  // price list are overridden per request below.
-  const items: TransportTable = {
-    "TableName": "ObjectID_457",
-    "TransportDataColumns": [
-      {
-        "ColumnName": "CC716_ORD_TYPE",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 0
-      },
-      {
-        "ColumnName": "CC716_DESC",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 1
-      },
-      {
-        "ColumnName": "cQUANTITY",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 2
-      },
-      {
-        "ColumnName": "ResourceCode_EV370_UOM",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 3
-      },
-      {
-        "ColumnName": "cITEM_RATE",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 4
-      },
-      {
-        "ColumnName": "CC716_RES_TYPE_NEW",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 5
-      },
-      {
-        "ColumnName": "CC716_RES_CODE",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 6
-      },
-      {
-        "ColumnName": "cORDER_FORM_DESC",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 7
-      },
-      {
-        "ColumnName": "ResourceType_EV370_CODE_DESC",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 8
-      },
-      {
-        "ColumnName": "CC716_TIER1_RATE_STD",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 9
-      },
-      {
-        "ColumnName": "CC716_TIER1_RATE_LATE",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 10
-      },
-      {
-        "ColumnName": "CC716_TIER1_RATE_ADV",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 11
-      },
-      {
-        "ColumnName": "CC716_RATE_COL1",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 12
-      },
-      {
-        "ColumnName": "CC716_RATE_COL2",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 13
-      },
-      {
-        "ColumnName": "CC716_RATE_COL3",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 14
-      },
-      {
-        "ColumnName": "CC716_COST_SCHEME",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 15
-      },
-      {
-        "ColumnName": "CC716_COST_TIER1_RATE_STD",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 16
-      },
-      {
-        "ColumnName": "CC716_COST_TIER1_RATE_ADV",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 17
-      },
-      {
-        "ColumnName": "CC716_COST_TIER1_RATE_LATE",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 18
-      },
-      {
-        "ColumnName": "CC716_USE_TIER",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 19
-      },
-      {
-        "ColumnName": "CC716_USE_TIER_COST",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 20
-      },
-      {
-        "ColumnName": "CC716_PER_UOM",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 21
-      },
-      {
-        "ColumnName": "CC716_ORIG_COST",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 22
-      },
-      {
-        "ColumnName": "CC716_DAILY",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 23
-      },
-      {
-        "ColumnName": "CC716_SCHEME_CODE",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 24
-      },
-      {
-        "ColumnName": "CC716_ORIG_RATE",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 25
-      },
-      {
-        "ColumnName": "CC716_COST_COL1",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 26
-      },
-      {
-        "ColumnName": "CC716_COST_COL2",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 27
-      },
-      {
-        "ColumnName": "CC716_COST_COL3",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 28
-      },
-      {
-        "ColumnName": "CC716_SHIPPABLE",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 29
-      },
-      {
-        "ColumnName": "CC716_CHARGEABLE",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 30
-      },
-      {
-        "ColumnName": "CC716_TAX_EI",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 31
-      },
-      {
-        "ColumnName": "CC716_MIN_CHRG",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 32
-      },
-      {
-        "ColumnName": "CC716_MAX_CHRG",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 33
-      },
-      {
-        "ColumnName": "ResourceCode_EV370_DECIMALS",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 34
-      },
-      {
-        "ColumnName": "ResourceCode_EV370_LEAD_HRS",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 35
-      },
-      {
-        "ColumnName": "ResourceCode_EV370_STRIKE_HRS",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 36
-      },
-      {
-        "ColumnName": "ResourceCode_EV370_PER_UOM",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 37
-      },
-      {
-        "ColumnName": "CC716_SEQ",
-        "DataType": "System.Int32",
-        "DefaultValue": null,
-        "ColumnID": 38
-      },
-      {
-        "ColumnName": "CC716_PRICE_LIST",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 39
-      },
-      {
-        "ColumnName": "CC716_HEADER_ONLY",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 40
-      },
-      {
-        "ColumnName": "CC716_DSP_SEQ_1",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 41
-      },
-      {
-        "ColumnName": "CC716_DSP_SEQ_2",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 42
-      },
-      {
-        "ColumnName": "CC716_MIN_QTY",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 43
-      },
-      {
-        "ColumnName": "ResourceCode_EV370_MSTR_SEQ_NBR",
-        "DataType": "System.Int32",
-        "DefaultValue": null,
-        "ColumnID": 44
-      },
-      {
-        "ColumnName": "CC716_STATUS",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 45
-      },
-      {
-        "ColumnName": "ER101_STAT_ORD_NBR",
-        "DataType": "System.Int32",
-        "DefaultValue": null,
-        "ColumnID": 46
-      },
-      {
-        "ColumnName": "ER101_STAT_ORD_LINE",
-        "DataType": "System.Int32",
-        "DefaultValue": null,
-        "ColumnID": 47
-      },
-      {
-        "ColumnName": "ER101_TIME_QTY",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 48
-      },
-      {
-        "ColumnName": "ER101_TIME_QTY_EDIT",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 49
-      },
-      {
-        "ColumnName": "ResourceCode_EV370_SETUP_ID",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 50
-      },
-      {
-        "ColumnName": "Setup_EV375_SETUP_TYPE",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 51
-      },
-      {
-        "ColumnName": "Setup_EV375_VERIFY",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 52
-      },
-      {
-        "ColumnName": "CC716_ORG_CODE",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 53
-      },
-      {
-        "ColumnName": "cSTD_COST",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 54
-      },
-      {
-        "ColumnName": "cSTD_RATE",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 55
-      },
-      {
-        "ColumnName": "cADV_COST",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 56
-      },
-      {
-        "ColumnName": "cADV_RATE",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 57
-      },
-      {
-        "ColumnName": "cLATE_COST",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 58
-      },
-      {
-        "ColumnName": "cLATE_RATE",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 59
-      },
-      {
-        "ColumnName": "cQUICK_SELECT",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 60
-      },
-      {
-        "ColumnName": "cITEM_TOTAL",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 61
-      },
-      {
-        "ColumnName": "cSTATS_ORD",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 62
-      },
-      {
-        "ColumnName": "cEVENT_ATTENDANCE",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 63
-      },
-      {
-        "ColumnName": "cFUNC_ATTENDANCE",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 64
-      },
-      {
-        "ColumnName": "cSUITE_ATTENDANCE",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 65
-      },
-      {
-        "ColumnName": "cSTAT_ORDNBR_ORDLINE_QTY",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 66
-      },
-      {
-        "ColumnName": "CC716_ORD_TYPE__SORT",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 67
-      },
-      {
-        "ColumnName": "cORDER_FORM_DESC__SORT",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 68
-      },
-      {
-        "ColumnName": "cROW_KEY",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 69
-      },
-      {
-        "ColumnName": "COMP_ROW_ACCESS",
-        "DataType": "System.Int32",
-        "DefaultValue": null,
-        "ColumnID": 70
-      },
-      {
-        "ColumnName": "GrandTotal",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 71
-      },
-      {
-        "ColumnName": "COMP_CC716_ORD_TYPE",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 72
-      },
-      {
-        "ColumnName": "COMP_CC716_RES_TYPE_NEW",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 73
-      },
-      {
-        "ColumnName": "cQUANTITY__EDIT_SORT",
-        "DataType": "System.Decimal",
-        "DefaultValue": null,
-        "ColumnID": 74
-      },
-      {
-        "ColumnName": "ResourceType_EV370_CODE_DESC__EDIT_SORT",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 75
-      },
-      {
-        "ColumnName": "CC716_RES_CODE__EDIT_SORT",
-        "DataType": "System.String",
-        "DefaultValue": null,
-        "ColumnID": 76
-      }
-    ],
-    "TransportDataRows": [
-      {
-        "Values": {
-          "0": "11",
-          "1": "Cherry Pie",
-          "2": 2,
-          "3": "EA",
-          "4": 6,
-          "5": "3740",
-          "6": "CHERRY PIE",
-          "7": "Room Setups (11)",
-          "8": "Desserts",
-          "9": 0,
-          "10": 0,
-          "11": 0,
-          "12": 6,
-          "13": 6,
-          "14": 6,
-          "15": "",
-          "16": 0,
-          "17": 0,
-          "18": 0,
-          "19": "N",
-          "20": "N",
-          "21": "EA",
-          "22": 1.1,
-          "23": "N",
-          "24": "",
-          "25": 0,
-          "26": 1.1,
-          "27": 1.1,
-          "28": 1.1,
-          "29": "N",
-          "30": "OT",
-          "31": "E",
-          "32": 0,
-          "33": 0,
-          "34": "2",
-          "35": null,
-          "36": null,
-          "37": "EA",
-          "38": 217,
-          "39": "2022SPL",
-          "40": "N",
-          "41": "11",
-          "42": " ",
-          "43": 0,
-          "44": 1044,
-          "45": "A",
-          "46": null,
-          "47": null,
-          "48": null,
-          "49": null,
-          "50": " ",
-          "51": null,
-          "52": null,
-          "53": "10",
-          "54": 1.1,
-          "55": 6,
-          "56": 1.1,
-          "57": 6,
-          "58": 1.1,
-          "59": 6,
-          "60": null,
-          "61": 0,
-          "62": "Y",
-          "63": "Y",
-          "64": "Y",
-          "65": "Y",
-          "66": null,
-          "67": "11_11",
-          "68": 58,
-          "69": "10|2022SPL|217",
-          "70": 1,
-          "71": null,
-          "72": "11",
-          "73": "3740",
-          "74": 0,
-          "75": "Desserts",
-          "76": "CHERRY PIE"
-        }
-      },
-      {
-        "Values": {
-          "0": "11",
-          "1": "Cheesecake",
-          "2": 2,
-          "3": "EA",
-          "4": 12,
-          "5": "3740",
-          "6": "CHEESE-CAKE",
-          "7": "Room Setups (11)",
-          "8": "Desserts",
-          "9": 0,
-          "10": 0,
-          "11": 0,
-          "12": 6,
-          "13": 12,
-          "14": 12,
-          "15": "",
-          "16": 0,
-          "17": 0,
-          "18": 0,
-          "19": "N",
-          "20": "N",
-          "21": "EA",
-          "22": 1.75,
-          "23": "N",
-          "24": "",
-          "25": 0,
-          "26": 1.75,
-          "27": 1.75,
-          "28": 1.75,
-          "29": "N",
-          "30": "OT",
-          "31": "E",
-          "32": 0,
-          "33": 0,
-          "34": "2",
-          "35": null,
-          "36": null,
-          "37": "EA",
-          "38": 216,
-          "39": "2022SPL",
-          "40": "N",
-          "41": "11",
-          "42": " ",
-          "43": 0,
-          "44": 945,
-          "45": "A",
-          "46": null,
-          "47": null,
-          "48": null,
-          "49": null,
-          "50": " ",
-          "51": null,
-          "52": null,
-          "53": "10",
-          "54": 1.75,
-          "55": 6,
-          "56": 1.75,
-          "57": 12,
-          "58": 1.75,
-          "59": 12,
-          "60": null,
-          "61": 0,
-          "62": "Y",
-          "63": "Y",
-          "64": "Y",
-          "65": "Y",
-          "66": null,
-          "67": "11_11",
-          "68": 58,
-          "69": "10|2022SPL|216",
-          "70": 1,
-          "71": null,
-          "72": "11",
-          "73": "3740",
-          "74": 2,
-          "75": "Desserts",
-          "76": "CHEESE-CAKE"
-        }
-      }
-    ]
-  };
-
-  setRowValue(orderHeader, 'ER100_ORD_NBR', Number(so.orderNbr));
-  setRowValue(orderHeader, 'ER100_SO_SEARCH', so.soSearch);
-  setRowValue(orderHeader, 'ER100_EVT_ID', Number(so.evtId));
-  setRowValue(orderHeader, 'ER100_FUNC_ID', Number(so.funcId));
-  setRowValue(orderHeader, 'ER100_ORD_ACCT', so.ordAcct);
-  setRowValue(orderHeader, 'ER100_BILL_TO_CUST', so.billTo);
-  setRowValue(orderHeader, 'ER100_NG_ORD_CONTACT', so.ordContact);
-  setRowValue(orderHeader, 'ER100_NG_BTO_CONTACT', so.btoContact);
-  setRowValue(orderHeader, 'ER100_NG_REQ_CONTACT', so.reqContact);
-  setRowValue(orderHeader, 'ER100_REQ_CUST', so.reqCust);
-  setRowValue(orderHeader, 'ER100_SHIPTO_ACCT', so.shipTo);
-  setRowValue(orderHeader, 'ER100_SHIPTO_CONT', so.shipToContact);
-  setRowValue(orderHeader, 'ER100_PRICE_LIST', so.priceList);
-  setRowValue(orderHeader, 'ER100_ORD_TYPE', so.orderType);
-  setRowValue(orderHeader, 'ER100_NEW_STS', so.status);
-  setRowValue(orderHeader, 'ER100_RES_PHASE', so.resPhase);
-  setRowValue(orderHeader, 'ER100_ORG_CODE', so.orgCode);
-
-  // The captured order header pins the order date to 2024; the added item inherits it and the server
-  // rejects it as outside the seeded function's range. Re-date the order 60 days out so it falls
-  // inside the seeded event/function window (which opens 30 days out — see events/create.data.ts).
-  const DAY = 24 * 60 * 60 * 1000;
-  const orderDate = todayMidnightUtc() + 60 * DAY;
-  setRowValue(orderHeader, 'cSTART_DATE_TIME', orderDate);
-  setRowValue(orderHeader, 'cEND_DATE_TIME', orderDate + DAY);
-
-  setColumnValueAllRows(items, 'cQUANTITY', quantity);
-  setColumnValueAllRows(items, 'CC716_PRICE_LIST', so.priceList);
-
-  const itemRowKeys = items.TransportDataRows.map(
-    (_, i) => `${so.orgCode}|${so.priceList}|${getColumnValue(items, i, 'CC716_SEQ')}`
-  );
-
-  return [
-    1,
-    '10',
-    4,
-    0,
-    0,
-    4,
-    2,
-    [
-      { Key: 'OrgCode', Value: so.orgCode },
-      { Key: 'wdwMode', Value: 2 },
-      { Key: 'RemoveEditLayoutLink', Value: false },
-      { Key: 'ContextObjectID', Value: 0 },
-      { Key: 'MenuType', Value: 4 },
-      { Key: 'OrdAcct', Value: so.ordAcct },
-      { Key: 'InvoiceNbr', Value: Number(so.invoice) },
-      { Key: 'FuncID', Value: Number(so.funcId) },
-      { Key: 'OrdBillTo', Value: so.billTo },
-      { Key: 'EvtID', Value: Number(so.evtId) },
-      { Key: 'ExhibitorID', Value: Number(so.exhibitorId) },
-      { Key: 'OrdBillToCntct', Value: so.btoContact },
-      { Key: 'OrdCntct', Value: so.ordContact },
-      { Key: 'OrdReqCntct', Value: so.reqContact },
-      { Key: 'OrdSalesPer', Value: so.salesPer },
-      { Key: 'Occurrence', Value: Number(so.occurrence) },
-      { Key: 'OrderType', Value: so.orderType },
-      { Key: 'PriceList', Value: so.priceList },
-      { Key: 'OrdReq', Value: so.reqCust },
-      { Key: 'OrderPhase', Value: so.resPhase },
-      { Key: 'OrdShipTo', Value: so.shipTo },
-      { Key: 'OrdShipToCntct', Value: so.shipToContact },
-      { Key: 'OrdCatSeq', Value: so.ordCatSeq },
-      { Key: 'EvtDesig', Value: so.evtDesig },
-      { Key: 'AcctClass', Value: so.acctClass },
-      { Key: 'EventSuiteID', Value: Number(so.eventSuiteId) },
-      { Key: 'EvtStatus', Value: so.evtStatus },
-      { Key: 'RowKeyList', Value: so.rowKey },
-      { Key: 'RefreshDependentKey', Value: Date.now() },
-      { Key: 'OrderNbr', Value: Number(so.orderNbr) },
-      { Key: 'ForceOneColumnLayout', Value: false },
-      { Key: 'ShowHelpTextInfo', Value: true },
-      { Key: 'MoveGeneralSectionToNewTab', Value: true },
-      { Key: 'ShowQuickInfoHeader', Value: true },
-      { Key: 'SectionUDFSets', Value: '41|-125|10|C|25' },
-      { Key: 'Status', Value: so.status },
-      { Key: 'MenuObjectID', Value: 5 },
-      { Key: 'MenuContextObjectID', Value: 4 },
-      { Key: 'DeptCode', Value: '' },
-      { Key: 'wdwid', Value: 'EM9160' },
-      { Key: 'WdwType', Value: 4 },
-      { Key: 'WindowObjectID', Value: 456 },
-      { Key: 'RateType', Value: 'LT' },
-      { Key: 'IsExhibitorOrder', Value: 'N' },
-      { Key: 'BoothNumber', Value: '' },
-    ],
+// Captured order-header table (ER100) for the service order being modified. Identity columns and the
+// edited order date are woven in per picked service order at their captured cells.
+const orderTable = (
+  so: ServiceOrderRow,
+  orderDate: number,
+): TransportTable => ({
+  TableName: String(Date.now()),
+  TransportDataColumns: [
     {
-      SaveMode: 0,
-      Delete: false,
-      Tag: {},
-      MessageInfoList: [],
-      WorkflowToolbarButtonID: 0,
-      AddedRowKeys: [],
-      ModifiedRowKeys: [so.rowKey],
-      DeletedRowKeys: [],
-      UnchangedRowKeys: [],
-      AdditionalTableKeyAddedRowKeys: [{ Key: 'ObjectID_457', Value: [] }],
-      AdditionalTableKeyModifiedRowKeys: [{ Key: 'ObjectID_457', Value: itemRowKeys }],
-      AdditionalTableKeyDeletedRowKeys: [{ Key: 'ObjectID_457', Value: [] }],
-      AdditionalTableKeyUnchangedRowKeys: [{ Key: 'ObjectID_457', Value: [] }],
+      ColumnName: "ER100_EVT_ID",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 0,
     },
-    { TransportDataTables: [orderHeader] },
-    { TransportDataTables: [items] },
     {
-      AutoRefresh: 'Y',
-      EnterUserID: '',
-      FilterCriteria: '',
-      ID: 0,
-      ObjectID: 0,
-      OrgCode: null,
-      ResultsCount: 0,
-      ResultsLimit: 0,
-      ResultsTime: 0,
-      SearchDesc: '',
-      SearchFilters: [],
-      ThemeID: 0,
-      USIID: 0,
-      UpdateUserID: '',
-      UserID: '',
-      SourceUSIID: 0,
-      ConvertToUserDisplayTimeZone: false,
+      ColumnName: "ER100_FUNC_ID",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 1,
     },
-  ];
-};
+    {
+      ColumnName: "ER100_ORD_ACCT",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 2,
+    },
+    {
+      ColumnName: "ER100_NG_ORD_CONTACT",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 3,
+    },
+    {
+      ColumnName: "ER100_NEW_STS",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 4,
+    },
+    {
+      ColumnName: "OrderFunc_EV700_SPACE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 5,
+    },
+    {
+      ColumnName: "OrderFunc_cFUNC_SPACE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 6,
+    },
+    {
+      ColumnName: "ER100_PRICE_LIST",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 7,
+    },
+    {
+      ColumnName: "ER100_BILL_TO_CUST",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 8,
+    },
+    {
+      ColumnName: "ER100_NG_BTO_CONTACT",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 9,
+    },
+    {
+      ColumnName: "OrderUDF_10_C_25_CR073_TXT_01",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 10,
+    },
+    {
+      ColumnName: "OrderUDF_10_C_25_CR073_TXT_03",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 11,
+    },
+    {
+      ColumnName: "OrderUDF_10_C_25_CR073_TXT_02",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 12,
+    },
+    {
+      ColumnName: "ER100_COMM_ORDER",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 13,
+    },
+    {
+      ColumnName: "ER100_EXHIBITOR_ID",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 14,
+    },
+    {
+      ColumnName: "ER100_NG_REQ_CONTACT",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 15,
+    },
+    {
+      ColumnName: "ER100_OCCURRENCE",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 16,
+    },
+    {
+      ColumnName: "ER100_ORD_STS",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 17,
+    },
+    {
+      ColumnName: "ER100_ORD_TYPE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 18,
+    },
+    {
+      ColumnName: "ER100_PAY_PLAN_ID",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 19,
+    },
+    {
+      ColumnName: "ER100_REQ_CUST",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 20,
+    },
+    {
+      ColumnName: "ER100_RES_PHASE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 21,
+    },
+    {
+      ColumnName: "ER100_SHIPTO_ACCT",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 22,
+    },
+    {
+      ColumnName: "ER100_SHIPTO_CONT",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 23,
+    },
+    {
+      ColumnName: "ER100_TAXABLE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 24,
+    },
+    {
+      ColumnName: "ER100_BKG_ORDER",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 25,
+    },
+    {
+      ColumnName: "ER100_SO_SEARCH",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 26,
+    },
+    {
+      ColumnName: "ER100_CURRENCY",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 27,
+    },
+    {
+      ColumnName: "ER100_PRJ_ID",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 28,
+    },
+    {
+      ColumnName: "ER100_ORDER_DESIG",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 29,
+    },
+    {
+      ColumnName: "ER100_ACCT_DESIG",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 30,
+    },
+    {
+      ColumnName: "ER100_ORD_CAT_SEQ",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 31,
+    },
+    {
+      ColumnName: "ER100_SERVICE_CHARGE_EXEMPT",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 32,
+    },
+    {
+      ColumnName: "OrderEvent_EV200_EVT_DESIGNATION",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 33,
+    },
+    {
+      ColumnName: "ER100_EVENT_SUITE_ID",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 34,
+    },
+    {
+      ColumnName: "OrderEvent_EV200_EVT_STATUS",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 35,
+    },
+    {
+      ColumnName: "OrderEvent_EV200_SLSPER",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 36,
+    },
+    {
+      ColumnName: "OrderEvent_EV200_COORD_1",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 37,
+    },
+    {
+      ColumnName: "OrderEvent_EV200_COORD_2",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 38,
+    },
+    {
+      ColumnName: "OrderEvent_EV200_EVT_COORD3",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 39,
+    },
+    {
+      ColumnName: "OrderEvent_EV200_EVT_COORD4",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 40,
+    },
+    {
+      ColumnName: "ER100_ORD_NBR",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 41,
+    },
+    {
+      ColumnName: "ER100_ORG_CODE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 42,
+    },
+    {
+      ColumnName: "cRATE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 43,
+    },
+    {
+      ColumnName: "cUSE_FUNC_DATE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 44,
+    },
+    {
+      ColumnName: "cACCOUNT_CONTACT_MAPPINGS",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 45,
+    },
+    {
+      ColumnName: "cSTART_END_DATETIME",
+      DataType: "System.DateTime",
+      DefaultValue: null,
+      ColumnID: 46,
+    },
+    {
+      ColumnName: "cSTART_DATE_TIME",
+      DataType: "System.DateTime",
+      DefaultValue: null,
+      ColumnID: 47,
+    },
+    {
+      ColumnName: "cEND_DATE_TIME",
+      DataType: "System.DateTime",
+      DefaultValue: null,
+      ColumnID: 48,
+    },
+    {
+      ColumnName: "OrderFunc_cFUNC_SPACE__SORT",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 49,
+    },
+    {
+      ColumnName: "COMP_ROW_ACCESS",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 50,
+    },
+    {
+      ColumnName: "COMP_OrderFunc_EV700_SPACE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 51,
+    },
+  ],
+  TransportDataRows: [
+    {
+      Values: {
+        "0": Number(so.evtId),
+        "1": Number(so.funcId),
+        "2": so.ordAcct,
+        "3": so.ordContact,
+        "4": so.status,
+        "5": "",
+        "6": "",
+        "7": so.priceList,
+        "8": so.billTo,
+        "9": so.btoContact,
+        "10": null,
+        "11": "",
+        "12": null,
+        "13": "N",
+        "14": 0,
+        "15": so.reqContact,
+        "16": 0,
+        "17": "A",
+        "18": so.orderType,
+        "19": 0,
+        "20": so.reqCust,
+        "21": so.resPhase,
+        "22": so.shipTo,
+        "23": so.shipToContact,
+        "24": "Y",
+        "25": "N",
+        "26": so.soSearch,
+        "27": "***",
+        "28": null,
+        "29": "C",
+        "30": null,
+        "31": 0,
+        "32": "N",
+        "33": "X",
+        "34": 0,
+        "35": "28",
+        "36": "00154232",
+        "37": "",
+        "38": "",
+        "39": null,
+        "40": null,
+        "41": Number(so.orderNbr),
+        "42": so.orgCode,
+        "43": "LT",
+        "44": "Y",
+        "45": null,
+        "46": -2208988800000,
+        "47": orderDate,
+        "48": orderDate + DAY,
+        "49": -1,
+        "50": 1,
+        "51": "",
+      },
+    },
+  ],
+});
+
+// Captured price-list item lines (cheesecake + cherry pie). cQUANTITY and the price list are woven
+// into every row at their captured cells.
+const itemsTable = (so: ServiceOrderRow, quantity: number): TransportTable => ({
+  TableName: "ObjectID_457",
+  TransportDataColumns: [
+    {
+      ColumnName: "CC716_ORD_TYPE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 0,
+    },
+    {
+      ColumnName: "CC716_DESC",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 1,
+    },
+    {
+      ColumnName: "cQUANTITY",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 2,
+    },
+    {
+      ColumnName: "ResourceCode_EV370_UOM",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 3,
+    },
+    {
+      ColumnName: "cITEM_RATE",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 4,
+    },
+    {
+      ColumnName: "CC716_RES_TYPE_NEW",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 5,
+    },
+    {
+      ColumnName: "CC716_RES_CODE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 6,
+    },
+    {
+      ColumnName: "cORDER_FORM_DESC",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 7,
+    },
+    {
+      ColumnName: "ResourceType_EV370_CODE_DESC",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 8,
+    },
+    {
+      ColumnName: "CC716_TIER1_RATE_STD",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 9,
+    },
+    {
+      ColumnName: "CC716_TIER1_RATE_LATE",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 10,
+    },
+    {
+      ColumnName: "CC716_TIER1_RATE_ADV",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 11,
+    },
+    {
+      ColumnName: "CC716_RATE_COL1",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 12,
+    },
+    {
+      ColumnName: "CC716_RATE_COL2",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 13,
+    },
+    {
+      ColumnName: "CC716_RATE_COL3",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 14,
+    },
+    {
+      ColumnName: "CC716_COST_SCHEME",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 15,
+    },
+    {
+      ColumnName: "CC716_COST_TIER1_RATE_STD",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 16,
+    },
+    {
+      ColumnName: "CC716_COST_TIER1_RATE_ADV",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 17,
+    },
+    {
+      ColumnName: "CC716_COST_TIER1_RATE_LATE",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 18,
+    },
+    {
+      ColumnName: "CC716_USE_TIER",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 19,
+    },
+    {
+      ColumnName: "CC716_USE_TIER_COST",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 20,
+    },
+    {
+      ColumnName: "CC716_PER_UOM",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 21,
+    },
+    {
+      ColumnName: "CC716_ORIG_COST",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 22,
+    },
+    {
+      ColumnName: "CC716_DAILY",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 23,
+    },
+    {
+      ColumnName: "CC716_SCHEME_CODE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 24,
+    },
+    {
+      ColumnName: "CC716_ORIG_RATE",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 25,
+    },
+    {
+      ColumnName: "CC716_COST_COL1",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 26,
+    },
+    {
+      ColumnName: "CC716_COST_COL2",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 27,
+    },
+    {
+      ColumnName: "CC716_COST_COL3",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 28,
+    },
+    {
+      ColumnName: "CC716_SHIPPABLE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 29,
+    },
+    {
+      ColumnName: "CC716_CHARGEABLE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 30,
+    },
+    {
+      ColumnName: "CC716_TAX_EI",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 31,
+    },
+    {
+      ColumnName: "CC716_MIN_CHRG",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 32,
+    },
+    {
+      ColumnName: "CC716_MAX_CHRG",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 33,
+    },
+    {
+      ColumnName: "ResourceCode_EV370_DECIMALS",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 34,
+    },
+    {
+      ColumnName: "ResourceCode_EV370_LEAD_HRS",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 35,
+    },
+    {
+      ColumnName: "ResourceCode_EV370_STRIKE_HRS",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 36,
+    },
+    {
+      ColumnName: "ResourceCode_EV370_PER_UOM",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 37,
+    },
+    {
+      ColumnName: "CC716_SEQ",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 38,
+    },
+    {
+      ColumnName: "CC716_PRICE_LIST",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 39,
+    },
+    {
+      ColumnName: "CC716_HEADER_ONLY",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 40,
+    },
+    {
+      ColumnName: "CC716_DSP_SEQ_1",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 41,
+    },
+    {
+      ColumnName: "CC716_DSP_SEQ_2",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 42,
+    },
+    {
+      ColumnName: "CC716_MIN_QTY",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 43,
+    },
+    {
+      ColumnName: "ResourceCode_EV370_MSTR_SEQ_NBR",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 44,
+    },
+    {
+      ColumnName: "CC716_STATUS",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 45,
+    },
+    {
+      ColumnName: "ER101_STAT_ORD_NBR",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 46,
+    },
+    {
+      ColumnName: "ER101_STAT_ORD_LINE",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 47,
+    },
+    {
+      ColumnName: "ER101_TIME_QTY",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 48,
+    },
+    {
+      ColumnName: "ER101_TIME_QTY_EDIT",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 49,
+    },
+    {
+      ColumnName: "ResourceCode_EV370_SETUP_ID",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 50,
+    },
+    {
+      ColumnName: "Setup_EV375_SETUP_TYPE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 51,
+    },
+    {
+      ColumnName: "Setup_EV375_VERIFY",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 52,
+    },
+    {
+      ColumnName: "CC716_ORG_CODE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 53,
+    },
+    {
+      ColumnName: "cSTD_COST",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 54,
+    },
+    {
+      ColumnName: "cSTD_RATE",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 55,
+    },
+    {
+      ColumnName: "cADV_COST",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 56,
+    },
+    {
+      ColumnName: "cADV_RATE",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 57,
+    },
+    {
+      ColumnName: "cLATE_COST",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 58,
+    },
+    {
+      ColumnName: "cLATE_RATE",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 59,
+    },
+    {
+      ColumnName: "cQUICK_SELECT",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 60,
+    },
+    {
+      ColumnName: "cITEM_TOTAL",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 61,
+    },
+    {
+      ColumnName: "cSTATS_ORD",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 62,
+    },
+    {
+      ColumnName: "cEVENT_ATTENDANCE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 63,
+    },
+    {
+      ColumnName: "cFUNC_ATTENDANCE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 64,
+    },
+    {
+      ColumnName: "cSUITE_ATTENDANCE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 65,
+    },
+    {
+      ColumnName: "cSTAT_ORDNBR_ORDLINE_QTY",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 66,
+    },
+    {
+      ColumnName: "CC716_ORD_TYPE__SORT",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 67,
+    },
+    {
+      ColumnName: "cORDER_FORM_DESC__SORT",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 68,
+    },
+    {
+      ColumnName: "cROW_KEY",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 69,
+    },
+    {
+      ColumnName: "COMP_ROW_ACCESS",
+      DataType: "System.Int32",
+      DefaultValue: null,
+      ColumnID: 70,
+    },
+    {
+      ColumnName: "GrandTotal",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 71,
+    },
+    {
+      ColumnName: "COMP_CC716_ORD_TYPE",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 72,
+    },
+    {
+      ColumnName: "COMP_CC716_RES_TYPE_NEW",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 73,
+    },
+    {
+      ColumnName: "cQUANTITY__EDIT_SORT",
+      DataType: "System.Decimal",
+      DefaultValue: null,
+      ColumnID: 74,
+    },
+    {
+      ColumnName: "ResourceType_EV370_CODE_DESC__EDIT_SORT",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 75,
+    },
+    {
+      ColumnName: "CC716_RES_CODE__EDIT_SORT",
+      DataType: "System.String",
+      DefaultValue: null,
+      ColumnID: 76,
+    },
+  ],
+  TransportDataRows: [
+    {
+      Values: {
+        "0": "11",
+        "1": "Cherry Pie",
+        "2": quantity,
+        "3": "EA",
+        "4": 6,
+        "5": "3740",
+        "6": "CHERRY PIE",
+        "7": "Room Setups (11)",
+        "8": "Desserts",
+        "9": 0,
+        "10": 0,
+        "11": 0,
+        "12": 6,
+        "13": 6,
+        "14": 6,
+        "15": "",
+        "16": 0,
+        "17": 0,
+        "18": 0,
+        "19": "N",
+        "20": "N",
+        "21": "EA",
+        "22": 1.1,
+        "23": "N",
+        "24": "",
+        "25": 0,
+        "26": 1.1,
+        "27": 1.1,
+        "28": 1.1,
+        "29": "N",
+        "30": "OT",
+        "31": "E",
+        "32": 0,
+        "33": 0,
+        "34": "2",
+        "35": null,
+        "36": null,
+        "37": "EA",
+        "38": 217,
+        "39": so.priceList,
+        "40": "N",
+        "41": "11",
+        "42": " ",
+        "43": 0,
+        "44": 1044,
+        "45": "A",
+        "46": null,
+        "47": null,
+        "48": null,
+        "49": null,
+        "50": " ",
+        "51": null,
+        "52": null,
+        "53": "10",
+        "54": 1.1,
+        "55": 6,
+        "56": 1.1,
+        "57": 6,
+        "58": 1.1,
+        "59": 6,
+        "60": null,
+        "61": 0,
+        "62": "Y",
+        "63": "Y",
+        "64": "Y",
+        "65": "Y",
+        "66": null,
+        "67": "11_11",
+        "68": 58,
+        "69": "10|2022SPL|217",
+        "70": 1,
+        "71": null,
+        "72": "11",
+        "73": "3740",
+        "74": 0,
+        "75": "Desserts",
+        "76": "CHERRY PIE",
+      },
+    },
+    {
+      Values: {
+        "0": "11",
+        "1": "Cheesecake",
+        "2": quantity,
+        "3": "EA",
+        "4": 12,
+        "5": "3740",
+        "6": "CHEESE-CAKE",
+        "7": "Room Setups (11)",
+        "8": "Desserts",
+        "9": 0,
+        "10": 0,
+        "11": 0,
+        "12": 6,
+        "13": 12,
+        "14": 12,
+        "15": "",
+        "16": 0,
+        "17": 0,
+        "18": 0,
+        "19": "N",
+        "20": "N",
+        "21": "EA",
+        "22": 1.75,
+        "23": "N",
+        "24": "",
+        "25": 0,
+        "26": 1.75,
+        "27": 1.75,
+        "28": 1.75,
+        "29": "N",
+        "30": "OT",
+        "31": "E",
+        "32": 0,
+        "33": 0,
+        "34": "2",
+        "35": null,
+        "36": null,
+        "37": "EA",
+        "38": 216,
+        "39": so.priceList,
+        "40": "N",
+        "41": "11",
+        "42": " ",
+        "43": 0,
+        "44": 945,
+        "45": "A",
+        "46": null,
+        "47": null,
+        "48": null,
+        "49": null,
+        "50": " ",
+        "51": null,
+        "52": null,
+        "53": "10",
+        "54": 1.75,
+        "55": 6,
+        "56": 1.75,
+        "57": 12,
+        "58": 1.75,
+        "59": 12,
+        "60": null,
+        "61": 0,
+        "62": "Y",
+        "63": "Y",
+        "64": "Y",
+        "65": "Y",
+        "66": null,
+        "67": "11_11",
+        "68": 58,
+        "69": "10|2022SPL|216",
+        "70": 1,
+        "71": null,
+        "72": "11",
+        "73": "3740",
+        "74": 2,
+        "75": "Desserts",
+        "76": "CHEESE-CAKE",
+      },
+    },
+  ],
+});
+
+export const serviceOrderItemsSavePayload = (
+  so: ServiceOrderRow,
+  quantity: number,
+) => [
+  1,
+  "10",
+  4,
+  0,
+  0,
+  4,
+  2,
+  [
+    { Key: "OrgCode", Value: so.orgCode },
+    { Key: "wdwMode", Value: 2 },
+    { Key: "RemoveEditLayoutLink", Value: false },
+    { Key: "ContextObjectID", Value: 0 },
+    { Key: "MenuType", Value: 4 },
+    { Key: "OrdAcct", Value: so.ordAcct },
+    { Key: "InvoiceNbr", Value: Number(so.invoice) },
+    { Key: "FuncID", Value: Number(so.funcId) },
+    { Key: "OrdBillTo", Value: so.billTo },
+    { Key: "EvtID", Value: Number(so.evtId) },
+    { Key: "ExhibitorID", Value: Number(so.exhibitorId) },
+    { Key: "OrdBillToCntct", Value: so.btoContact },
+    { Key: "OrdCntct", Value: so.ordContact },
+    { Key: "OrdReqCntct", Value: so.reqContact },
+    { Key: "OrdSalesPer", Value: so.salesPer },
+    { Key: "Occurrence", Value: Number(so.occurrence) },
+    { Key: "OrderType", Value: so.orderType },
+    { Key: "PriceList", Value: so.priceList },
+    { Key: "OrdReq", Value: so.reqCust },
+    { Key: "OrderPhase", Value: so.resPhase },
+    { Key: "OrdShipTo", Value: so.shipTo },
+    { Key: "OrdShipToCntct", Value: so.shipToContact },
+    { Key: "OrdCatSeq", Value: so.ordCatSeq },
+    { Key: "EvtDesig", Value: so.evtDesig },
+    { Key: "AcctClass", Value: so.acctClass },
+    { Key: "EventSuiteID", Value: Number(so.eventSuiteId) },
+    { Key: "EvtStatus", Value: so.evtStatus },
+    { Key: "RowKeyList", Value: so.rowKey },
+    { Key: "RefreshDependentKey", Value: Date.now() },
+    { Key: "OrderNbr", Value: Number(so.orderNbr) },
+    { Key: "ForceOneColumnLayout", Value: false },
+    { Key: "ShowHelpTextInfo", Value: true },
+    { Key: "MoveGeneralSectionToNewTab", Value: true },
+    { Key: "ShowQuickInfoHeader", Value: true },
+    { Key: "SectionUDFSets", Value: "41|-125|10|C|25" },
+    { Key: "Status", Value: so.status },
+    { Key: "MenuObjectID", Value: 5 },
+    { Key: "MenuContextObjectID", Value: 4 },
+    { Key: "DeptCode", Value: "" },
+    { Key: "wdwid", Value: "EM9160" },
+    { Key: "WdwType", Value: 4 },
+    { Key: "WindowObjectID", Value: 456 },
+    { Key: "RateType", Value: "LT" },
+    { Key: "IsExhibitorOrder", Value: "N" },
+    { Key: "BoothNumber", Value: "" },
+  ],
+  {
+    SaveMode: 0,
+    Delete: false,
+    Tag: {},
+    MessageInfoList: [],
+    WorkflowToolbarButtonID: 0,
+    AddedRowKeys: [],
+    ModifiedRowKeys: [so.rowKey],
+    DeletedRowKeys: [],
+    UnchangedRowKeys: [],
+    AdditionalTableKeyAddedRowKeys: [{ Key: "ObjectID_457", Value: [] }],
+    AdditionalTableKeyModifiedRowKeys: [
+      {
+        Key: "ObjectID_457",
+        Value: [
+          `${so.orgCode}|${so.priceList}|217`,
+          `${so.orgCode}|${so.priceList}|216`,
+        ],
+      },
+    ],
+    AdditionalTableKeyDeletedRowKeys: [{ Key: "ObjectID_457", Value: [] }],
+    AdditionalTableKeyUnchangedRowKeys: [{ Key: "ObjectID_457", Value: [] }],
+  },
+  // Order dated 60 days out so it falls inside the seeded event/function window (opens 30 days
+  // out — see events/create.data.ts); the captured 2024 date would be rejected as out of range.
+  {
+    TransportDataTables: [orderTable(so, todayMidnightUtc() + 60 * DAY)],
+  },
+  { TransportDataTables: [itemsTable(so, quantity)] },
+  {
+    AutoRefresh: "Y",
+    EnterUserID: "",
+    FilterCriteria: "",
+    ID: 0,
+    ObjectID: 0,
+    OrgCode: null,
+    ResultsCount: 0,
+    ResultsLimit: 0,
+    ResultsTime: 0,
+    SearchDesc: "",
+    SearchFilters: [],
+    ThemeID: 0,
+    USIID: 0,
+    UpdateUserID: "",
+    UserID: "",
+    SourceUSIID: 0,
+    ConvertToUserDisplayTimeZone: false,
+  },
+];
