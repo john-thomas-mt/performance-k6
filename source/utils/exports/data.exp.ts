@@ -10,5 +10,5 @@ export * from '../../data/payloads/service-orders/detail.data.ts';
 export * from '../../data/payloads/service-orders/grid.data.ts';
 export * from '../../data/payloads/service-orders/save.data.ts';
 export * from '../../data/payloads/sales-ai/manual-entry.data.ts';
-export * from '../../data/payloads/navigation/navigation.data.ts';
+export * from '../../data/payloads/common/navigation.data.ts';
 export * from '../../data/creds/users.data.ts';
