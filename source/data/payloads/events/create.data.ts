@@ -1,6 +1,130 @@
 import { todayMidnightUtc } from "../../../utils/exports/helpers.exp.ts";
 import { TransportTable } from "../../../utils/exports/types.exp.ts";
 
+// Captured create-event Save2 request (GenericDetailServer/Save2, window EB8073, from-scratch
+// add-event) built inline per call; the builder rewrites only the description columns to the seed
+// marker so the seeded event is discoverable. Account/dates/status stay as captured — the seeded
+// service orders inherit that context, matching the create-SO template.
+export const createEventPayload = (description: string) => [
+  1,
+  "10",
+  1,
+  0,
+  0,
+  4,
+  1,
+  [
+    {
+      Key: "OrgCode",
+      Value: "10",
+    },
+    {
+      Key: "WindowObjectID",
+      Value: 1,
+    },
+    {
+      Key: "wdwid",
+      Value: "EB8073",
+    },
+    {
+      Key: "WdwType",
+      Value: 4,
+    },
+    {
+      Key: "wdwMode",
+      Value: 1,
+    },
+    {
+      Key: "RemoveEditLayoutLink",
+      Value: false,
+    },
+    {
+      Key: "ContextObjectID",
+      Value: 0,
+    },
+    {
+      Key: "MenuType",
+      Value: 1,
+    },
+    {
+      Key: "MenuObjectID",
+      Value: 0,
+    },
+    {
+      Key: "MenuContextObjectID",
+      Value: 0,
+    },
+    {
+      Key: "EditWdwID",
+      Value: "EB8074",
+    },
+    {
+      Key: "ForceOneColumnLayout",
+      Value: false,
+    },
+    {
+      Key: "ShowHelpTextInfo",
+      Value: true,
+    },
+    {
+      Key: "MoveGeneralSectionToNewTab",
+      Value: true,
+    },
+    {
+      Key: "ShowQuickInfoHeader",
+      Value: true,
+    },
+    {
+      Key: "SectionUDFSets",
+      Value: "",
+    },
+    {
+      Key: "LinkedFuncs",
+      Value: "Y",
+    },
+  ],
+  {
+    SaveMode: 7,
+    Delete: false,
+    Tag: {},
+    MessageInfoList: [],
+    WorkflowToolbarButtonID: 0,
+    AddedRowKeys: ["10|-1"],
+    ModifiedRowKeys: [],
+    DeletedRowKeys: [],
+    UnchangedRowKeys: [],
+    AdditionalTableKeyAddedRowKeys: [],
+    AdditionalTableKeyModifiedRowKeys: [],
+    AdditionalTableKeyDeletedRowKeys: [],
+    AdditionalTableKeyUnchangedRowKeys: [],
+  },
+  {
+    TransportDataTables: [eventTable(description)],
+  },
+  {
+    TransportDataTables: [],
+  },
+  {
+    AutoRefresh: "Y",
+    EnterUserID: "",
+    FilterCriteria: "",
+    ID: 0,
+    ObjectID: 0,
+    OrgCode: null,
+    ResultsCount: 0,
+    ResultsLimit: 0,
+    ResultsTime: 0,
+    SearchDesc: "",
+    SearchFilters: [],
+    ThemeID: 0,
+    USIID: 0,
+    UpdateUserID: "",
+    UserID: "",
+    SourceUSIID: 0,
+    ConvertToUserDisplayTimeZone: false,
+  },
+];
+
 // Event date range opening 30 days out and running ~1 year ahead, relative to run time so it never
 // goes stale. The seeded event's auto-created function inherits this range; the items-save dates the
 // order (and thus the added item) 60 days out (see service-orders/save.data.ts), which sits inside
@@ -1168,127 +1292,3 @@ const eventTable = (description: string): TransportTable => ({
     },
   ],
 });
-
-// Captured create-event Save2 request (GenericDetailServer/Save2, window EB8073, from-scratch
-// add-event) built inline per call; the builder rewrites only the description columns to the seed
-// marker so the seeded event is discoverable. Account/dates/status stay as captured — the seeded
-// service orders inherit that context, matching the create-SO template.
-export const createEventPayload = (description: string) => [
-  1,
-  "10",
-  1,
-  0,
-  0,
-  4,
-  1,
-  [
-    {
-      Key: "OrgCode",
-      Value: "10",
-    },
-    {
-      Key: "WindowObjectID",
-      Value: 1,
-    },
-    {
-      Key: "wdwid",
-      Value: "EB8073",
-    },
-    {
-      Key: "WdwType",
-      Value: 4,
-    },
-    {
-      Key: "wdwMode",
-      Value: 1,
-    },
-    {
-      Key: "RemoveEditLayoutLink",
-      Value: false,
-    },
-    {
-      Key: "ContextObjectID",
-      Value: 0,
-    },
-    {
-      Key: "MenuType",
-      Value: 1,
-    },
-    {
-      Key: "MenuObjectID",
-      Value: 0,
-    },
-    {
-      Key: "MenuContextObjectID",
-      Value: 0,
-    },
-    {
-      Key: "EditWdwID",
-      Value: "EB8074",
-    },
-    {
-      Key: "ForceOneColumnLayout",
-      Value: false,
-    },
-    {
-      Key: "ShowHelpTextInfo",
-      Value: true,
-    },
-    {
-      Key: "MoveGeneralSectionToNewTab",
-      Value: true,
-    },
-    {
-      Key: "ShowQuickInfoHeader",
-      Value: true,
-    },
-    {
-      Key: "SectionUDFSets",
-      Value: "",
-    },
-    {
-      Key: "LinkedFuncs",
-      Value: "Y",
-    },
-  ],
-  {
-    SaveMode: 7,
-    Delete: false,
-    Tag: {},
-    MessageInfoList: [],
-    WorkflowToolbarButtonID: 0,
-    AddedRowKeys: ["10|-1"],
-    ModifiedRowKeys: [],
-    DeletedRowKeys: [],
-    UnchangedRowKeys: [],
-    AdditionalTableKeyAddedRowKeys: [],
-    AdditionalTableKeyModifiedRowKeys: [],
-    AdditionalTableKeyDeletedRowKeys: [],
-    AdditionalTableKeyUnchangedRowKeys: [],
-  },
-  {
-    TransportDataTables: [eventTable(description)],
-  },
-  {
-    TransportDataTables: [],
-  },
-  {
-    AutoRefresh: "Y",
-    EnterUserID: "",
-    FilterCriteria: "",
-    ID: 0,
-    ObjectID: 0,
-    OrgCode: null,
-    ResultsCount: 0,
-    ResultsLimit: 0,
-    ResultsTime: 0,
-    SearchDesc: "",
-    SearchFilters: [],
-    ThemeID: 0,
-    USIID: 0,
-    UpdateUserID: "",
-    UserID: "",
-    SourceUSIID: 0,
-    ConvertToUserDisplayTimeZone: false,
-  },
-];

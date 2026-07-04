@@ -1,6 +1,258 @@
 import { majorMinor } from "../../../utils/exports/helpers.exp.ts";
 import { TransportTable } from "../../../utils/exports/types.exp.ts";
 
+// Captured create-service-order Save2 request (GenericDetailServer/Save2, window EM9131) built inline
+// per call. The session user, version, and event-id references are woven in from the arguments so the
+// order is created under the freshly seeded event. ER100_SO_SEARCH is server-assigned on create
+// (equals the new order number), so it is intentionally left unset here.
+export const createServiceOrderPayload = (
+  encUserId: string,
+  evtId: string,
+  version: string,
+) => [
+  1,
+  "10",
+  456,
+  0,
+  0,
+  4,
+  1,
+  [
+    {
+      Key: "wdwid",
+      Value: "EM9131",
+    },
+    {
+      Key: "WindowObjectID",
+      Value: 456,
+    },
+    {
+      Key: "ObjectContextID",
+      Value: 0,
+    },
+    {
+      Key: "DetailsWdwid",
+      Value: "",
+    },
+    {
+      Key: "DetailsAssembly",
+      Value: "",
+    },
+    {
+      Key: "DetailsClass",
+      Value: "",
+    },
+    {
+      Key: "WdwType",
+      Value: 4,
+    },
+    {
+      Key: "EncUserID",
+      Value: encUserId,
+    },
+    {
+      Key: "Version",
+      Value: majorMinor(version),
+    },
+    {
+      Key: "EditWdwID",
+      Value: "EM2005",
+    },
+    {
+      Key: "panel",
+      Value: "N",
+    },
+    {
+      Key: "OrdCatSeq",
+      Value: "0",
+    },
+    {
+      Key: "MenuType",
+      Value: 3,
+    },
+    {
+      Key: "OrgCode",
+      Value: "10",
+    },
+    {
+      Key: "wdwMode",
+      Value: 2,
+    },
+    {
+      Key: "RemoveEditLayoutLink",
+      Value: false,
+    },
+    {
+      Key: "ContextObjectID",
+      Value: 0,
+    },
+    {
+      Key: "EvtID",
+      Value: Number(evtId),
+    },
+    {
+      Key: "ForceOneColumnLayout",
+      Value: false,
+    },
+    {
+      Key: "ShowHelpTextInfo",
+      Value: true,
+    },
+    {
+      Key: "MoveGeneralSectionToNewTab",
+      Value: true,
+    },
+    {
+      Key: "ShowQuickInfoHeader",
+      Value: true,
+    },
+    {
+      Key: "SectionUDFSets",
+      Value: "41|-125|10|C|25",
+    },
+    {
+      Key: "LinkedFuncs",
+      Value: "Y",
+    },
+    {
+      Key: "EvtAcct",
+      Value: "00159220",
+    },
+    {
+      Key: "MenuObjectID",
+      Value: 4,
+    },
+    {
+      Key: "MenuContextObjectID",
+      Value: 1,
+    },
+    {
+      Key: "EvtStatus",
+      Value: "26",
+    },
+    {
+      Key: "EvtCntct",
+      Value: "00167764",
+    },
+    {
+      Key: "EvtSalesPer",
+      Value: "00154232",
+    },
+    {
+      Key: "EJCatCode",
+      Value: "",
+    },
+    {
+      Key: "EvtBillTo",
+      Value: "00159220",
+    },
+    {
+      Key: "EvtBillToCntct",
+      Value: "00167764",
+    },
+    {
+      Key: "PrvEvtId",
+      Value: Number(evtId),
+    },
+    {
+      Key: "EvtPriceList",
+      Value: "2022SPL",
+    },
+    {
+      Key: "EvtPrimeCoord",
+      Value: "",
+    },
+    {
+      Key: "EvtSecCoord",
+      Value: "",
+    },
+    {
+      Key: "EvtDesig",
+      Value: "X",
+    },
+    {
+      Key: "EvtReq",
+      Value: "00159220",
+    },
+    {
+      Key: "EvtReqCntct",
+      Value: "00167764",
+    },
+    {
+      Key: "RowKeyList",
+      Value: `10|${evtId}`,
+    },
+    {
+      Key: "PriceList",
+      Value: "2022SPL",
+    },
+    {
+      Key: "RateType",
+      Value: "AD",
+    },
+    {
+      Key: "IsExhibitorOrder",
+      Value: "N",
+    },
+    {
+      Key: "BoothNumber",
+      Value: "",
+    },
+    {
+      Key: "StartDate",
+      Value: "6/23/2026 9:00:00 AM",
+    },
+    {
+      Key: "EndDate",
+      Value: "6/25/2026 6:00:00 PM",
+    },
+    {
+      Key: "Status",
+      Value: "T",
+    },
+  ],
+  {
+    SaveMode: 0,
+    Delete: false,
+    Tag: {},
+    MessageInfoList: [],
+    WorkflowToolbarButtonID: 0,
+    AddedRowKeys: ["10|-1"],
+    ModifiedRowKeys: [],
+    DeletedRowKeys: [],
+    UnchangedRowKeys: [],
+    AdditionalTableKeyAddedRowKeys: [],
+    AdditionalTableKeyModifiedRowKeys: [],
+    AdditionalTableKeyDeletedRowKeys: [],
+    AdditionalTableKeyUnchangedRowKeys: [],
+  },
+  {
+    TransportDataTables: [orderTable(evtId)],
+  },
+  {
+    TransportDataTables: [],
+  },
+  {
+    AutoRefresh: "Y",
+    EnterUserID: "",
+    FilterCriteria: "",
+    ID: 0,
+    ObjectID: 0,
+    OrgCode: null,
+    ResultsCount: 0,
+    ResultsLimit: 0,
+    ResultsTime: 0,
+    SearchDesc: "",
+    SearchFilters: [],
+    ThemeID: 0,
+    USIID: 0,
+    UpdateUserID: "",
+    UserID: "",
+    SourceUSIID: 0,
+    ConvertToUserDisplayTimeZone: false,
+  },
+];
+
 // Order-function date range, mirroring the items-save template's captured range
 // (2024-01-01 09:00 .. 2024-01-03 18:00). The seeded SO's function dates must match the item
 // date/times the items-save sends, or the save warns "item date/time outside the order function's
@@ -383,255 +635,3 @@ const orderTable = (evtId: string): TransportTable => ({
     },
   ],
 });
-
-// Captured create-service-order Save2 request (GenericDetailServer/Save2, window EM9131) built inline
-// per call. The session user, version, and event-id references are woven in from the arguments so the
-// order is created under the freshly seeded event. ER100_SO_SEARCH is server-assigned on create
-// (equals the new order number), so it is intentionally left unset here.
-export const createServiceOrderPayload = (
-  encUserId: string,
-  evtId: string,
-  version: string,
-) => [
-  1,
-  "10",
-  456,
-  0,
-  0,
-  4,
-  1,
-  [
-    {
-      Key: "wdwid",
-      Value: "EM9131",
-    },
-    {
-      Key: "WindowObjectID",
-      Value: 456,
-    },
-    {
-      Key: "ObjectContextID",
-      Value: 0,
-    },
-    {
-      Key: "DetailsWdwid",
-      Value: "",
-    },
-    {
-      Key: "DetailsAssembly",
-      Value: "",
-    },
-    {
-      Key: "DetailsClass",
-      Value: "",
-    },
-    {
-      Key: "WdwType",
-      Value: 4,
-    },
-    {
-      Key: "EncUserID",
-      Value: encUserId,
-    },
-    {
-      Key: "Version",
-      Value: majorMinor(version),
-    },
-    {
-      Key: "EditWdwID",
-      Value: "EM2005",
-    },
-    {
-      Key: "panel",
-      Value: "N",
-    },
-    {
-      Key: "OrdCatSeq",
-      Value: "0",
-    },
-    {
-      Key: "MenuType",
-      Value: 3,
-    },
-    {
-      Key: "OrgCode",
-      Value: "10",
-    },
-    {
-      Key: "wdwMode",
-      Value: 2,
-    },
-    {
-      Key: "RemoveEditLayoutLink",
-      Value: false,
-    },
-    {
-      Key: "ContextObjectID",
-      Value: 0,
-    },
-    {
-      Key: "EvtID",
-      Value: Number(evtId),
-    },
-    {
-      Key: "ForceOneColumnLayout",
-      Value: false,
-    },
-    {
-      Key: "ShowHelpTextInfo",
-      Value: true,
-    },
-    {
-      Key: "MoveGeneralSectionToNewTab",
-      Value: true,
-    },
-    {
-      Key: "ShowQuickInfoHeader",
-      Value: true,
-    },
-    {
-      Key: "SectionUDFSets",
-      Value: "41|-125|10|C|25",
-    },
-    {
-      Key: "LinkedFuncs",
-      Value: "Y",
-    },
-    {
-      Key: "EvtAcct",
-      Value: "00159220",
-    },
-    {
-      Key: "MenuObjectID",
-      Value: 4,
-    },
-    {
-      Key: "MenuContextObjectID",
-      Value: 1,
-    },
-    {
-      Key: "EvtStatus",
-      Value: "26",
-    },
-    {
-      Key: "EvtCntct",
-      Value: "00167764",
-    },
-    {
-      Key: "EvtSalesPer",
-      Value: "00154232",
-    },
-    {
-      Key: "EJCatCode",
-      Value: "",
-    },
-    {
-      Key: "EvtBillTo",
-      Value: "00159220",
-    },
-    {
-      Key: "EvtBillToCntct",
-      Value: "00167764",
-    },
-    {
-      Key: "PrvEvtId",
-      Value: Number(evtId),
-    },
-    {
-      Key: "EvtPriceList",
-      Value: "2022SPL",
-    },
-    {
-      Key: "EvtPrimeCoord",
-      Value: "",
-    },
-    {
-      Key: "EvtSecCoord",
-      Value: "",
-    },
-    {
-      Key: "EvtDesig",
-      Value: "X",
-    },
-    {
-      Key: "EvtReq",
-      Value: "00159220",
-    },
-    {
-      Key: "EvtReqCntct",
-      Value: "00167764",
-    },
-    {
-      Key: "RowKeyList",
-      Value: `10|${evtId}`,
-    },
-    {
-      Key: "PriceList",
-      Value: "2022SPL",
-    },
-    {
-      Key: "RateType",
-      Value: "AD",
-    },
-    {
-      Key: "IsExhibitorOrder",
-      Value: "N",
-    },
-    {
-      Key: "BoothNumber",
-      Value: "",
-    },
-    {
-      Key: "StartDate",
-      Value: "6/23/2026 9:00:00 AM",
-    },
-    {
-      Key: "EndDate",
-      Value: "6/25/2026 6:00:00 PM",
-    },
-    {
-      Key: "Status",
-      Value: "T",
-    },
-  ],
-  {
-    SaveMode: 0,
-    Delete: false,
-    Tag: {},
-    MessageInfoList: [],
-    WorkflowToolbarButtonID: 0,
-    AddedRowKeys: ["10|-1"],
-    ModifiedRowKeys: [],
-    DeletedRowKeys: [],
-    UnchangedRowKeys: [],
-    AdditionalTableKeyAddedRowKeys: [],
-    AdditionalTableKeyModifiedRowKeys: [],
-    AdditionalTableKeyDeletedRowKeys: [],
-    AdditionalTableKeyUnchangedRowKeys: [],
-  },
-  {
-    TransportDataTables: [orderTable(evtId)],
-  },
-  {
-    TransportDataTables: [],
-  },
-  {
-    AutoRefresh: "Y",
-    EnterUserID: "",
-    FilterCriteria: "",
-    ID: 0,
-    ObjectID: 0,
-    OrgCode: null,
-    ResultsCount: 0,
-    ResultsLimit: 0,
-    ResultsTime: 0,
-    SearchDesc: "",
-    SearchFilters: [],
-    ThemeID: 0,
-    USIID: 0,
-    UpdateUserID: "",
-    UserID: "",
-    SourceUSIID: 0,
-    ConvertToUserDisplayTimeZone: false,
-  },
-];
