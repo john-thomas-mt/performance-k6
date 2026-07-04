@@ -1,5 +1,5 @@
 ---
-name: validate-payload-drift
+name: payload-drift
 description: Detect whether captured save payloads embedded in the data builders (today all `Save2`, but any captured write body applies) have drifted from what the live Momentus API now expects — by running the smoke test (all scripts, one iteration) and triaging failures. Use after a Momentus upgrade or config change, or when a test fails with server-side validation errors rather than correlation bugs.
 ---
 
@@ -55,10 +55,10 @@ the `generate-test` flow's exploration and save the request body to `temp/captur
 then:
 ```
 # run the committed builder and print its emitted payload as JSON (use the exported builder name)
-node .claude/skills/validate-payload-drift/scripts/materialize-template.cjs source/data/payloads/<module>/<file>.data.ts <builderName> > temp/object.json
+node .claude/skills/payload-drift/scripts/materialize-template.cjs source/data/payloads/<module>/<file>.data.ts <builderName> > temp/object.json
 
 # shape-diff it against the fresh recording (exit 0 = clean, 1 = drift)
-node .claude/skills/validate-payload-drift/scripts/compare-payload.cjs temp/object.json temp/captures/raw/<name>.json
+node .claude/skills/payload-drift/scripts/compare-payload.cjs temp/object.json temp/captures/raw/<name>.json
 ```
 The diff ignores dynamic leaf values and reports only structure — added/removed fields and type
 changes — naming the drifted column where the array carries a stable id field.
