@@ -1,11 +1,6 @@
 import { check, group, sleep } from 'k6';
 import { loginToEvents } from './login.flow.ts';
-import {
-  searchEvents,
-  loadServiceOrders,
-  openServiceOrderDetail,
-  saveServiceOrderItems,
-} from '../utils/exports/apis.exp.ts';
+import { searchEvents, loadServiceOrders, openServiceOrderDetail, saveServiceOrderItems } from '../utils/exports/apis.exp.ts';
 import { config } from '../utils/exports/config.exp.ts';
 import { User, ServiceOrderSetup, ServiceOrderRow, EventRow } from '../utils/exports/types.exp.ts';
 
@@ -23,9 +18,7 @@ export function discoverServiceOrderPool(version: string, user: User): ServiceOr
     .filter((e) => e.desc.startsWith(config.seedEventDesc))
     .reduce<EventRow | null>((newest, e) => (newest && Number(newest.evtId) >= Number(e.evtId) ? newest : e), null);
   if (!seedEvent) {
-    throw new Error(
-      `seed event "${config.seedEventDesc}" not found — run source/seeds/service-orders.seed.ts after the snapshot reset`
-    );
+    throw new Error(`seed event "${config.seedEventDesc}" not found — run source/seeds/service-orders.seed.ts after the snapshot reset`);
   }
 
   const pool = loadServiceOrders(bearerToken, version, seedEvent);

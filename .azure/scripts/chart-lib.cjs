@@ -72,9 +72,7 @@ function configSection(specPath, exec) {
     }
   }
   if (items.length === 0) return '';
-  const trs = items
-    .map(([k, v]) => `<tr><td class="k">${esc(k)}</td><td>${esc(v)}</td></tr>`)
-    .join('');
+  const trs = items.map(([k, v]) => `<tr><td class="k">${esc(k)}</td><td>${esc(v)}</td></tr>`).join('');
   return `<section><h2>Run configuration</h2><table>${trs}</table></section>`;
 }
 
@@ -94,9 +92,7 @@ function svgChart(title, elapsed, series, unit, stages) {
   const prepared = series
     .map((s) => ({
       ...s,
-      pts: s.values
-        .map((v, i) => ({ x: elapsed[i], v }))
-        .filter((p) => p.v !== null && p.v !== undefined && !Number.isNaN(p.v)),
+      pts: s.values.map((v, i) => ({ x: elapsed[i], v })).filter((p) => p.v !== null && p.v !== undefined && !Number.isNaN(p.v)),
     }))
     .filter((s) => s.pts.length > 0);
 

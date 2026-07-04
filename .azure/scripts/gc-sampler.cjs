@@ -5,8 +5,7 @@
 const fs = require('node:fs');
 const http = require('node:http');
 
-const [, , outPath = 'temp/gc-usage.csv', intervalArg = '1', address = '127.0.0.1:6565'] =
-  process.argv;
+const [, , outPath = 'temp/gc-usage.csv', intervalArg = '1', address = '127.0.0.1:6565'] = process.argv;
 const intervalMs = Math.max(1, Number(intervalArg)) * 1000;
 const MB = 1024 * 1024;
 

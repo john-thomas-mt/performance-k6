@@ -60,9 +60,7 @@ if (selected && !allScenarios[selected]) {
   throw new Error(`Unknown SCENARIO "${selected}" — valid: ${Object.keys(allScenarios).join(', ')}`);
 }
 
-const activeThresholds: Record<string, string[]> = selected
-  ? allThresholds[selected]
-  : Object.assign({}, ...Object.values(allThresholds));
+const activeThresholds: Record<string, string[]> = selected ? allThresholds[selected] : Object.assign({}, ...Object.values(allThresholds));
 
 export const options: Options = {
   scenarios: selected ? { [selected]: allScenarios[selected] } : allScenarios,

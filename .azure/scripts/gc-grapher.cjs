@@ -1,14 +1,7 @@
 const fs = require('node:fs');
 const { readExecReq, configSection, page, svgChart } = require('./chart-lib.cjs');
 
-const [
-  ,
-  ,
-  csvPath = 'temp/gc-usage.csv',
-  htmlPath = 'temp/gc-usage.html',
-  specPath = '',
-  execReqPath = '',
-] = process.argv;
+const [, , csvPath = 'temp/gc-usage.csv', htmlPath = 'temp/gc-usage.html', specPath = '', execReqPath = ''] = process.argv;
 
 const raw = fs.existsSync(csvPath) ? fs.readFileSync(csvPath, 'utf8').trim() : '';
 const lines = raw ? raw.split(/\r?\n/) : [];
@@ -59,13 +52,7 @@ const avgPauseMs = dCount.map((c, i) => (c && c > 0 ? (dSum[i] / c) * 1000 : c =
 const maxPauseMs = column('gc_pause_max_s').map((v) => (v == null ? null : v * 1000));
 
 const charts = [
-  svgChart(
-    'GC frequency',
-    elapsed,
-    [{ values: delta(gcCount, true), color: '#2b7a4b' }],
-    ' GC/s',
-    stages,
-  ),
+  svgChart('GC frequency', elapsed, [{ values: delta(gcCount, true), color: '#2b7a4b' }], ' GC/s', stages),
   svgChart(
     'GC pause duration',
     elapsed,
@@ -86,13 +73,7 @@ const charts = [
     ' MB',
     stages,
   ),
-  svgChart(
-    'Allocation rate',
-    elapsed,
-    [{ values: delta(column('alloc_total_mb'), true), color: '#2b7a4b' }],
-    ' MB/s',
-    stages,
-  ),
+  svgChart('Allocation rate', elapsed, [{ values: delta(column('alloc_total_mb'), true), color: '#2b7a4b' }], ' MB/s', stages),
   svgChart(
     'Goroutines & OS threads',
     elapsed,

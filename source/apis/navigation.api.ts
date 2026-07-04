@@ -31,16 +31,11 @@ export function getWindowInfo(token: string, version: string, windowId: string):
   return (res.json() as unknown as WindowInfo[])[0].ObjectID;
 }
 
-export function getListInitialData(
-  token: string,
-  version: string,
-  screen: NavScreen,
-  objectId: number
-): boolean {
+export function getListInitialData(token: string, version: string, screen: NavScreen, objectId: number): boolean {
   const res = http.post(
     `${config.baseUrl}/api/GenericListServer/GetInitialData2`,
     JSON.stringify(listInitialDataPayload(screen, objectId)),
-    { headers: buildHeaders(token, version), tags: { name: 'GetListInitialData' } }
+    { headers: buildHeaders(token, version), tags: { name: 'GetListInitialData' } },
   );
 
   const ok = check(res, {
@@ -49,9 +44,7 @@ export function getListInitialData(
   });
 
   if (!ok) {
-    console.error(
-      `[VU ${__VU}] getListInitialData failed for "${screen.label}" (${screen.windowId}) — HTTP ${res.status}`
-    );
+    console.error(`[VU ${__VU}] getListInitialData failed for "${screen.label}" (${screen.windowId}) — HTTP ${res.status}`);
   }
 
   return ok;

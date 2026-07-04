@@ -47,12 +47,12 @@ Browser VUs are dramatically heavier: each k6 runner **spawns its own Chromium p
 
 12 physical / 16 logical cores, ~2.1 GHz base. The numbers below are an order-of-magnitude **extrapolation** from official sizing — a mobile CPU at 2.1 GHz base with thermal/power throttling falls well short of the high-core servers the 30k–40k figure assumes.
 
-| Workload | Realistic on this laptop | Binding constraint |
-|---|---|---|
-| Simple HTTP API VUs | low-thousands up to **~10,000** protocol VUs | **CPU first**, then Windows port/socket limits |
-| Requests/sec (HTTP) | **tens of thousands RPS** (SUT-dependent) | CPU + SUT response time |
-| Browser/Chromium VUs | **~5–20** | CPU + RAM per browser process |
-| RAM | not the limit — covers ~6,000–30,000 simple VUs | — |
+| Workload             | Realistic on this laptop                        | Binding constraint                             |
+| -------------------- | ----------------------------------------------- | ---------------------------------------------- |
+| Simple HTTP API VUs  | low-thousands up to **~10,000** protocol VUs    | **CPU first**, then Windows port/socket limits |
+| Requests/sec (HTTP)  | **tens of thousands RPS** (SUT-dependent)       | CPU + SUT response time                        |
+| Browser/Chromium VUs | **~5–20**                                       | CPU + RAM per browser process                  |
+| RAM                  | not the limit — covers ~6,000–30,000 simple VUs | —                                              |
 
 **Bottom line:** for HTTP API load testing this laptop can realistically push a few thousand VUs / tens of thousands of RPS before CPU saturates — plenty for most API perf work. CPU is the wall, not the 32 GB RAM.
 

@@ -4,24 +4,24 @@ A capacity sweep of the same k6 load run executed from a developer laptop at fou
 
 ## Run parameters
 
-| Parameter | Value |
-|---|---|
-| Script | `source/tests/load.spec.ts` (`navigation` scenario) |
-| Profile | `load` — 5m ramp / 10m sustain / 2m ramp-down (~17.5 min each) |
-| VU levels | 10, 20, 50, 100 (set by editing the `load` profile target per run) |
-| Target env | PERF (`performance.ungerboeck.net`) **over VPN** |
-| Generator | Developer laptop, ~32 GB RAM (Windows) |
+| Parameter  | Value                                                              |
+| ---------- | ------------------------------------------------------------------ |
+| Script     | `source/tests/load.spec.ts` (`navigation` scenario)                |
+| Profile    | `load` — 5m ramp / 10m sustain / 2m ramp-down (~17.5 min each)     |
+| VU levels  | 10, 20, 50, 100 (set by editing the `load` profile target per run) |
+| Target env | PERF (`performance.ungerboeck.net`) **over VPN**                   |
+| Generator  | Developer laptop, ~32 GB RAM (Windows)                             |
 
 Each level was a full 17.5-min run, identical in shape to the CI runs — only the peak VU count and the generator differ.
 
 ## Scaling — throughput & latency
 
 | VUs | iterations | iter/s | http_reqs | req/s | checks % | fail % | avg ms | p95 ms | p99 ms | max ms |
-|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 10 | 2,413 | 2.36 | 7,222 | 7.0 | 99.85 | 0.15 | 434 | 564 | 618 | 60,000 |
-| 20 | 4,767 | 4.65 | 14,224 | 13.9 | 99.70 | 0.30 | 468 | 567 | 644 | 60,000 |
-| 50 | 11,500 | 11.24 | 34,400 | 33.6 | 99.89 | 0.11 | 508 | 742 | 907 | 60,000 |
-| 100 | 14,371 | 14.07 | 43,046 | 42.1 | 100.00 | 0.00 | 1,219 | 1,863 | 2,090 | 3,776 |
+| --: | ---------: | -----: | --------: | ----: | -------: | -----: | -----: | -----: | -----: | -----: |
+|  10 |      2,413 |   2.36 |     7,222 |   7.0 |    99.85 |   0.15 |    434 |    564 |    618 | 60,000 |
+|  20 |      4,767 |   4.65 |    14,224 |  13.9 |    99.70 |   0.30 |    468 |    567 |    644 | 60,000 |
+|  50 |     11,500 |  11.24 |    34,400 |  33.6 |    99.89 |   0.11 |    508 |    742 |    907 | 60,000 |
+| 100 |     14,371 |  14.07 |    43,046 |  42.1 |   100.00 |   0.00 |  1,219 |  1,863 |  2,090 |  3,776 |
 
 Reading:
 
@@ -32,11 +32,11 @@ Reading:
 ## Generator resources — idle at every level
 
 | VUs | cpu avg % | cpu p95 % | cpu max % | ram used MB | ram % |
-|---:|---:|---:|---:|---:|---:|
-| 10 | 8.1 | 16.4 | 88.5 | 13,012 | 40.1 |
-| 20 | 7.1 | 10.9 | 60.6 | 13,207 | 40.7 |
-| 50 | 9.0 | 13.1 | 24.1 | 13,321 | 41.0 |
-| 100 | 9.4 | 13.4 | 26.4 | 13,291 | 40.9 |
+| --: | --------: | --------: | --------: | ----------: | ----: |
+|  10 |       8.1 |      16.4 |      88.5 |      13,012 |  40.1 |
+|  20 |       7.1 |      10.9 |      60.6 |      13,207 |  40.7 |
+|  50 |       9.0 |      13.1 |      24.1 |      13,321 |  41.0 |
+| 100 |       9.4 |      13.4 |      26.4 |      13,291 |  40.9 |
 
 The laptop sat at **~9 % CPU and ~40 % RAM even at 100 VUs**. (The 88.5 % CPU max at 10 VUs is a single transient spike — p95 is only 16.4 %.) The generator was nowhere near saturation, so the plateau above is **not** the machine running out of capacity.
 
@@ -44,18 +44,18 @@ The laptop sat at **~9 % CPU and ~40 % RAM even at 100 VUs**. (The 88.5 % CPU ma
 
 Same VUs, same 17.5-min profile, **different network path**. This is not an agent-capacity ranking — it is a demonstration of what a VPN link does to a load generator.
 
-| | Laptop (VPN) | AWS agent | Momentus agent |
-|---|---:|---:|---:|
-| iterations | 14,371 | 24,674 | 24,924 |
-| http_reqs | 43,046 | 73,869 | 74,575 |
-| req rate /s | **42.1** | 72.2 | 73.0 |
-| req_dur avg ms | **1,219** | 430 | 418 |
-| req_dur p95 ms | **1,863** | 1,177 | 1,133 |
-| req_dur p99 ms | 2,090 | 1,414 | 1,368 |
-| checks % | 100 | 100 | 99.99 |
-| cpu avg % | 9.4 | 13.2 | 11.9 |
-| ram used avg MB | 13,291 | 2,603 | 3,432 |
-| net rx avg kB/s | 806 | 1,142 | 1,154 |
+|                 | Laptop (VPN) | AWS agent | Momentus agent |
+| --------------- | -----------: | --------: | -------------: |
+| iterations      |       14,371 |    24,674 |         24,924 |
+| http_reqs       |       43,046 |    73,869 |         74,575 |
+| req rate /s     |     **42.1** |      72.2 |           73.0 |
+| req_dur avg ms  |    **1,219** |       430 |            418 |
+| req_dur p95 ms  |    **1,863** |     1,177 |          1,133 |
+| req_dur p99 ms  |        2,090 |     1,414 |          1,368 |
+| checks %        |          100 |       100 |          99.99 |
+| cpu avg %       |          9.4 |      13.2 |           11.9 |
+| ram used avg MB |       13,291 |     2,603 |          3,432 |
+| net rx avg kB/s |          806 |     1,142 |          1,154 |
 
 The laptop pushed **~42 req/s vs the agents' ~72–73 req/s at ~2.8× the latency — while sitting at 9 % CPU with bandwidth to spare** (rx peaked at 2,677 kB/s, far above its 806 kB/s average). CPU, RAM, and bandwidth all show large headroom, so the binding constraint is the **network round-trip**: the laptop reaches PERF over VPN, whereas the cloud agents have a fast, close path to PERF. Slower per-request latency means each VU completes fewer iterations, so throughput plateaus even though the machine idles.
 

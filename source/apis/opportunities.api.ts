@@ -8,30 +8,21 @@ type Res = RefinedResponse<ResponseType | undefined>;
 
 export function getOpportunities(salesAiJwt: string, name = 'GetOpportunities'): Res {
   const tenantId = tenantIdFromJwt(salesAiJwt);
-  const res = http.get(
-    `${config.salesAiUrl}/api/opportunities?tenantId=${tenantId}`,
-    {
-      headers: salesAiHeaders(salesAiJwt),
-      tags: { name },
-    }
-  );
+  const res = http.get(`${config.salesAiUrl}/api/opportunities?tenantId=${tenantId}`, {
+    headers: salesAiHeaders(salesAiJwt),
+    tags: { name },
+  });
 
   check(res, {
     [`${name}: status is 200`]: (r) => r.status === 200,
-    [`${name}: response is JSON`]: (r) =>
-      r.headers['Content-Type'] !== undefined &&
-      r.headers['Content-Type'].includes('application/json'),
+    [`${name}: response is JSON`]: (r) => r.headers['Content-Type'] !== undefined && r.headers['Content-Type'].includes('application/json'),
     [`${name}: response body is non-empty`]: (r) => String(r.body ?? '').length > 0,
   });
 
   return res;
 }
 
-export function pollForOpportunity(
-  salesAiJwt: string,
-  searchToken: string,
-  maxWaitSeconds = 120
-): Opportunity | null {
+export function pollForOpportunity(salesAiJwt: string, searchToken: string, maxWaitSeconds = 120): Opportunity | null {
   const intervalSeconds = 5;
   const maxAttempts = Math.ceil(maxWaitSeconds / intervalSeconds);
 
@@ -67,12 +58,7 @@ type BatchReq = [string, string, null, { headers: Record<string, string>; tags: 
 
 export function openOpportunityDetail(salesAiJwt: string, opportunityId: string): Res | null {
   const headers = salesAiHeaders(salesAiJwt);
-  const get = (path: string, name: string): BatchReq => [
-    'GET',
-    `${config.salesAiUrl}${path}`,
-    null,
-    { headers, tags: { name } },
-  ];
+  const get = (path: string, name: string): BatchReq => ['GET', `${config.salesAiUrl}${path}`, null, { headers, tags: { name } }];
 
   const responses = Object.values(
     http.batch([
@@ -83,20 +69,23 @@ export function openOpportunityDetail(salesAiJwt: string, opportunityId: string)
       get(`/api/opportunities/scores/${opportunityId}`, 'GetOpportunityScore'),
       get(`/api/opportunities/${opportunityId}/communications/threads?pageSize=10`, 'GetCommThreads'),
       get(`/api/opportunities/${opportunityId}/deal-analysis`, 'GetDealAnalysis'),
-    ])
+    ]),
   );
 
   const detail = responses[0];
   const ok = check(detail, {
     'GetOpportunityDetail: status is 200': (r) => r.status === 200,
     'GetOpportunityDetail: id matches': (r) => {
-      try { return (r.json() as Opportunity).id === opportunityId; } catch { return false; }
+      try {
+        return (r.json() as Opportunity).id === opportunityId;
+      } catch {
+        return false;
+      }
     },
   });
 
   check(null, {
-    'OpportunityDetail: auxiliary requests all 200': () =>
-      responses.slice(1).every((r) => r.status === 200),
+    'OpportunityDetail: auxiliary requests all 200': () => responses.slice(1).every((r) => r.status === 200),
   });
 
   if (!ok) {

@@ -6,14 +6,14 @@ Whether adopting Grafana Cloud (free tier) adds value for a team running k6 loca
 
 "Free forever," no credit card. Per month:
 
-| Resource | Free tier limit |
-|---|---|
-| k6 virtual user hours (VUh) | **500 / month** |
-| Prometheus active series | 10,000 |
-| Logs / Traces / Profiles | 50 GB each |
-| Grafana users (visualization seats) | 3 |
-| Retention (all data, incl. k6 results) | **14 days** |
-| Support | Community |
+| Resource                               | Free tier limit |
+| -------------------------------------- | --------------- |
+| k6 virtual user hours (VUh)            | **500 / month** |
+| Prometheus active series               | 10,000          |
+| Logs / Traces / Profiles               | 50 GB each      |
+| Grafana users (visualization seats)    | 3               |
+| Retention (all data, incl. k6 results) | **14 days**     |
+| Support                                | Community       |
 
 Test **configs** and user data persist indefinitely — only **result data** rolls off at 14 days (rolling auto-delete).
 
@@ -49,7 +49,7 @@ The two run modes differ in execution location too: plain `k6 cloud run` (withou
 - Duration rounds up to the next minute of actual execution.
 - Example: a 50-VU, 12-min protocol test ≈ 10 VUh → 500/month ≈ **~50 such runs**.
 
-Two myths were **refuted** during research: VUh is *not* rounded up per-VU, and preallocated open-model VUs do *not* each bill a full hour. So the "open execution is prohibitively expensive" concern does not hold.
+Two myths were **refuted** during research: VUh is _not_ rounded up per-VU, and preallocated open-model VUs do _not_ each bill a full hour. So the "open execution is prohibitively expensive" concern does not hold.
 
 ## Past the free tier
 

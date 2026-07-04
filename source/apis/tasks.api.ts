@@ -4,23 +4,20 @@ import { config } from '../utils/exports/config.exp.ts';
 import { salesAiHeaders } from '../utils/exports/helpers.exp.ts';
 import { TasksResponse } from '../utils/exports/types.exp.ts';
 
-export function getTasks(
-  salesAiJwt: string,
-  recordId: string,
-  recordType = 'Opportunity'
-): RefinedResponse<ResponseType | undefined> {
-  const res = http.get(
-    `${config.salesAiUrl}/api/Tasks?associatedRecordId=${recordId}&associatedRecordType=${recordType}`,
-    {
-      headers: salesAiHeaders(salesAiJwt),
-      tags: { name: 'GetTasks' },
-    }
-  );
+export function getTasks(salesAiJwt: string, recordId: string, recordType = 'Opportunity'): RefinedResponse<ResponseType | undefined> {
+  const res = http.get(`${config.salesAiUrl}/api/Tasks?associatedRecordId=${recordId}&associatedRecordType=${recordType}`, {
+    headers: salesAiHeaders(salesAiJwt),
+    tags: { name: 'GetTasks' },
+  });
 
   check(res, {
     'GetTasks: status is 200': (r) => r.status === 200,
     'GetTasks: response has items array': (r) => {
-      try { return Array.isArray((r.json() as unknown as TasksResponse).items); } catch { return false; }
+      try {
+        return Array.isArray((r.json() as unknown as TasksResponse).items);
+      } catch {
+        return false;
+      }
     },
   });
 

@@ -31,17 +31,11 @@ function parseEventRows(res: Res, name: string): EventRow[] {
   }
 }
 
-export function searchEvents(
-  token: string,
-  version: string,
-  searchValue: string,
-  name = 'SearchEvents'
-): EventRow[] {
-  const res = http.post(
-    `${config.baseUrl}/api/USIDataGridServer/GetGridData2`,
-    JSON.stringify(searchPayload(searchValue)),
-    { headers: buildHeaders(token, version), tags: { name } }
-  );
+export function searchEvents(token: string, version: string, searchValue: string, name = 'SearchEvents'): EventRow[] {
+  const res = http.post(`${config.baseUrl}/api/USIDataGridServer/GetGridData2`, JSON.stringify(searchPayload(searchValue)), {
+    headers: buildHeaders(token, version),
+    tags: { name },
+  });
 
   const ok = check(res, {
     [`${name}: status is 201`]: (r) => r.status === 201,
@@ -55,16 +49,11 @@ export function searchEvents(
   return parseEventRows(res, name);
 }
 
-export function openCopyForm(
-  token: string,
-  version: string,
-  encUserId: string,
-  source: EventRow
-): Res | null {
+export function openCopyForm(token: string, version: string, encUserId: string, source: EventRow): Res | null {
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/GetInitialData2`,
     JSON.stringify(copyFormPayload(encUserId, source, version)),
-    { headers: buildHeaders(token, version), tags: { name: 'OpenCopyForm' } }
+    { headers: buildHeaders(token, version), tags: { name: 'OpenCopyForm' } },
   );
 
   const ok = check(res, {
@@ -80,26 +69,29 @@ export function openCopyForm(
   return res;
 }
 
-export function saveEventCopy(
-  token: string,
-  version: string,
-  encUserId: string,
-  source: EventRow,
-  description: string
-): string | null {
+export function saveEventCopy(token: string, version: string, encUserId: string, source: EventRow, description: string): string | null {
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/Save2`,
     JSON.stringify(savePayload(encUserId, source, description, version)),
-    { headers: buildHeaders(token, version), tags: { name: 'SaveEventCopy' } }
+    { headers: buildHeaders(token, version), tags: { name: 'SaveEventCopy' } },
   );
 
   const ok = check(res, {
     'SaveEventCopy: status is 201': (r) => r.status === 201,
     'SaveEventCopy: ResultValue is 0 (success)': (r) => {
-      try { return (r.json() as unknown as EventSaveResult[])[0].ResultValue === 0; } catch { return false; }
+      try {
+        return (r.json() as unknown as EventSaveResult[])[0].ResultValue === 0;
+      } catch {
+        return false;
+      }
     },
     'SaveEventCopy: returns new event row key': (r) => {
-      try { const k = (r.json() as unknown as EventSaveResult[])[0].AddedRowKeys; return Array.isArray(k) && k.length > 0; } catch { return false; }
+      try {
+        const k = (r.json() as unknown as EventSaveResult[])[0].AddedRowKeys;
+        return Array.isArray(k) && k.length > 0;
+      } catch {
+        return false;
+      }
     },
   });
 
@@ -112,25 +104,28 @@ export function saveEventCopy(
   return addedKey.split('|')[1] || null;
 }
 
-export function createEvent(
-  token: string,
-  version: string,
-  description: string,
-  name = 'CreateEvent'
-): string | null {
-  const res = http.post(
-    `${config.baseUrl}/api/GenericDetailServer/Save2`,
-    JSON.stringify(createEventPayload(description)),
-    { headers: buildHeaders(token, version), tags: { name } }
-  );
+export function createEvent(token: string, version: string, description: string, name = 'CreateEvent'): string | null {
+  const res = http.post(`${config.baseUrl}/api/GenericDetailServer/Save2`, JSON.stringify(createEventPayload(description)), {
+    headers: buildHeaders(token, version),
+    tags: { name },
+  });
 
   const ok = check(res, {
     [`${name}: status is 201`]: (r) => r.status === 201,
     [`${name}: ResultValue is 0 (success)`]: (r) => {
-      try { return (r.json() as unknown as EventSaveResult[])[0].ResultValue === 0; } catch { return false; }
+      try {
+        return (r.json() as unknown as EventSaveResult[])[0].ResultValue === 0;
+      } catch {
+        return false;
+      }
     },
     [`${name}: returns new event row key`]: (r) => {
-      try { const k = (r.json() as unknown as EventSaveResult[])[0].AddedRowKeys; return Array.isArray(k) && k.length > 0; } catch { return false; }
+      try {
+        const k = (r.json() as unknown as EventSaveResult[])[0].AddedRowKeys;
+        return Array.isArray(k) && k.length > 0;
+      } catch {
+        return false;
+      }
     },
   });
 
@@ -143,17 +138,11 @@ export function createEvent(
   return addedKey.split('|')[1] || null;
 }
 
-export function openEventDetail(
-  token: string,
-  version: string,
-  newEvtId: string,
-  expectedDesc: string
-): Res | null {
-  const res = http.post(
-    `${config.baseUrl}/api/GenericDetailServer/GetInitialData2`,
-    JSON.stringify(detailPayload(newEvtId)),
-    { headers: buildHeaders(token, version), tags: { name: 'OpenEventDetail' } }
-  );
+export function openEventDetail(token: string, version: string, newEvtId: string, expectedDesc: string): Res | null {
+  const res = http.post(`${config.baseUrl}/api/GenericDetailServer/GetInitialData2`, JSON.stringify(detailPayload(newEvtId)), {
+    headers: buildHeaders(token, version),
+    tags: { name: 'OpenEventDetail' },
+  });
 
   const ok = check(res, {
     'OpenEventDetail: status is 201': (r) => r.status === 201,

@@ -1,28 +1,28 @@
-import { NavScreen } from "../../../utils/exports/types.exp.ts";
+import { NavScreen } from '../../../utils/exports/types.exp.ts';
 
 // Top-level navigation modules and the window id each one opens (captured from the live nav menu).
 // AcctDesig-scoped screens (Accounts, Contacts) carry the extra list param the app sends for them;
 // every other screen loads with the standard context alone.
 export const navScreens: NavScreen[] = [
   {
-    label: "Accounts",
-    windowId: "ES8070",
-    listParams: [{ Key: "AcctDesig", Value: "C" }],
+    label: 'Accounts',
+    windowId: 'ES8070',
+    listParams: [{ Key: 'AcctDesig', Value: 'C' }],
   },
   {
-    label: "Contacts",
-    windowId: "ES8300",
-    listParams: [{ Key: "AcctDesig", Value: "C" }],
+    label: 'Contacts',
+    windowId: 'ES8300',
+    listParams: [{ Key: 'AcctDesig', Value: 'C' }],
   },
-  { label: "Events", windowId: "EM8059" },
-  { label: "Contracts", windowId: "CA2168" },
-  { label: "Service Orders", windowId: "EM8066" },
-  { label: "Work Orders", windowId: "EM9564" },
-  { label: "Activities", windowId: "CF8161" },
-  { label: "Event Opportunities", windowId: "ES8737" },
-  { label: "Purchase Orders", windowId: "PO7906" },
-  { label: "Requisitions", windowId: "PO7909" },
-  { label: "Invoices", windowId: "AR8157" },
+  { label: 'Events', windowId: 'EM8059' },
+  { label: 'Contracts', windowId: 'CA2168' },
+  { label: 'Service Orders', windowId: 'EM8066' },
+  { label: 'Work Orders', windowId: 'EM9564' },
+  { label: 'Activities', windowId: 'CF8161' },
+  { label: 'Event Opportunities', windowId: 'ES8737' },
+  { label: 'Purchase Orders', windowId: 'PO7906' },
+  { label: 'Requisitions', windowId: 'PO7909' },
+  { label: 'Invoices', windowId: 'AR8157' },
 ];
 
 // GetInitialData2 loads a list screen. The payload is almost entirely defaults; the only values that
@@ -46,20 +46,20 @@ export const listInitialDataPayload = (screen: NavScreen, objectId: number) => [
 
 // Org the pool accounts belong to; the same for every user in users.data.ts. GetWindowInfo does
 // not report it, so it is a shared constant rather than a correlated value.
-const ORG_CODE = "10";
+const ORG_CODE = '10';
 
 const listContext = (screen: NavScreen, objectId: number) => [
-  { Key: "OrgCode", Value: ORG_CODE },
-  { Key: "WindowObjectID", Value: objectId },
-  { Key: "wdwid", Value: screen.windowId },
-  { Key: "WdwType", Value: 1 },
-  { Key: "wdwMode", Value: 0 },
-  { Key: "RemoveEditLayoutLink", Value: false },
-  { Key: "ContextObjectID", Value: 0 },
+  { Key: 'OrgCode', Value: ORG_CODE },
+  { Key: 'WindowObjectID', Value: objectId },
+  { Key: 'wdwid', Value: screen.windowId },
+  { Key: 'WdwType', Value: 1 },
+  { Key: 'wdwMode', Value: 0 },
+  { Key: 'RemoveEditLayoutLink', Value: false },
+  { Key: 'ContextObjectID', Value: 0 },
   ...(screen.listParams ?? []),
-  { Key: "MenuType", Value: 1 },
-  { Key: "MenuObjectID", Value: 0 },
-  { Key: "MenuContextObjectID", Value: 0 },
+  { Key: 'MenuType', Value: 1 },
+  { Key: 'MenuObjectID', Value: 0 },
+  { Key: 'MenuContextObjectID', Value: 0 },
 ];
 
 // View and search are sent empty so the server resolves the user's default view (the captured
@@ -67,46 +67,46 @@ const listContext = (screen: NavScreen, objectId: number) => [
 const listView = {
   ID: 0,
   ThemeID: 0,
-  UserID: "",
+  UserID: '',
   ObjectID: 0,
-  ViewDesc: "",
+  ViewDesc: '',
   SearchID: 0,
-  Default: "N",
-  EnterUserID: "",
-  UpdateUserID: "",
+  Default: 'N',
+  EnterUserID: '',
+  UpdateUserID: '',
   USIID: 0,
-  SubTotalColumns: "",
-  GrandTotalColumns: "",
+  SubTotalColumns: '',
+  GrandTotalColumns: '',
   ShowGroupCounts: false,
   ViewType: 0,
   ViewColumns: [],
-  OrgCode: "",
+  OrgCode: '',
   GrandTotalRowCollapsed: false,
-  CustomXML: "",
+  CustomXML: '',
   AccessType: 1,
-  RoleIDs: "",
-  ContextObjectIDs: "",
+  RoleIDs: '',
+  ContextObjectIDs: '',
   ViewGroups: [],
   UseCardList: false,
   SourceUSIID: 0,
 };
 
 const listSearch = {
-  AutoRefresh: "Y",
-  EnterUserID: "",
-  FilterCriteria: "",
+  AutoRefresh: 'Y',
+  EnterUserID: '',
+  FilterCriteria: '',
   ID: 0,
   ObjectID: 0,
   OrgCode: null,
   ResultsCount: 0,
   ResultsLimit: 0,
   ResultsTime: 0,
-  SearchDesc: "",
+  SearchDesc: '',
   SearchFilters: [],
   ThemeID: 0,
   USIID: 0,
-  UpdateUserID: "",
-  UserID: "",
+  UpdateUserID: '',
+  UserID: '',
   SourceUSIID: 0,
   ConvertToUserDisplayTimeZone: false,
 };

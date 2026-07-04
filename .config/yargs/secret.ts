@@ -11,7 +11,8 @@ const argv = yargs(hideBin(process.argv))
   .option('key', {
     alias: 'k',
     type: 'string',
-    description: 'Passphrase used to decrypt the user pool at runtime (same value used to mint the encrypted passwords in source/data/users.data.ts)',
+    description:
+      'Passphrase used to decrypt the user pool at runtime (same value used to mint the encrypted passwords in source/data/users.data.ts)',
     demandOption: true,
   })
   .help()

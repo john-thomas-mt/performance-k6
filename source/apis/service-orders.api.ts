@@ -3,7 +3,16 @@ import { check } from 'k6';
 import { b64encode } from 'k6/encoding';
 import { config } from '../utils/exports/config.exp.ts';
 import { buildHeaders } from '../utils/exports/helpers.exp.ts';
-import { serviceOrdersGridPayload, serviceOrderDetailPayload, serviceOrderItemsSavePayload, createServiceOrderPayload, editGeneralSavePayload, cacheFilesPayload, documentFormPayload, documentSavePayload } from '../utils/exports/data.exp.ts';
+import {
+  serviceOrdersGridPayload,
+  serviceOrderDetailPayload,
+  serviceOrderItemsSavePayload,
+  createServiceOrderPayload,
+  editGeneralSavePayload,
+  cacheFilesPayload,
+  documentFormPayload,
+  documentSavePayload,
+} from '../utils/exports/data.exp.ts';
 import { EventRow, ServiceOrderRow, ServiceOrderSaveResult, DocumentFields } from '../utils/exports/types.exp.ts';
 
 type Res = RefinedResponse<ResponseType | undefined>;
@@ -13,8 +22,8 @@ function parseServiceOrderRows(res: Res, name: string): ServiceOrderRow[] {
     const body: any = res.json();
     const arr = Array.isArray(body) ? body : [];
     const tdt = arr.find((e) => e && typeof e === 'object' && !Array.isArray(e) && e.TransportDataTables);
-    const table = tdt.TransportDataTables.find(
-      (t: any) => t.TransportDataColumns.some((c: { ColumnName: string }) => c.ColumnName === 'ER100_ORD_NBR')
+    const table = tdt.TransportDataTables.find((t: any) =>
+      t.TransportDataColumns.some((c: { ColumnName: string }) => c.ColumnName === 'ER100_ORD_NBR'),
     );
     const cols: string[] = table.TransportDataColumns.map((c: { ColumnName: string }) => c.ColumnName);
     const at = (v: Record<string, unknown>, n: string): string => {
@@ -57,17 +66,11 @@ function parseServiceOrderRows(res: Res, name: string): ServiceOrderRow[] {
   }
 }
 
-export function loadServiceOrders(
-  token: string,
-  version: string,
-  event: EventRow,
-  name = 'LoadServiceOrders'
-): ServiceOrderRow[] {
-  const res = http.post(
-    `${config.baseUrl}/api/USIDataGridServer/GetInitialData2`,
-    JSON.stringify(serviceOrdersGridPayload(event)),
-    { headers: buildHeaders(token, version), tags: { name } }
-  );
+export function loadServiceOrders(token: string, version: string, event: EventRow, name = 'LoadServiceOrders'): ServiceOrderRow[] {
+  const res = http.post(`${config.baseUrl}/api/USIDataGridServer/GetInitialData2`, JSON.stringify(serviceOrdersGridPayload(event)), {
+    headers: buildHeaders(token, version),
+    tags: { name },
+  });
 
   const ok = check(res, {
     [`${name}: status is 201`]: (r) => r.status === 201,
@@ -81,16 +84,11 @@ export function loadServiceOrders(
   return parseServiceOrderRows(res, name);
 }
 
-export function openServiceOrderDetail(
-  token: string,
-  version: string,
-  so: ServiceOrderRow
-): Res | null {
-  const res = http.post(
-    `${config.baseUrl}/api/GenericDetailServer/GetInitialData2`,
-    JSON.stringify(serviceOrderDetailPayload(so)),
-    { headers: buildHeaders(token, version), tags: { name: 'OpenServiceOrderDetail' } }
-  );
+export function openServiceOrderDetail(token: string, version: string, so: ServiceOrderRow): Res | null {
+  const res = http.post(`${config.baseUrl}/api/GenericDetailServer/GetInitialData2`, JSON.stringify(serviceOrderDetailPayload(so)), {
+    headers: buildHeaders(token, version),
+    tags: { name: 'OpenServiceOrderDetail' },
+  });
 
   const ok = check(res, {
     'OpenServiceOrderDetail: status is 201': (r) => r.status === 201,
@@ -110,21 +108,30 @@ export function createServiceOrder(
   version: string,
   encUserId: string,
   evtId: string,
-  name = 'CreateServiceOrder'
+  name = 'CreateServiceOrder',
 ): string | null {
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/Save2`,
     JSON.stringify(createServiceOrderPayload(encUserId, evtId, version)),
-    { headers: buildHeaders(token, version), tags: { name } }
+    { headers: buildHeaders(token, version), tags: { name } },
   );
 
   const ok = check(res, {
     [`${name}: status is 201`]: (r) => r.status === 201,
     [`${name}: ResultValue is 0 (success)`]: (r) => {
-      try { return (r.json() as unknown as ServiceOrderSaveResult[])[0].ResultValue === 0; } catch { return false; }
+      try {
+        return (r.json() as unknown as ServiceOrderSaveResult[])[0].ResultValue === 0;
+      } catch {
+        return false;
+      }
     },
     [`${name}: returns new order row key`]: (r) => {
-      try { const k = (r.json() as unknown as ServiceOrderSaveResult[])[0].AddedRowKeys; return Array.isArray(k) && k.length > 0; } catch { return false; }
+      try {
+        const k = (r.json() as unknown as ServiceOrderSaveResult[])[0].AddedRowKeys;
+        return Array.isArray(k) && k.length > 0;
+      } catch {
+        return false;
+      }
     },
   });
 
@@ -165,21 +172,28 @@ export function editServiceOrderGeneral(
   version: string,
   so: ServiceOrderRow,
   orderDate: number,
-  stamps: { entDateIso: string; updDateIso: string }
+  stamps: { entDateIso: string; updDateIso: string },
 ): ServiceOrderSaveResult | null {
-  const res = http.post(
-    `${config.baseUrl}/api/GenericDetailServer/Save2`,
-    JSON.stringify(editGeneralSavePayload(so, orderDate, stamps)),
-    { headers: buildHeaders(token, version), tags: { name: 'EditServiceOrderGeneral' } }
-  );
+  const res = http.post(`${config.baseUrl}/api/GenericDetailServer/Save2`, JSON.stringify(editGeneralSavePayload(so, orderDate, stamps)), {
+    headers: buildHeaders(token, version),
+    tags: { name: 'EditServiceOrderGeneral' },
+  });
 
   const ok = check(res, {
     'EditServiceOrderGeneral: status is 201': (r) => r.status === 201,
     'EditServiceOrderGeneral: ResultValue is 0 (success)': (r) => {
-      try { return (r.json() as unknown as ServiceOrderSaveResult[])[0].ResultValue === 0; } catch { return false; }
+      try {
+        return (r.json() as unknown as ServiceOrderSaveResult[])[0].ResultValue === 0;
+      } catch {
+        return false;
+      }
     },
     'EditServiceOrderGeneral: order row was modified': (r) => {
-      try { return (r.json() as unknown as ServiceOrderSaveResult[])[0].ModifiedRowKeys?.includes(so.rowKey) ?? false; } catch { return false; }
+      try {
+        return (r.json() as unknown as ServiceOrderSaveResult[])[0].ModifiedRowKeys?.includes(so.rowKey) ?? false;
+      } catch {
+        return false;
+      }
     },
   });
 
@@ -191,22 +205,21 @@ export function editServiceOrderGeneral(
   return (res.json() as unknown as ServiceOrderSaveResult[])[0];
 }
 
-export function cacheDocumentFile(
-  token: string,
-  version: string,
-  fileName: string,
-  fileContent: ArrayBuffer
-): string | null {
+export function cacheDocumentFile(token: string, version: string, fileName: string, fileContent: ArrayBuffer): string | null {
   const res = http.post(
     `${config.baseUrl}/api/GenericServer/CacheFiles`,
     JSON.stringify(cacheFilesPayload(fileName, b64encode(fileContent))),
-    { headers: buildHeaders(token, version), tags: { name: 'CacheFiles' } }
+    { headers: buildHeaders(token, version), tags: { name: 'CacheFiles' } },
   );
 
   const ok = check(res, {
     'CacheFiles: status is 201': (r) => r.status === 201,
     'CacheFiles: returns a cached file ref': (r) => {
-      try { return typeof (r.json() as unknown as string[][])[0][0] === 'string'; } catch { return false; }
+      try {
+        return typeof (r.json() as unknown as string[][])[0][0] === 'string';
+      } catch {
+        return false;
+      }
     },
   });
 
@@ -223,12 +236,12 @@ export function openDocumentForm(
   version: string,
   so: ServiceOrderRow,
   fileKey: string,
-  fileName: string
+  fileName: string,
 ): DocumentFields | null {
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/GetInitialData2`,
     JSON.stringify(documentFormPayload(so, fileKey, fileName)),
-    { headers: buildHeaders(token, version), tags: { name: 'OpenDocumentForm' } }
+    { headers: buildHeaders(token, version), tags: { name: 'OpenDocumentForm' } },
   );
 
   const ok = check(res, {
@@ -263,25 +276,28 @@ export function openDocumentForm(
   return null;
 }
 
-export function saveDocument(
-  token: string,
-  version: string,
-  so: ServiceOrderRow,
-  doc: DocumentFields
-): ServiceOrderSaveResult | null {
-  const res = http.post(
-    `${config.baseUrl}/api/GenericDetailServer/Save2`,
-    JSON.stringify(documentSavePayload(so, doc)),
-    { headers: buildHeaders(token, version), tags: { name: 'SaveDocument' } }
-  );
+export function saveDocument(token: string, version: string, so: ServiceOrderRow, doc: DocumentFields): ServiceOrderSaveResult | null {
+  const res = http.post(`${config.baseUrl}/api/GenericDetailServer/Save2`, JSON.stringify(documentSavePayload(so, doc)), {
+    headers: buildHeaders(token, version),
+    tags: { name: 'SaveDocument' },
+  });
 
   const ok = check(res, {
     'SaveDocument: status is 201': (r) => r.status === 201,
     'SaveDocument: ResultValue is 0 (success)': (r) => {
-      try { return (r.json() as unknown as ServiceOrderSaveResult[])[0].ResultValue === 0; } catch { return false; }
+      try {
+        return (r.json() as unknown as ServiceOrderSaveResult[])[0].ResultValue === 0;
+      } catch {
+        return false;
+      }
     },
     'SaveDocument: document row was added': (r) => {
-      try { const k = (r.json() as unknown as ServiceOrderSaveResult[])[0].AddedRowKeys; return Array.isArray(k) && k.length > 0; } catch { return false; }
+      try {
+        const k = (r.json() as unknown as ServiceOrderSaveResult[])[0].AddedRowKeys;
+        return Array.isArray(k) && k.length > 0;
+      } catch {
+        return false;
+      }
     },
   });
 
@@ -298,21 +314,29 @@ export function saveAndCloseServiceOrder(
   version: string,
   so: ServiceOrderRow,
   orderDate: number,
-  stamps: { entDateIso: string; updDateIso: string }
+  stamps: { entDateIso: string; updDateIso: string },
 ): ServiceOrderSaveResult | null {
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/Save2`,
     JSON.stringify(editGeneralSavePayload(so, orderDate, stamps, 0)),
-    { headers: buildHeaders(token, version), tags: { name: 'SaveAndCloseServiceOrder' } }
+    { headers: buildHeaders(token, version), tags: { name: 'SaveAndCloseServiceOrder' } },
   );
 
   const ok = check(res, {
     'SaveAndCloseServiceOrder: status is 201': (r) => r.status === 201,
     'SaveAndCloseServiceOrder: ResultValue is 0 (success)': (r) => {
-      try { return (r.json() as unknown as ServiceOrderSaveResult[])[0].ResultValue === 0; } catch { return false; }
+      try {
+        return (r.json() as unknown as ServiceOrderSaveResult[])[0].ResultValue === 0;
+      } catch {
+        return false;
+      }
     },
     'SaveAndCloseServiceOrder: order row was modified': (r) => {
-      try { return (r.json() as unknown as ServiceOrderSaveResult[])[0].ModifiedRowKeys?.includes(so.rowKey) ?? false; } catch { return false; }
+      try {
+        return (r.json() as unknown as ServiceOrderSaveResult[])[0].ModifiedRowKeys?.includes(so.rowKey) ?? false;
+      } catch {
+        return false;
+      }
     },
   });
 
@@ -328,13 +352,12 @@ export function saveServiceOrderItems(
   token: string,
   version: string,
   so: ServiceOrderRow,
-  quantity: number
+  quantity: number,
 ): ServiceOrderSaveResult | null {
-  const res = http.post(
-    `${config.baseUrl}/api/GenericDetailServer/Save2`,
-    JSON.stringify(serviceOrderItemsSavePayload(so, quantity)),
-    { headers: buildHeaders(token, version), tags: { name: 'SaveServiceOrderItems' } }
-  );
+  const res = http.post(`${config.baseUrl}/api/GenericDetailServer/Save2`, JSON.stringify(serviceOrderItemsSavePayload(so, quantity)), {
+    headers: buildHeaders(token, version),
+    tags: { name: 'SaveServiceOrderItems' },
+  });
 
   const addedItemCount = (r: Res): number => {
     try {
@@ -348,10 +371,18 @@ export function saveServiceOrderItems(
   const ok = check(res, {
     'SaveServiceOrderItems: status is 201': (r) => r.status === 201,
     'SaveServiceOrderItems: ResultValue is 0 (success)': (r) => {
-      try { return (r.json() as unknown as ServiceOrderSaveResult[])[0].ResultValue === 0; } catch { return false; }
+      try {
+        return (r.json() as unknown as ServiceOrderSaveResult[])[0].ResultValue === 0;
+      } catch {
+        return false;
+      }
     },
     'SaveServiceOrderItems: order row was modified': (r) => {
-      try { return (r.json() as unknown as ServiceOrderSaveResult[])[0].ModifiedRowKeys?.includes(so.rowKey) ?? false; } catch { return false; }
+      try {
+        return (r.json() as unknown as ServiceOrderSaveResult[])[0].ModifiedRowKeys?.includes(so.rowKey) ?? false;
+      } catch {
+        return false;
+      }
     },
     'SaveServiceOrderItems: items were added to order': (r) => addedItemCount(r) > 0,
   });

@@ -4,11 +4,7 @@ import { config } from '../utils/exports/config.exp.ts';
 import { salesAiHeaders } from '../utils/exports/helpers.exp.ts';
 import { ManualEntryResult } from '../utils/exports/types.exp.ts';
 
-export function submitManualEntry(
-  salesAiJwt: string,
-  entry: Record<string, unknown>,
-  userId: string
-): ManualEntryResult | null {
+export function submitManualEntry(salesAiJwt: string, entry: Record<string, unknown>, userId: string): ManualEntryResult | null {
   const payload = {
     ...entry,
     metadata: {
@@ -20,19 +16,19 @@ export function submitManualEntry(
     },
   };
 
-  const res = http.post(
-    `${config.salesAiUrl}/api/manual-entry`,
-    JSON.stringify(payload),
-    {
-      headers: salesAiHeaders(salesAiJwt, 'application/json'),
-      tags: { name: 'ManualEntry' },
-    }
-  );
+  const res = http.post(`${config.salesAiUrl}/api/manual-entry`, JSON.stringify(payload), {
+    headers: salesAiHeaders(salesAiJwt, 'application/json'),
+    tags: { name: 'ManualEntry' },
+  });
 
   const ok = check(res, {
     'ManualEntry: status is 202': (r) => r.status === 202,
     'ManualEntry: status is Processing': (r) => {
-      try { return (r.json() as ManualEntryResult).status === 'Processing'; } catch { return false; }
+      try {
+        return (r.json() as ManualEntryResult).status === 'Processing';
+      } catch {
+        return false;
+      }
     },
   });
 

@@ -13,16 +13,16 @@ So **graphs over time** and **per-group timings** come from different places. No
 
 ## Options evaluated
 
-| Approach | Graphs | Group timings | VuH | Portable file | Maintenance | Outcome |
-|---|---|---|---|---|---|---|
-| Built-in web dashboard | ✅ | ❌ | none | ✅ single HTML | none (official) | **Kept** |
-| `handleSummary` + k6-reporter | ❌ | ✅ | none | ✅ single HTML | vendored lib | Rejected |
-| Dashboard + reporter (iframe tabs) | ✅ | ✅ | none | partial | vendored lib + glue | Rejected |
-| Local Grafana + Prometheus stack | ✅ | ✅ | none | ❌ (live site) | off-the-shelf, needs Docker | Removed |
-| Custom `--out json` → HTML builder | ✅ | ✅ | none | ✅ single HTML | **ours** + vendored chart lib | Removed |
-| Grafana Cloud k6 | ✅ | ✅ | **paid** | ❌ | SaaS | Out of scope (cost) |
+| Approach                           | Graphs | Group timings | VuH      | Portable file  | Maintenance                   | Outcome             |
+| ---------------------------------- | ------ | ------------- | -------- | -------------- | ----------------------------- | ------------------- |
+| Built-in web dashboard             | ✅     | ❌            | none     | ✅ single HTML | none (official)               | **Kept**            |
+| `handleSummary` + k6-reporter      | ❌     | ✅            | none     | ✅ single HTML | vendored lib                  | Rejected            |
+| Dashboard + reporter (iframe tabs) | ✅     | ✅            | none     | partial        | vendored lib + glue           | Rejected            |
+| Local Grafana + Prometheus stack   | ✅     | ✅            | none     | ❌ (live site) | off-the-shelf, needs Docker   | Removed             |
+| Custom `--out json` → HTML builder | ✅     | ✅            | none     | ✅ single HTML | **ours** + vendored chart lib | Removed             |
+| Grafana Cloud k6                   | ✅     | ✅            | **paid** | ❌             | SaaS                          | Out of scope (cost) |
 
-### 1. Built-in web dashboard — *kept*
+### 1. Built-in web dashboard — _kept_
 
 `K6_WEB_DASHBOARD=true` + `K6_WEB_DASHBOARD_EXPORT=<file>` produces a self-contained, time-series HTML report from a local run. Zero VuH.
 
