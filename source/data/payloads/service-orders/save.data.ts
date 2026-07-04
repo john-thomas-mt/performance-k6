@@ -1,10 +1,11 @@
-import { setRowValue, setColumnValueAllRows, getColumnValue, todayMidnightUtc, clone } from '../../../utils/exports/helpers.exp.ts';
+import { setRowValue, setColumnValueAllRows, getColumnValue, todayMidnightUtc } from '../../../utils/exports/helpers.exp.ts';
 import { ServiceOrderRow, TransportTable } from '../../../utils/exports/types.exp.ts';
 
-// Captured order-header table (ER100) for the service order being modified.
-// Identity columns are overridden per picked service order in the builder below.
-const ORDER_HEADER_TABLE: TransportTable = {
-    "TableName": "1782200767125",
+export const serviceOrderItemsSavePayload = (so: ServiceOrderRow, quantity: number) => {
+  // Captured order-header table (ER100) for the service order being modified.
+  // Identity columns are overridden per picked service order below.
+  const orderHeader: TransportTable = {
+    "TableName": String(Date.now()),
     "TransportDataColumns": [
       {
         "ColumnName": "ER100_EVT_ID",
@@ -379,9 +380,9 @@ const ORDER_HEADER_TABLE: TransportTable = {
     ]
   };
 
-// Captured price-list item lines (cheesecake + cherry pie). cQUANTITY and the
-// price list are overridden per request in the builder below.
-const ITEM_TABLE: TransportTable = {
+  // Captured price-list item lines (cheesecake + cherry pie). cQUANTITY and the
+  // price list are overridden per request below.
+  const items: TransportTable = {
     "TableName": "ObjectID_457",
     "TransportDataColumns": [
       {
@@ -1013,9 +1014,6 @@ const ITEM_TABLE: TransportTable = {
     ]
   };
 
-export const serviceOrderItemsSavePayload = (so: ServiceOrderRow, quantity: number) => {
-  const orderHeader = clone(ORDER_HEADER_TABLE);
-  orderHeader.TableName = String(Date.now());
   setRowValue(orderHeader, 'ER100_ORD_NBR', Number(so.orderNbr));
   setRowValue(orderHeader, 'ER100_SO_SEARCH', so.soSearch);
   setRowValue(orderHeader, 'ER100_EVT_ID', Number(so.evtId));
@@ -1042,8 +1040,6 @@ export const serviceOrderItemsSavePayload = (so: ServiceOrderRow, quantity: numb
   setRowValue(orderHeader, 'cSTART_DATE_TIME', orderDate);
   setRowValue(orderHeader, 'cEND_DATE_TIME', orderDate + DAY);
 
-  const items = clone(ITEM_TABLE);
-  items.TableName = 'ObjectID_457';
   setColumnValueAllRows(items, 'cQUANTITY', quantity);
   setColumnValueAllRows(items, 'CC716_PRICE_LIST', so.priceList);
 

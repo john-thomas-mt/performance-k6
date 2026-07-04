@@ -1,11 +1,18 @@
-import { setRowValue, clone, majorMinor } from '../../../utils/exports/helpers.exp.ts';
-import { TransportTable } from '../../../utils/exports/types.exp.ts';
+import { majorMinor } from '../../../utils/exports/helpers.exp.ts';
 
-// Captured create-service-order Save2 request (GenericDetailServer/Save2, window EM9131). Embedded
-// verbatim; the builder clones it and overrides the session user and the event-id references so the
+// Order-function date range, mirroring the items-save template's captured range
+// (2024-01-01 09:00 .. 2024-01-03 18:00). The seeded SO's function dates must match the item
+// date/times the items-save sends, or the save warns "item date/time outside the order function's
+// range" (ResultValue 1). The captured create defaulted the function to "today", so align it here.
+const FUNC_START = 1704099600000;
+const FUNC_END = 1704304800000;
+
+// Captured create-service-order Save2 request (GenericDetailServer/Save2, window EM9131) built inline
+// per call. The session user, version, and event-id references are woven in from the arguments so the
 // order is created under the freshly seeded event. ER100_SO_SEARCH is server-assigned on create
 // (equals the new order number), so it is intentionally left unset here.
-const TEMPLATE: unknown[] = [
+export const createServiceOrderPayload = (encUserId: string, evtId: string, version: string) => {
+  const payload: unknown[] = [
   1,
   "10",
   456,
@@ -44,11 +51,11 @@ const TEMPLATE: unknown[] = [
     },
     {
       "Key": "EncUserID",
-      "Value": "KiBsFCSAWUv0muGnqgbv1A%3d%3d"
+      "Value": encUserId
     },
     {
       "Key": "Version",
-      "Value": "26.2"
+      "Value": majorMinor(version)
     },
     {
       "Key": "EditWdwID",
@@ -84,7 +91,7 @@ const TEMPLATE: unknown[] = [
     },
     {
       "Key": "EvtID",
-      "Value": 142877
+      "Value": Number(evtId)
     },
     {
       "Key": "ForceOneColumnLayout",
@@ -148,7 +155,7 @@ const TEMPLATE: unknown[] = [
     },
     {
       "Key": "PrvEvtId",
-      "Value": 63363
+      "Value": Number(evtId)
     },
     {
       "Key": "EvtPriceList",
@@ -176,7 +183,7 @@ const TEMPLATE: unknown[] = [
     },
     {
       "Key": "RowKeyList",
-      "Value": "10|142877"
+      "Value": `10|${evtId}`
     },
     {
       "Key": "PriceList",
@@ -545,7 +552,7 @@ const TEMPLATE: unknown[] = [
         "TransportDataRows": [
           {
             "Values": {
-              "0": 142877,
+              "0": Number(evtId),
               "1": "1",
               "2": "00159220",
               "3": "00167764",
@@ -592,8 +599,8 @@ const TEMPLATE: unknown[] = [
               "44": "Y",
               "45": null,
               "46": -2208988800000,
-              "47": 1782205200000,
-              "48": 1782410400000,
+              "47": FUNC_START,
+              "48": FUNC_END,
               "49": null,
               "50": 1,
               "51": ""
@@ -625,31 +632,6 @@ const TEMPLATE: unknown[] = [
     "SourceUSIID": 0,
     "ConvertToUserDisplayTimeZone": false
   }
-];
-
-const setParam = (params: { Key: string; Value: unknown }[], key: string, value: unknown): void => {
-  const p = params.find((x) => x.Key === key);
-  if (p) p.Value = value;
-};
-
-// Order-function date range, mirroring the items-save template's captured range
-// (2024-01-01 09:00 .. 2024-01-03 18:00). The seeded SO's function dates must match the item
-// date/times the items-save sends, or the save warns "item date/time outside the order function's
-// range" (ResultValue 1). The captured create defaulted the function to "today", so align it here.
-const FUNC_START = 1704099600000;
-const FUNC_END = 1704304800000;
-
-export const createServiceOrderPayload = (encUserId: string, evtId: string, version: string) => {
-  const payload = clone(TEMPLATE);
-  const params = payload[7] as { Key: string; Value: unknown }[];
-  setParam(params, 'EncUserID', encUserId);
-  setParam(params, 'Version', majorMinor(version));
-  setParam(params, 'EvtID', Number(evtId));
-  setParam(params, 'PrvEvtId', Number(evtId));
-  setParam(params, 'RowKeyList', `10|${evtId}`);
-  const table = (payload[9] as { TransportDataTables: TransportTable[] }).TransportDataTables[0];
-  setRowValue(table, 'ER100_EVT_ID', Number(evtId));
-  setRowValue(table, 'cSTART_DATE_TIME', FUNC_START);
-  setRowValue(table, 'cEND_DATE_TIME', FUNC_END);
+  ];
   return payload;
 };

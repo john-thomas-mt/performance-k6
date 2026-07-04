@@ -1,10 +1,20 @@
-import { setRowValue, clone } from '../../../utils/exports/helpers.exp.ts';
+import { setRowValue } from '../../../utils/exports/helpers.exp.ts';
 import { ServiceOrderRow, TransportTable } from '../../../utils/exports/types.exp.ts';
 
-// Captured ER100 order-header table for the edit-general (rate & order date) Save2.
-// Per-order identity columns and the edited order date are overridden in the builder below.
-const ORDER_HEADER_TABLE: TransportTable = {
-  "TableName": "1757868246388",
+// Edit General: re-save the order header with a new order date. Same ER100 Save2 envelope
+// as the add-items save; here the only change is ER100_ORD_DATE and no item table is sent.
+// SaveMode 7 = save & keep editing (edit-general); 0 = save & close. Both are the same ER100
+// header Save2 envelope — the mode is the only structural difference between the two steps.
+export const editGeneralSavePayload = (
+  so: ServiceOrderRow,
+  orderDate: number,
+  stamps: { entDateIso: string; updDateIso: string },
+  saveMode = 7
+) => {
+  // Captured ER100 order-header table for the edit-general (rate & order date) Save2.
+  // Per-order identity columns and the edited order date are overridden below.
+  const header: TransportTable = {
+  "TableName": String(Date.now()),
   "TransportDataColumns": [
     {
       "ColumnName": "OrderBillTo_EV870_ADDRESS_L1",
@@ -791,20 +801,6 @@ const ORDER_HEADER_TABLE: TransportTable = {
     }
   ]
 };
-
-// Edit General: re-save the order header with a new order date. Same ER100 Save2 envelope
-// as the add-items save; here the only change is ER100_ORD_DATE and no item table is sent.
-// SaveMode 7 = save & keep editing (edit-general); 0 = save & close. Both are the same ER100
-// header Save2 envelope — the mode is the only structural difference between the two steps.
-export const editGeneralSavePayload = (
-  so: ServiceOrderRow,
-  orderDate: number,
-  stamps: { entDateIso: string; updDateIso: string },
-  saveMode = 7
-) => {
-  const header = clone(ORDER_HEADER_TABLE);
-  header.TableName = String(Date.now());
-
   // Concurrency token — the server rejects the save ("PrimaryKeyRecordChanged") unless the
   // row's current update timestamp is echoed back. Correlate it from the detail-open response
   // (see readOrderHeaderStamps) rather than replaying the captured stamp.

@@ -1,10 +1,60 @@
-import { setRowValue, clone } from '../../../utils/exports/helpers.exp.ts';
+import { setRowValue } from '../../../utils/exports/helpers.exp.ts';
 import { ServiceOrderRow, TransportTable } from '../../../utils/exports/types.exp.ts';
 
-// Captured MM446 document table for the import Save2. Order identity and the correlated file
-// fields (key/name/description) are overridden per run in the builder below.
-const DOCUMENT_TABLE: TransportTable = {
-  "TableName": "1757868280855",
+// CacheFiles uploads the raw bytes; the server returns a session ref like ["<n>|<filename>"].
+// NeoLoad hardcoded a stale FileKey here instead of correlating it — we use the runtime ref.
+export const cacheFilesPayload = (filename: string, base64: string) => [
+  [{ Key: filename, Value: base64 }],
+];
+
+// Open the document detail form (object 26) for the cached file. The response carries the
+// server-allocated FileKey plus the generated document description and filename.
+export const documentFormPayload = (so: ServiceOrderRow, fileKey: string, fileName: string) => [
+  [
+    { Key: 'OrgCode', Value: so.orgCode },
+    { Key: 'WindowObjectID', Value: 26 },
+    { Key: 'wdwid', Value: 'AA9031' },
+    { Key: 'WdwType', Value: 4 },
+    { Key: 'wdwMode', Value: 2 },
+    { Key: 'RemoveEditLayoutLink', Value: false },
+    { Key: 'ContextObjectID', Value: 0 },
+    { Key: 'MenuType', Value: 4 },
+    { Key: 'OrdAcct', Value: so.ordAcct },
+    { Key: 'EvtID', Value: Number(so.evtId) },
+    { Key: 'OrdBillTo', Value: so.billTo },
+    { Key: 'ExhibitorID', Value: Number(so.exhibitorId) },
+    { Key: 'FuncID', Value: Number(so.funcId) },
+    { Key: 'InvoiceNbr', Value: Number(so.invoice) },
+    { Key: 'OrderType', Value: so.orderType },
+    { Key: 'PriceList', Value: so.priceList },
+    { Key: 'OrdReq', Value: so.reqCust },
+    { Key: 'OrderPhase', Value: so.resPhase },
+    { Key: 'OrdShipTo', Value: so.shipTo },
+    { Key: 'RowKeyList', Value: so.rowKey },
+    { Key: 'RefreshDependentKey', Value: Date.now() },
+    { Key: 'OrderNbr', Value: Number(so.orderNbr) },
+    { Key: 'Status', Value: so.status },
+    { Key: 'documentSubject', Value: 'ORD' },
+    { Key: 'Mode', Value: 'IMPORT' },
+    { Key: 'FileKey', Value: fileKey },
+    { Key: 'FileName', Value: fileName },
+    { Key: 'IsExternalDropFile', Value: false },
+    { Key: 'IsWebAddinInstalled', Value: false },
+  ],
+  'AA9031', 1, 26, 4, 0, '', '', null,
+  { TransportDataColumns: [], TransportDataRows: [], TableName: '' },
+  [], true,
+];
+
+// Import Save2: create the document row (AddedRowKeys ["10|S|-1"]) linked to the order.
+// The captured MM446 document table is built inline per call; order identity and the correlated
+// file fields (key/name/description) are overridden below.
+export const documentSavePayload = (
+  so: ServiceOrderRow,
+  doc: { fileKey: string; fileName: string; docDesc: string }
+) => {
+  const table: TransportTable = {
+  "TableName": String(Date.now()),
   "TransportDataColumns": [
     {
       "ColumnName": "MM446_DOC_DESC",
@@ -420,59 +470,6 @@ const DOCUMENT_TABLE: TransportTable = {
     }
   ]
 };
-
-// CacheFiles uploads the raw bytes; the server returns a session ref like ["<n>|<filename>"].
-// NeoLoad hardcoded a stale FileKey here instead of correlating it — we use the runtime ref.
-export const cacheFilesPayload = (filename: string, base64: string) => [
-  [{ Key: filename, Value: base64 }],
-];
-
-// Open the document detail form (object 26) for the cached file. The response carries the
-// server-allocated FileKey plus the generated document description and filename.
-export const documentFormPayload = (so: ServiceOrderRow, fileKey: string, fileName: string) => [
-  [
-    { Key: 'OrgCode', Value: so.orgCode },
-    { Key: 'WindowObjectID', Value: 26 },
-    { Key: 'wdwid', Value: 'AA9031' },
-    { Key: 'WdwType', Value: 4 },
-    { Key: 'wdwMode', Value: 2 },
-    { Key: 'RemoveEditLayoutLink', Value: false },
-    { Key: 'ContextObjectID', Value: 0 },
-    { Key: 'MenuType', Value: 4 },
-    { Key: 'OrdAcct', Value: so.ordAcct },
-    { Key: 'EvtID', Value: Number(so.evtId) },
-    { Key: 'OrdBillTo', Value: so.billTo },
-    { Key: 'ExhibitorID', Value: Number(so.exhibitorId) },
-    { Key: 'FuncID', Value: Number(so.funcId) },
-    { Key: 'InvoiceNbr', Value: Number(so.invoice) },
-    { Key: 'OrderType', Value: so.orderType },
-    { Key: 'PriceList', Value: so.priceList },
-    { Key: 'OrdReq', Value: so.reqCust },
-    { Key: 'OrderPhase', Value: so.resPhase },
-    { Key: 'OrdShipTo', Value: so.shipTo },
-    { Key: 'RowKeyList', Value: so.rowKey },
-    { Key: 'RefreshDependentKey', Value: Date.now() },
-    { Key: 'OrderNbr', Value: Number(so.orderNbr) },
-    { Key: 'Status', Value: so.status },
-    { Key: 'documentSubject', Value: 'ORD' },
-    { Key: 'Mode', Value: 'IMPORT' },
-    { Key: 'FileKey', Value: fileKey },
-    { Key: 'FileName', Value: fileName },
-    { Key: 'IsExternalDropFile', Value: false },
-    { Key: 'IsWebAddinInstalled', Value: false },
-  ],
-  'AA9031', 1, 26, 4, 0, '', '', null,
-  { TransportDataColumns: [], TransportDataRows: [], TableName: '' },
-  [], true,
-];
-
-// Import Save2: create the document row (AddedRowKeys ["10|S|-1"]) linked to the order.
-export const documentSavePayload = (
-  so: ServiceOrderRow,
-  doc: { fileKey: string; fileName: string; docDesc: string }
-) => {
-  const table = clone(DOCUMENT_TABLE);
-  table.TableName = String(Date.now());
   // Order identity.
   setRowValue(table, 'MM446_EVENT', Number(so.evtId));
   setRowValue(table, 'MM446_INDEX', Number(so.orderNbr));
