@@ -28,19 +28,24 @@ Request bodies are **TS object builders**, never `.json`/`.txt` templates loaded
   `copyFormPayload(encUserId, source)`, `searchPayload(searchValue)`.
 - Per-iteration uniqueness is interpolated inside the builder (template literals), not by
   `{{runToken}}` string substitution on opened text.
-- Build the payload literal **inside** the builder function (assign it to a local and `return` it, or
-  return it directly) so each call yields a fresh object — never hoist a captured body to a
-  module-level `const` and `clone()` it per call, which adds shared mutable state and a per-iteration
-  deep copy the inline form doesn't need.
-- Weave each varying value into the literal at its own cell so the builder stays one self-contained
-  object. A value that is fixed for the builder (a run marker, a computed date) goes inline at its
-  position — including inside a columnar transport table, where the cell is the numeric `Values` key
-  matching that column's `ColumnID` (`"0": description`), not a post-build mutation. Reserve
-  `setRowValue`/`setColumnValueAllRows` (write by column name) for what those helpers exist for:
-  re-correlating **per-record** identity fields from a runtime `source` row onto a reused capture (see
-  `rules/scripting.md`) — not as the default way to populate a from-scratch body.
+- Return the payload literal directly from the builder arrow (`export const x = (...) => [...]`) so each
+  call yields a fresh object; don't wrap it in a pointless `const payload = [...]; return payload`, and
+  never hoist a captured body to a shared module-level `const` mutated or copied per call. (A
+  module-level table *builder function* is fine — it returns a fresh literal each call; see below.)
+- Weave every varying value into the literal at its own cell — a run marker, a computed date, and
+  per-record identity re-correlated from a runtime `source` row alike (see `rules/scripting.md`).
+  Inside a columnar transport table the cell is the numeric `Values` key matching that column's
+  `ColumnID` (`"41": Number(so.orderNbr)`), mapped once against the `TransportDataColumns` array;
+  never a post-build mutation of the row by column name.
+- Extract each nested transport table (`TransportDataColumns` + `TransportDataRows`) into its own
+  module-level builder that takes the correlated values and returns a fresh `TransportTable` —
+  `orderTable(so, orderDate)`, `itemsTable(so, quantity)` — so the payload arrow plugs the builders in
+  and reads as a skeleton. Annotate each builder `: TransportTable` so a structurally malformed table
+  is caught at the builder. Non-varying cells stay as captured constants; a captured constant that is
+  load-bearing (the server rejects the save without it) gets a short why-comment at the cell (see
+  `rules/comments.md`).
 - Builders may import types from the types barrel and shared transforms from the helpers barrel, and carry logic. They stay in `source/data/payloads/`, not elsewhere in `source/`.
-- Logic shared across a single module's builders lives in a module-local `helpers.ts` (e.g. `source/data/payloads/events/helpers.ts` for `todayMidnightUtc`). Once a transform is shared across more than one data module, promote it to `source/utils/helpers/payload.helper.ts` (transport-envelope cell setters/readers, e.g. `setRowValue`) rather than duplicating it per module — see `rules/helpers.md`.
+- Logic shared across a single module's builders lives in a module-local `helpers.ts`. Once a transform is shared across more than one data module, promote it to `source/utils/helpers/payload.helper.ts` (e.g. `todayMidnightUtc`, shared by the event and service-order date windows) rather than duplicating it per module — see `rules/helpers.md`.
 - Callers import and call the builder directly in the VU function — no init-context `open()`.
 
 ## Upload fixtures — `source/data/uploads/<module>/<sub>/`

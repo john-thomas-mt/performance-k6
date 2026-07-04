@@ -15,26 +15,11 @@ if (!file || !exportName) {
   process.exit(2);
 }
 
-// Type-faithful stand-ins for the shared payload helpers — only the return TYPE matters for a shape
-// diff, so the transforms need not be exact. setRowValue/clone are kept faithful since a builder may
-// clone a template then mutate it.
+// Type-faithful stand-ins for the shared payload helpers a builder imports (todayMidnightUtc,
+// majorMinor) — only the return TYPE matters for a shape diff, so they need not be exact.
 const helperStub = {
   todayMidnightUtc: () => 0,
   majorMinor: () => '0.0',
-  clone: (v) => JSON.parse(JSON.stringify(v)),
-  setRowValue(t, name, value) {
-    const i = t.TransportDataColumns.findIndex((c) => c.ColumnName === name);
-    if (i >= 0) t.TransportDataRows[0].Values[String(i)] = value;
-  },
-  setColumnValueAllRows(t, name, value) {
-    const i = t.TransportDataColumns.findIndex((c) => c.ColumnName === name);
-    if (i < 0) return;
-    for (const row of t.TransportDataRows) row.Values[String(i)] = value;
-  },
-  getColumnValue(t, row, name) {
-    const i = t.TransportDataColumns.findIndex((c) => c.ColumnName === name);
-    return i >= 0 && t.TransportDataRows[row] ? t.TransportDataRows[row].Values[String(i)] : undefined;
-  },
 };
 
 const cache = new Map();

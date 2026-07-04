@@ -68,8 +68,8 @@ Update the affected `source/data/**.data.ts` builder:
 - For a changed/added/removed field, regenerate the body from the fresh capture (never hand-transcribe
   a large payload), keeping each varying cell parameterized the way the builder already had it.
 - Reconcile the parameterization: if a varying cell's column was renamed/removed, move it to the new
-  column — and parameterize any new per-record-unique (identity) field, writing it by column name
-  (`setRowValue`) when it's re-correlated from a runtime `source` row.
+  column — and parameterize any new per-record-unique (identity) field by weaving the `source` value
+  into its cell (the numeric `Values` key matching the column's `ColumnID`) in the table builder.
 
 Then re-run `npx tsc --noEmit`, `k6 inspect source/tests/smoke.spec.ts`, and the smoke run again until
 the checks pass.

@@ -25,7 +25,7 @@ Every value the server generates must be extracted at runtime from a prior respo
 - `traceId` → upload/submit responses; reuse it for follow-up status requests
 Client-generated values (`x-nonce`, `wsid`, sessionIds, timestamps) are produced fresh per request with `crypto.randomUUID()` / `new Date()`, never copied from a capture.
 
-When a capture-derived payload template is reused for a *different* record (e.g. a templated detail/`Save2` body sent for another service order), re-correlate every **per-record-unique** field from the target row — overwrite it by column name (`setRowValue`), don't leave the captured value. A unique search key such as `ER100_SO_SEARCH` left at the captured order's value makes the server reject the save ("the value entered in the search field already exists for another order"). These fields read like static template data but are identity, not shape.
+When a capture-derived payload template is reused for a *different* record (e.g. a templated detail/`Save2` body sent for another service order), re-correlate every **per-record-unique** field from the target row — weave the `source` value into its cell in the table builder (the numeric `Values` key matching that column's `ColumnID`), don't leave the captured value. A unique search key such as `ER100_SO_SEARCH` left at the captured order's value makes the server reject the save ("the value entered in the search field already exists for another order"). These fields read like static template data but are identity, not shape.
 
 ## Checks
 - Every wrapper asserts on its own response with `check(res, {...})`
