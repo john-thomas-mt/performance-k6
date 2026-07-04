@@ -7,13 +7,17 @@
     "secret": "ts-node .config/yargs/secret.ts",
     "setup": "ts-node .config/yargs/setup.ts",
     "smoke:local": "cross-env K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=temp/report.html k6 run source/tests/smoke.spec.ts",
-    "smoke:cloud": "cross-env K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=temp/report.html k6 cloud run --local-execution source/tests/smoke.spec.ts"
+    "smoke:cloud": "cross-env K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=temp/report.html k6 cloud run --local-execution source/tests/smoke.spec.ts",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@types/k6": "^2.0.0",
     "@types/node": "^20.19.37",
     "@types/yargs": "^17.0.33",
     "cross-env": "^7.0.3",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.8.1",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3",
     "yargs": "^17.7.2"
