@@ -84,10 +84,11 @@ _No T15 exists in the tree. T39 has two variants (dashboard + widgets)._
 | U15_PatchControllerTimeout       | Controller timeout patch | Infra util — does not port                                 |
 | U19_DataScript_CheckedOut        | Checked-out record state | Likely feeds T31 / T43 — confirm                           |
 
-## Out-of-suite k6 journeys already built
+## Out of scope — sales-ai journeys
 
-Momentus Assistant / sales-ai flows that are already ported but are **not** in the NeoLoad Enterprise
-`@t*` set. Decide whether they form their own suite in the load model.
+Momentus Assistant / sales-ai is a **separate scope** from this NeoLoad Enterprise migration and is
+not mixed into this backlog or load model. These journeys are already ported and belong to that
+separate initiative — listed here only so they aren't re-ported as if they were Enterprise `@t*` flows.
 
 | k6 journey           | Surface                                                           |
 | -------------------- | ----------------------------------------------------------------- |
@@ -102,7 +103,6 @@ Momentus Assistant / sales-ai flows that are already ported but are **not** in t
 2. **Tentative mappings** — confirm T12→`login`, T21→`service-order-items`, T25→`navigation`.
 3. **T30 category** — report vs base; drives its VU weight in the load profile.
 4. **Unmapped `@u*`** — which of U11/U14/U15/U19 are journey seeds vs infra utilities.
-5. **MA/sales-ai journeys** — separate suite, or fold into scope.
 
 ## Current load-spec state
 
