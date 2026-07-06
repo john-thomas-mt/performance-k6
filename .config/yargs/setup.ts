@@ -2,10 +2,11 @@ import yargs from 'yargs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { hideBin } from 'yargs/helpers';
+import type { Site, ReleaseVersion } from '../../source/utils/types/config.type.ts';
 
 interface Arguments {
-  site: string;
-  env: string;
+  site: Site;
+  env: ReleaseVersion;
 }
 
 const argv = yargs(hideBin(process.argv))
@@ -13,14 +14,15 @@ const argv = yargs(hideBin(process.argv))
     alias: 's',
     type: 'string',
     choices: ['QE', 'AT', 'RC', 'PERF'],
-    default: 'AT',
-    description: 'Target site',
+    default: 'PERF',
+    description: 'Target site (defaults to PERF, the only site perf tests run on; QE/AT/RC are debug-only)',
   })
   .option('env', {
     alias: 'e',
     type: 'string',
-    default: '26_2',
-    description: 'Release version path segment, e.g. main, 26_2',
+    default: 'main',
+    description:
+      'Release version path segment (defaults to main, the authoring target); valid values are the ReleaseVersion union in source/utils/types/config.type.ts',
   })
   .help()
   .parseSync() as Arguments;

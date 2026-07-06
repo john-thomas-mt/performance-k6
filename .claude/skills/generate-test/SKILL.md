@@ -14,7 +14,7 @@ One continuous flow: drive the app, build an in-context correlation picture, wri
 1. Confirm the target flow with the user if ambiguous (which page, which actions, which data).
 2. **Tell the user before opening the browser** — exploration sends real traffic to the environment.
 3. Get **approval once, upfront, for the whole sequence** (exploration + the three verification runs). With that approval, run all three steps and any re-runs without prompting again.
-4. Read `source/config/env.config.ts` for the app URL (`baseUrl`; the sales-ai `tenantId` is not stored — it's correlated at runtime). For **exploration** you need a live login: `source/data/creds/users.data.ts` ships usernames plaintext but passwords **AES-GCM-encrypted**, so decrypt the first user with the `temp/secret.json` passphrase (via `decryptUsers`) — you can't read a usable password straight from the file. The generated test draws from the full pool via `pickUser` (see §3).
+4. **Target `main` on PERF** — the unreleased, highest-priority env authoring always runs against, so the script is written for the newest schema and trickles down to released envs. A bare `npm run setup` writes exactly this (site `PERF`, env `main` are the defaults). Read `source/config/env.config.ts` for the app URL (`baseUrl`; the sales-ai `tenantId` is not stored — it's correlated at runtime). For **exploration** you need a live login: `source/data/creds/users.data.ts` ships usernames plaintext but passwords **AES-GCM-encrypted**, so decrypt the first user with the `temp/secret.json` passphrase (via `decryptUsers`) — you can't read a usable password straight from the file. The generated test draws from the full pool via `pickUser` (see §3).
 5. `playwright-cli list` — if any session shows `[incompatible please re-open]`, `playwright-cli kill-all` first.
 
 ## 1. Explore & observe (in-context)
@@ -109,3 +109,7 @@ Any match that isn't a `config`/`__ENV` value is a correlation miss — extract 
 ## 6. Report
 
 Summarize: requests scripted, lib modules created/reused, correlation decisions, the 3-step verification results, any refactors, and the run commands.
+
+## 7. Trickle down (optional)
+
+The 3-step run proves the journey on `main` only. To prove it trickles down to the released envs, offer to hand off to `verify-envs` — targeting **the journey just authored** (pass its scenario name automatically; don't make the user restate it) — which runs that journey once per env in the `ReleaseVersion` matrix and triages any cross-version drift. Don't fold that sweep into this skill; it's a separate, user-approved traffic run.

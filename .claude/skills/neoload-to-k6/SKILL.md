@@ -15,7 +15,7 @@ One continuous pass: read the NeoLoad script as the **source of truth** (the tra
 
 1. Locate the NeoLoad VU. A decoded on-disk project has `team/vus/<VU name>/` (a folder) plus a sibling `<VU name>.xml` (the VU definition). Filenames are URL-encoded: `#2F`=`/`, `#2E`=`.`, `@` prefixes a word. `#2826#2E2#29` = `(26.2)`.
 2. Confirm the target flow and scope with the user — a recorded VU can be 100+ requests; agree on which operations to port.
-3. Read `source/config/env.config.ts` for the target env, and check `temp/setup.json`/`temp/secret.json` exist (the run prerequisites).
+3. **Target `main` on PERF** — port against the unreleased, highest-priority env so the port matches the newest schema and trickles down to released envs. A bare `npm run setup` writes exactly this (site `PERF`, env `main` are the defaults). Read `source/config/env.config.ts` for the target env, and check `temp/setup.json`/`temp/secret.json` exist (the run prerequisites).
 4. **Get approval once, upfront, for the 3-step verification run sequence** — that is the only traffic this skill sends (parsing the tree sends none). This journey may **write** (each `Save2` mutates data); the DB snapshot reset owns cleanup, so journeys stay pure (no `teardown()`).
 
 ## 1. Parse the NeoLoad tree (zero traffic)
@@ -103,3 +103,5 @@ Loop rules (per `generate-test`): fix, re-run; if the fix touched correlation/sh
 Final structural pass against the auto-loaded rules. Then the static hardcode scan from `generate-test` §5 — but note the embedded payload constants **intentionally** contain captured values (that's the embed-and-override pattern); the scan targets the **flow/wrapper logic**, which must carry no hardcoded dynamic ids.
 
 Report: NeoLoad steps ported vs dropped-as-chrome, wrappers reused vs created, correlation decisions (and any NeoLoad smells corrected), the 3-step results, and the run commands.
+
+The 3-step run proves the journey on `main` only. NeoLoad re-recorded per version precisely because it couldn't parameterize this; k6 can. Offer to hand off to `verify-envs` — targeting **the journey just ported** (pass its scenario name automatically; don't make the user restate it) — to prove the port trickles down across the `ReleaseVersion` matrix and surface any cross-version drift. A separate, user-approved traffic run, not part of this skill.

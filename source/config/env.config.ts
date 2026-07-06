@@ -1,10 +1,10 @@
-type Site = 'QE' | 'AT' | 'RC' | 'PERF';
+import type { Site, ReleaseVersion } from '../utils/exports/types.exp.ts';
 
 const setup = JSON.parse(open('../../temp/setup.json')) as Record<string, string>;
 const secret = JSON.parse(open('../../temp/secret.json')) as Record<string, string>;
 
-const site = (setup.site || 'AT') as Site;
-const env = setup.env || '26_2';
+const site = (setup.site || 'PERF') as Site;
+const env = (setup.env || 'main') as ReleaseVersion;
 
 let urlPrefix: string;
 let path: string;
