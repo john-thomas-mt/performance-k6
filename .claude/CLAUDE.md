@@ -22,6 +22,7 @@ k6 performance test scripts for Momentus, produced via an AI-assisted workflow: 
 - `k6 inspect --execution-requirements source/tests/<name>.spec.ts` — also zero traffic; once a load spec consumes `loadProfile()`, this resolves the stage spread and computes its max VUs / total duration, so a broken stage config is caught without running load
 - Pre-commit compilation gate: `npx tsc --noEmit` (k6 strips types at parse time, so `k6 inspect` never catches a type error — this is the only check that does); lint/format are handled by commit hooks
 - When filtering `k6 run` output, pass `--quiet` and redirect to a file before grepping — the live progress bar floods the pipe, and piping straight to `| head` can SIGPIPE-kill the run mid-flight
+- A run whose `setup()` fails or times out still prints every threshold as `✓` against zero samples (`rate=0.00%`, `p(95)=0s`) yet exits non-zero — before trusting a green summary, confirm `iterations` / `checks_total` are greater than 0 (a `setup() execution timed out` line usually points at a VPN/connectivity stall)
 
 ## Module imports
 k6 uses browser-like module resolution: only relative/absolute paths with the full `.ts` filename resolve
