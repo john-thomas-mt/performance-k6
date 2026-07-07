@@ -5,7 +5,7 @@ import { User, SetupData, EventRow } from '../utils/exports/types.exp.ts';
 
 const SOURCE_EVENT = __ENV.SOURCE_EVENT || 'Manual Test Event 1';
 
-export const copyEventThresholds: Record<string, string[]> = {
+export const copyEventThresholds = {
   'http_req_duration{name:SearchEvents}': ['p(95)<3000'],
   'http_req_duration{name:OpenCopyForm}': ['p(95)<5000'],
   'http_req_duration{name:SaveEventCopy}': ['p(95)<5000'],

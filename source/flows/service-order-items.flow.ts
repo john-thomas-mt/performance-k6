@@ -28,7 +28,7 @@ export function discoverServiceOrderPool(version: string, user: User) {
   return pool;
 }
 
-export const serviceOrderItemsThresholds: Record<string, string[]> = {
+export const serviceOrderItemsThresholds = {
   'http_req_duration{name:OpenServiceOrderDetail}': ['p(95)<5000'],
   'http_req_duration{name:SaveServiceOrderItems}': ['p(95)<5000'],
 };

@@ -4,7 +4,7 @@ import { getWindowInfo, getListInitialData } from '../utils/exports/apis.exp.ts'
 import { navScreens } from '../utils/exports/data.exp.ts';
 import { User, SetupData } from '../utils/exports/types.exp.ts';
 
-export const navigationThresholds: Record<string, string[]> = {
+export const navigationThresholds = {
   'http_req_duration{name:GetWindowInfo}': ['p(95)<2000'],
   'http_req_duration{name:GetListInitialData}': ['p(95)<3000'],
 };

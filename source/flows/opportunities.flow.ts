@@ -3,7 +3,7 @@ import { loginToMomentusAssistant } from './login.flow.ts';
 import { getOpportunities } from '../utils/exports/apis.exp.ts';
 import { User, SetupData } from '../utils/exports/types.exp.ts';
 
-export const opportunitiesThresholds: Record<string, string[]> = {
+export const opportunitiesThresholds = {
   'http_req_duration{name:GetOpportunities}': ['p(95)<3000'],
 };
 

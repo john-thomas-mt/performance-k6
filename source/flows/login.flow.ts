@@ -2,7 +2,7 @@ import { group } from 'k6';
 import { signIn, signInSession, maAuthenticate } from '../utils/exports/helpers.exp.ts';
 import { User } from '../utils/exports/types.exp.ts';
 
-export const loginThresholds: Record<string, string[]> = {
+export const loginThresholds = {
   'http_req_duration{name:SignIn}': ['p(95)<2000'],
   'http_req_duration{name:MAAuthenticate}': ['p(95)<2000'],
 };

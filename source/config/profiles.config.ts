@@ -32,6 +32,6 @@ export function loadProfile(defaultName = 'smoke'): Profile {
   return profile;
 }
 
-export const commonThresholds: Record<string, string[]> = {
+export const commonThresholds = {
   http_req_failed: ['rate<0.05'],
 };

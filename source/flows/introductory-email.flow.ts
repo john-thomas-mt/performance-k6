@@ -4,7 +4,7 @@ import { submitManualEntry, pollForOpportunity, openOpportunityDetail, getTasks 
 import { manualEntryPayload } from '../utils/exports/data.exp.ts';
 import { User, SetupData, Opportunity, TasksResponse } from '../utils/exports/types.exp.ts';
 
-export const introductoryEmailThresholds: Record<string, string[]> = {
+export const introductoryEmailThresholds = {
   'http_req_duration{name:ManualEntry}': ['p(95)<3000'],
   'http_req_duration{name:GetOpportunityDetail}': ['p(95)<3000'],
   'http_req_duration{name:GetTasks}': ['p(95)<3000'],

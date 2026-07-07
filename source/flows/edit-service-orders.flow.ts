@@ -18,7 +18,7 @@ const DAY = 24 * 60 * 60 * 1000;
 const ITEM_QUANTITY = Number(__ENV.ITEM_QUANTITY || 2);
 const DOCUMENT_FILE_NAME = 'sample-document.txt';
 
-export const editServiceOrdersThresholds: Record<string, string[]> = {
+export const editServiceOrdersThresholds = {
   'http_req_duration{name:OpenServiceOrderDetail}': ['p(95)<5000'],
   'http_req_duration{name:EditServiceOrderGeneral}': ['p(95)<5000'],
   'http_req_duration{name:SaveServiceOrderItems}': ['p(95)<5000'],

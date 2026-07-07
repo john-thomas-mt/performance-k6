@@ -3,7 +3,7 @@ import { loginToMomentusAssistant } from './login.flow.ts';
 import { uploadOpportunityFile, pollForOpportunity } from '../utils/exports/apis.exp.ts';
 import { User, SetupData } from '../utils/exports/types.exp.ts';
 
-export const fileUploadThresholds: Record<string, string[]> = {
+export const fileUploadThresholds = {
   'http_req_duration{name:FileUpload}': ['p(95)<5000'],
 };
 
