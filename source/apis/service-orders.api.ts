@@ -18,6 +18,7 @@ import {
   ServiceOrderRow,
   ServiceOrderSaveResult,
   DocumentFields,
+  TransportEnvelope,
   TransportRow,
   TransportValues,
 } from '../utils/exports/types.exp.ts';
@@ -26,13 +27,11 @@ type Res = RefinedResponse<ResponseType | undefined>;
 
 function parseServiceOrderRows(res: Res, name: string): ServiceOrderRow[] {
   try {
-    const body: any = res.json();
-    const arr = Array.isArray(body) ? body : [];
+    const body = res.json();
+    const arr = Array.isArray(body) ? (body as TransportEnvelope[]) : [];
     const tdt = arr.find((e) => e && typeof e === 'object' && !Array.isArray(e) && e.TransportDataTables);
-    const table = tdt.TransportDataTables.find((t: any) =>
-      t.TransportDataColumns.some((c: { ColumnName: string }) => c.ColumnName === 'ER100_ORD_NBR'),
-    );
-    const cols: string[] = table.TransportDataColumns.map((c: { ColumnName: string }) => c.ColumnName);
+    const table = tdt!.TransportDataTables!.find((t) => t.TransportDataColumns.some((c) => c.ColumnName === 'ER100_ORD_NBR'))!;
+    const cols: string[] = table.TransportDataColumns.map((c) => c.ColumnName);
     const at = (v: TransportValues, n: string) => {
       const i = cols.indexOf(n);
       const raw = i >= 0 ? v[String(i)] : '';
@@ -147,13 +146,13 @@ export function createServiceOrder(token: string, version: string, encUserId: st
 
 export function readOrderHeaderStamps(res: Res) {
   try {
-    const body: any = res.json();
-    const arr = Array.isArray(body) ? body : [];
+    const body = res.json();
+    const arr = Array.isArray(body) ? (body as TransportEnvelope[]) : [];
     for (const el of arr) {
       const tables = el && typeof el === 'object' && !Array.isArray(el) && el.TransportDataTables;
       if (!Array.isArray(tables)) continue;
       for (const t of tables) {
-        const cols: string[] = (t.TransportDataColumns || []).map((c: { ColumnName: string }) => c.ColumnName);
+        const cols: string[] = (t.TransportDataColumns || []).map((c) => c.ColumnName);
         const ui = cols.indexOf('ER100_UPD_DATE_ISO');
         const ei = cols.indexOf('ER100_ENT_DATE_ISO');
         if (ui >= 0 && t.TransportDataRows?.[0]) {
@@ -247,13 +246,13 @@ export function openDocumentForm(token: string, version: string, so: ServiceOrde
   }
 
   try {
-    const body: any = res.json();
-    const arr = Array.isArray(body) ? body : [];
+    const body = res.json();
+    const arr = Array.isArray(body) ? (body as TransportEnvelope[]) : [];
     for (const el of arr) {
       const tables = el && typeof el === 'object' && !Array.isArray(el) && el.TransportDataTables;
       if (!Array.isArray(tables)) continue;
       for (const t of tables) {
-        const cols: string[] = (t.TransportDataColumns || []).map((c: { ColumnName: string }) => c.ColumnName);
+        const cols: string[] = (t.TransportDataColumns || []).map((c) => c.ColumnName);
         const di = cols.indexOf('MM446_DOC_DESC');
         if (di >= 0 && t.TransportDataRows?.[0]) {
           const v = t.TransportDataRows[0].Values;

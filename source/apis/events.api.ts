@@ -3,17 +3,17 @@ import { check, fail } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
 import { buildHeaders } from '../utils/exports/helpers.exp.ts';
 import { searchPayload, copyFormPayload, savePayload, detailPayload, createEventPayload } from '../utils/exports/data.exp.ts';
-import { EventRow, EventSaveResult, TransportRow, TransportValues } from '../utils/exports/types.exp.ts';
+import { EventRow, EventSaveResult, TransportEnvelope, TransportRow, TransportValues } from '../utils/exports/types.exp.ts';
 
 type Res = RefinedResponse<ResponseType | undefined>;
 
 function parseEventRows(res: Res, name: string): EventRow[] {
   try {
-    const body: any = res.json();
-    const arr = Array.isArray(body) ? body : [];
+    const body = res.json();
+    const arr = Array.isArray(body) ? (body as TransportEnvelope[]) : [];
     const tdt = arr.find((e) => e && typeof e === 'object' && !Array.isArray(e) && e.TransportDataTables);
-    const table = tdt.TransportDataTables[0];
-    const cols: string[] = table.TransportDataColumns.map((c: { ColumnName: string }) => c.ColumnName);
+    const table = tdt!.TransportDataTables![0];
+    const cols: string[] = table.TransportDataColumns.map((c) => c.ColumnName);
     const at = (v: TransportValues, n: string) => String(v[String(cols.indexOf(n))]);
     return table.TransportDataRows.map((r: TransportRow) => ({
       desc: at(r.Values, 'EV200_EVT_DESC'),

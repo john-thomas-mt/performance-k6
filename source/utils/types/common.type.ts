@@ -37,3 +37,7 @@ export type TransportTable = {
   TransportDataRows: TransportRow[];
   TableName?: string;
 };
+
+export type TransportEnvelope = {
+  TransportDataTables?: TransportTable[];
+};
