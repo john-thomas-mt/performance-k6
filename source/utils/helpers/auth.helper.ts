@@ -1,5 +1,5 @@
 import http from 'k6/http';
-import { check, fail } from 'k6';
+import { check, fail, JSONObject, JSONValue } from 'k6';
 import encoding from 'k6/encoding';
 import { config } from '../exports/config.exp.ts';
 import { buildHeaders } from './headers.helper.ts';
@@ -22,8 +22,14 @@ function postSignIn(username: string, password: string, version: string) {
   return res;
 }
 
-function extractBearerToken(body: unknown) {
+function extractBearerToken(body: JSONValue) {
   return Array.isArray(body) ? (body.find((item): item is string => typeof item === 'string' && /^\d+\|/.test(item)) ?? null) : null;
+}
+
+function extractEncryptedSN(body: JSONValue) {
+  if (!Array.isArray(body)) return null;
+  const item = body.find((e): e is JSONObject => !!e && typeof e === 'object' && !Array.isArray(e) && typeof e.EncryptedSN === 'string');
+  return item ? (item.EncryptedSN as string) : null;
 }
 
 export function signIn(username: string, password: string, version: string) {
@@ -41,9 +47,7 @@ export function signInSession(username: string, password: string, version: strin
 
   const body = res.json();
   const bearerToken = extractBearerToken(body);
-  const encUserId: string | null = Array.isArray(body)
-    ? ((body as any[]).find((e) => e && typeof e === 'object' && typeof e.EncryptedSN === 'string')?.EncryptedSN ?? null)
-    : null;
+  const encUserId = extractEncryptedSN(body);
 
   check(bearerToken, { 'SignIn: bearer token present': (t) => t !== null });
   check(encUserId, { 'SignIn: encoded user id present': (e) => e !== null });
