@@ -1,4 +1,4 @@
-import { majorMinor } from '../../../utils/exports/helpers.exp.ts';
+import { major_minor } from '../../../utils/exports/helpers.exp.ts';
 import { TransportTable } from '../../../utils/exports/types.exp.ts';
 
 /* Captured create-service-order Save2 (window EM9131); user, version, and event id are woven in so
@@ -46,7 +46,7 @@ export const createServiceOrderPayload = (encUserId: string, evtId: string, vers
     },
     {
       Key: 'Version',
-      Value: majorMinor(version),
+      Value: major_minor(version),
     },
     {
       Key: 'EditWdwID',

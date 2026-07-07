@@ -1,33 +1,33 @@
 import http from 'k6/http';
 import { check, fail, sleep } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
-import { salesAiHeaders, tenantIdFromJwt, bodyText } from '../utils/exports/helpers.exp.ts';
+import { sales_ai_headers, tenant_id_from_jwt, body_text } from '../utils/exports/helpers.exp.ts';
 import { Opportunity } from '../utils/exports/types.exp.ts';
 
-export function getOpportunities(salesAiJwt: string, name = 'GetOpportunities') {
-  const tenantId = tenantIdFromJwt(salesAiJwt);
+export function get_opportunities(salesAiJwt: string, name = 'GetOpportunities') {
+  const tenantId = tenant_id_from_jwt(salesAiJwt);
   const res = http.get(`${config.salesAiUrl}/api/opportunities?tenantId=${tenantId}`, {
-    headers: salesAiHeaders(salesAiJwt),
+    headers: sales_ai_headers(salesAiJwt),
     tags: { name },
   });
 
   check(res, {
     [`${name}: status is 200`]: (r) => r.status === 200,
     [`${name}: response is JSON`]: (r) => (r.headers['Content-Type'] ?? '').includes('application/json'),
-    [`${name}: response body is non-empty`]: (r) => bodyText(r).length > 0,
+    [`${name}: response body is non-empty`]: (r) => body_text(r).length > 0,
   });
 
   return res;
 }
 
-export function pollForOpportunity(salesAiJwt: string, searchToken: string, maxWaitSeconds = 120) {
+export function poll_for_opportunity(salesAiJwt: string, searchToken: string, maxWaitSeconds = 120) {
   const intervalSeconds = 5;
   const maxAttempts = Math.ceil(maxWaitSeconds / intervalSeconds);
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     sleep(intervalSeconds);
 
-    const res = getOpportunities(salesAiJwt, 'PollOpportunities');
+    const res = get_opportunities(salesAiJwt, 'PollOpportunities');
 
     if (res.status !== 200) {
       console.warn(`[VU ${__VU}] PollOpportunities attempt ${attempt}: HTTP ${res.status}`);
@@ -55,8 +55,8 @@ export function pollForOpportunity(salesAiJwt: string, searchToken: string, maxW
 
 type BatchReq = [string, string, null, { headers: { [header: string]: string }; tags: { name: string } }];
 
-export function openOpportunityDetail(salesAiJwt: string, opportunityId: string) {
-  const headers = salesAiHeaders(salesAiJwt);
+export function open_opportunity_detail(salesAiJwt: string, opportunityId: string) {
+  const headers = sales_ai_headers(salesAiJwt);
   const get = (path: string, name: string): BatchReq => ['GET', `${config.salesAiUrl}${path}`, null, { headers, tags: { name } }];
 
   const responses = Object.values(
@@ -88,7 +88,7 @@ export function openOpportunityDetail(salesAiJwt: string, opportunityId: string)
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] openOpportunityDetail failed — HTTP ${detail.status}`);
-    fail('openOpportunityDetail did not succeed');
+    console.error(`[VU ${__VU}] open_opportunity_detail failed — HTTP ${detail.status}`);
+    fail('open_opportunity_detail did not succeed');
   }
 }

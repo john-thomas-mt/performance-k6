@@ -1,4 +1,4 @@
-import { todayMidnightUtc } from '../../../utils/exports/helpers.exp.ts';
+import { today_midnight_utc } from '../../../utils/exports/helpers.exp.ts';
 import { ServiceOrderRow, TransportTable } from '../../../utils/exports/types.exp.ts';
 
 export const serviceOrderItemsSavePayload = (so: ServiceOrderRow, quantity: number) => [
@@ -79,7 +79,7 @@ export const serviceOrderItemsSavePayload = (so: ServiceOrderRow, quantity: numb
   /* Order dated 60 days out so it falls inside the seeded event/function window; the captured 2024
      date would be rejected as out of range. */
   {
-    TransportDataTables: [orderTable(so, todayMidnightUtc() + 60 * DAY)],
+    TransportDataTables: [orderTable(so, today_midnight_utc() + 60 * DAY)],
   },
   { TransportDataTables: [itemsTable(so, quantity)] },
   {

@@ -1,6 +1,6 @@
 import { check, group, sleep } from 'k6';
-import { loginToMomentusAssistant } from './login.flow.ts';
-import { submitManualEntry, pollForOpportunity, openOpportunityDetail, getTasks } from '../utils/exports/apis.exp.ts';
+import { login_to_momentus_assistant } from './login.flow.ts';
+import { submit_manual_entry, poll_for_opportunity, open_opportunity_detail, get_tasks } from '../utils/exports/apis.exp.ts';
 import { manualEntryPayload } from '../utils/exports/data.exp.ts';
 import { User, SetupData, Opportunity, TasksResponse } from '../utils/exports/types.exp.ts';
 
@@ -10,29 +10,29 @@ export const introductoryEmailThresholds = {
   'http_req_duration{name:GetTasks}': ['p(95)<3000'],
 };
 
-export function introductoryEmailJourney(user: User, data: SetupData) {
+export function introductory_email_journey(user: User, data: SetupData) {
   const runToken = crypto.randomUUID().split('-')[0];
   const entry = manualEntryPayload(runToken);
 
-  const { salesAiJwt } = loginToMomentusAssistant(user, data.version);
+  const { salesAiJwt } = login_to_momentus_assistant(user, data.version);
 
   group('3. Create Opportunity (Manual Entry)', () => {
-    submitManualEntry(salesAiJwt, entry, user.username.toUpperCase());
+    submit_manual_entry(salesAiJwt, entry, user.username.toUpperCase());
     console.log(`[VU ${__VU}] Manual entry accepted — token: ${runToken}`);
   });
 
   let opportunity: Opportunity | null = null;
   group('4. Poll for Created Opportunity', () => {
-    opportunity = pollForOpportunity(salesAiJwt, runToken, 60);
+    opportunity = poll_for_opportunity(salesAiJwt, runToken, 60);
   });
   const created = opportunity!;
 
   group('5. Open Opportunity Detail', () => {
-    openOpportunityDetail(salesAiJwt, created.id);
+    open_opportunity_detail(salesAiJwt, created.id);
   });
 
   group('6. Verify Introduce Yourself Task', () => {
-    const res = getTasks(salesAiJwt, created.id);
+    const res = get_tasks(salesAiJwt, created.id);
     check(res, {
       'Introduce Yourself task auto-created': (r) => {
         try {

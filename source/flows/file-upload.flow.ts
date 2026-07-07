@@ -1,6 +1,6 @@
 import { group, sleep } from 'k6';
-import { loginToMomentusAssistant } from './login.flow.ts';
-import { uploadOpportunityFile, pollForOpportunity } from '../utils/exports/apis.exp.ts';
+import { login_to_momentus_assistant } from './login.flow.ts';
+import { upload_opportunity_file, poll_for_opportunity } from '../utils/exports/apis.exp.ts';
 import { User, SetupData } from '../utils/exports/types.exp.ts';
 
 export const fileUploadThresholds = {
@@ -13,7 +13,7 @@ const fmtDate = (ms: number) => {
   return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
 };
 
-export function fileUploadJourney(user: User, data: SetupData, template: string) {
+export function file_upload_journey(user: User, data: SetupData, template: string) {
   const runToken = crypto.randomUUID().split('-')[0];
   /* Uploads with overlapping event dates score as duplicates and get routed to Tasks, not
      opportunities — so each run needs a distinct future event date plus a unique company/contact. */
@@ -30,15 +30,15 @@ export function fileUploadJourney(user: User, data: SetupData, template: string)
     .replace('Mar 17.2030', fmtDate(evtStart + 2 * DAY));
   const filename = `opportunity-${runToken}.txt`;
 
-  const { salesAiJwt } = loginToMomentusAssistant(user, data.version);
+  const { salesAiJwt } = login_to_momentus_assistant(user, data.version);
 
   group('3. Upload Opportunity File', () => {
-    const result = uploadOpportunityFile(salesAiJwt, uniqueContent, filename);
+    const result = upload_opportunity_file(salesAiJwt, uniqueContent, filename);
     console.log(`[VU ${__VU}] Upload accepted — traceId: ${result.traceId}, token: ${runToken}`);
   });
 
   group('4. Verify Opportunity Created', () => {
-    pollForOpportunity(salesAiJwt, runToken);
+    poll_for_opportunity(salesAiJwt, runToken);
   });
 
   sleep(1);

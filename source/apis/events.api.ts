@@ -1,13 +1,13 @@
 import http, { RefinedResponse, ResponseType } from 'k6/http';
 import { check, fail } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
-import { buildHeaders, bodyText } from '../utils/exports/helpers.exp.ts';
+import { build_headers, body_text } from '../utils/exports/helpers.exp.ts';
 import { searchPayload, copyFormPayload, savePayload, detailPayload, createEventPayload } from '../utils/exports/data.exp.ts';
 import { EventRow, EventSaveResult, TransportEnvelope, TransportRow, TransportValues } from '../utils/exports/types.exp.ts';
 
 type Res = RefinedResponse<ResponseType | undefined>;
 
-function parseEventRows(res: Res, name: string): EventRow[] {
+function parse_event_rows(res: Res, name: string): EventRow[] {
   try {
     const body = res.json();
     const arr = Array.isArray(body) ? (body as TransportEnvelope[]) : [];
@@ -31,9 +31,9 @@ function parseEventRows(res: Res, name: string): EventRow[] {
   }
 }
 
-export function searchEvents(token: string, version: string, searchValue: string, name = 'SearchEvents'): EventRow[] {
+export function search_events(token: string, version: string, searchValue: string, name = 'SearchEvents'): EventRow[] {
   const res = http.post(`${config.baseUrl}/api/USIDataGridServer/GetGridData2`, JSON.stringify(searchPayload(searchValue)), {
-    headers: buildHeaders(token, version),
+    headers: build_headers(token, version),
     tags: { name },
   });
 
@@ -42,36 +42,36 @@ export function searchEvents(token: string, version: string, searchValue: string
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] searchEvents failed — HTTP ${res.status}`);
+    console.error(`[VU ${__VU}] search_events failed — HTTP ${res.status}`);
     return [];
   }
 
-  return parseEventRows(res, name);
+  return parse_event_rows(res, name);
 }
 
-export function openCopyForm(token: string, version: string, encUserId: string, source: EventRow) {
+export function open_copy_form(token: string, version: string, encUserId: string, source: EventRow) {
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/GetInitialData2`,
     JSON.stringify(copyFormPayload(encUserId, source, version)),
-    { headers: buildHeaders(token, version), tags: { name: 'OpenCopyForm' } },
+    { headers: build_headers(token, version), tags: { name: 'OpenCopyForm' } },
   );
 
   const ok = check(res, {
     'OpenCopyForm: status is 201': (r) => r.status === 201,
-    'OpenCopyForm: returns copy form data': (r) => bodyText(r).length > 1000,
+    'OpenCopyForm: returns copy form data': (r) => body_text(r).length > 1000,
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] openCopyForm failed — HTTP ${res.status}`);
-    fail('openCopyForm did not succeed');
+    console.error(`[VU ${__VU}] open_copy_form failed — HTTP ${res.status}`);
+    fail('open_copy_form did not succeed');
   }
 }
 
-export function saveEventCopy(token: string, version: string, encUserId: string, source: EventRow, description: string) {
+export function save_event_copy(token: string, version: string, encUserId: string, source: EventRow, description: string) {
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/Save2`,
     JSON.stringify(savePayload(encUserId, source, description, version)),
-    { headers: buildHeaders(token, version), tags: { name: 'SaveEventCopy' } },
+    { headers: build_headers(token, version), tags: { name: 'SaveEventCopy' } },
   );
 
   const ok = check(res, {
@@ -94,17 +94,17 @@ export function saveEventCopy(token: string, version: string, encUserId: string,
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] saveEventCopy failed — HTTP ${res.status}: ${bodyText(res).slice(0, 300)}`);
-    fail('saveEventCopy did not succeed');
+    console.error(`[VU ${__VU}] save_event_copy failed — HTTP ${res.status}: ${body_text(res).slice(0, 300)}`);
+    fail('save_event_copy did not succeed');
   }
 
   const addedKey = (res.json() as EventSaveResult[])[0].AddedRowKeys[0];
   return addedKey.split('|')[1];
 }
 
-export function createEvent(token: string, version: string, description: string, name = 'CreateEvent') {
+export function create_event(token: string, version: string, description: string, name = 'CreateEvent') {
   const res = http.post(`${config.baseUrl}/api/GenericDetailServer/Save2`, JSON.stringify(createEventPayload(description)), {
-    headers: buildHeaders(token, version),
+    headers: build_headers(token, version),
     tags: { name },
   });
 
@@ -128,27 +128,27 @@ export function createEvent(token: string, version: string, description: string,
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] createEvent failed — HTTP ${res.status}: ${bodyText(res).slice(0, 300)}`);
-    fail('createEvent did not succeed');
+    console.error(`[VU ${__VU}] create_event failed — HTTP ${res.status}: ${body_text(res).slice(0, 300)}`);
+    fail('create_event did not succeed');
   }
 
   const addedKey = (res.json() as EventSaveResult[])[0].AddedRowKeys[0];
   return addedKey.split('|')[1];
 }
 
-export function openEventDetail(token: string, version: string, newEvtId: string, expectedDesc: string) {
+export function open_event_detail(token: string, version: string, newEvtId: string, expectedDesc: string) {
   const res = http.post(`${config.baseUrl}/api/GenericDetailServer/GetInitialData2`, JSON.stringify(detailPayload(newEvtId)), {
-    headers: buildHeaders(token, version),
+    headers: build_headers(token, version),
     tags: { name: 'OpenEventDetail' },
   });
 
   const ok = check(res, {
     'OpenEventDetail: status is 201': (r) => r.status === 201,
-    'OpenEventDetail: detail shows copied description': (r) => bodyText(r).includes(expectedDesc),
+    'OpenEventDetail: detail shows copied description': (r) => body_text(r).includes(expectedDesc),
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] openEventDetail failed — HTTP ${res.status}`);
-    fail('openEventDetail did not succeed');
+    console.error(`[VU ${__VU}] open_event_detail failed — HTTP ${res.status}`);
+    fail('open_event_detail did not succeed');
   }
 }

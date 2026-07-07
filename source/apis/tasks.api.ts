@@ -1,12 +1,12 @@
 import http from 'k6/http';
 import { check } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
-import { salesAiHeaders } from '../utils/exports/helpers.exp.ts';
+import { sales_ai_headers } from '../utils/exports/helpers.exp.ts';
 import { TasksResponse } from '../utils/exports/types.exp.ts';
 
-export function getTasks(salesAiJwt: string, recordId: string, recordType = 'Opportunity') {
+export function get_tasks(salesAiJwt: string, recordId: string, recordType = 'Opportunity') {
   const res = http.get(`${config.salesAiUrl}/api/Tasks?associatedRecordId=${recordId}&associatedRecordType=${recordType}`, {
-    headers: salesAiHeaders(salesAiJwt),
+    headers: sales_ai_headers(salesAiJwt),
     tags: { name: 'GetTasks' },
   });
 

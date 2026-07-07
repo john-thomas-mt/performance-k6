@@ -1,4 +1,4 @@
-export function salesAiHeaders(salesAiJwt: string, contentType?: string) {
+export function sales_ai_headers(salesAiJwt: string, contentType?: string) {
   const headers: { [header: string]: string } = {
     authorization: `Bearer ${salesAiJwt}`,
     accept: 'application/json, text/plain, */*',
@@ -7,7 +7,7 @@ export function salesAiHeaders(salesAiJwt: string, contentType?: string) {
   return headers;
 }
 
-export function buildHeaders(token: string | null, version: string) {
+export function build_headers(token: string | null, version: string) {
   // __VU/__ITER are undefined outside a VU iteration (e.g. setup()/teardown()), so guard them.
   const vu = typeof __VU !== 'undefined' ? __VU : 0;
   const iter = typeof __ITER !== 'undefined' ? __ITER : 0;

@@ -1,4 +1,4 @@
-import { majorMinor } from '../../../utils/exports/helpers.exp.ts';
+import { major_minor } from '../../../utils/exports/helpers.exp.ts';
 import { EventRow } from '../../../utils/exports/types.exp.ts';
 
 export const copyFormPayload = (encUserId: string, source: EventRow, version: string) => [
@@ -11,7 +11,7 @@ export const copyFormPayload = (encUserId: string, source: EventRow, version: st
     { Key: 'DetailsClass', Value: '' },
     { Key: 'WdwType', Value: 12 },
     { Key: 'EncUserID', Value: encUserId },
-    { Key: 'Version', Value: majorMinor(version) },
+    { Key: 'Version', Value: major_minor(version) },
     { Key: 'EditWdwID', Value: 'EB2212' },
     { Key: 'panel', Value: 'N' },
     { Key: 'modal', Value: 'Y' },

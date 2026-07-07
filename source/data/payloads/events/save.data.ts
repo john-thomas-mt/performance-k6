@@ -1,4 +1,4 @@
-import { todayMidnightUtc, majorMinor } from '../../../utils/exports/helpers.exp.ts';
+import { today_midnight_utc, major_minor } from '../../../utils/exports/helpers.exp.ts';
 import { EventRow, TransportTable } from '../../../utils/exports/types.exp.ts';
 
 export const savePayload = (encUserId: string, source: EventRow, description: string, version: string) => [
@@ -18,7 +18,7 @@ export const savePayload = (encUserId: string, source: EventRow, description: st
     { Key: 'DetailsClass', Value: '' },
     { Key: 'WdwType', Value: 12 },
     { Key: 'EncUserID', Value: encUserId },
-    { Key: 'Version', Value: majorMinor(version) },
+    { Key: 'Version', Value: major_minor(version) },
     { Key: 'EditWdwID', Value: 'EB2212' },
     { Key: 'panel', Value: 'N' },
     { Key: 'modal', Value: 'Y' },
@@ -957,7 +957,7 @@ const eventCopyTable = (source: EventRow, description: string): TransportTable =
         '58': '01/01/24 09:00 - 03/01/24 18:00',
         '59': '',
         '60': '',
-        '61': todayMidnightUtc(),
+        '61': today_midnight_utc(),
         '62': 946717200000,
         '63': 'N',
         '64': 'Y',
@@ -985,7 +985,8 @@ const eventCopyTable = (source: EventRow, description: string): TransportTable =
         '86': '*ALL',
         '87': 'T',
         '88': 'N',
-        '89': 'N', // cCOPY_BOOKINGS — copy-event Save2 fails unless N
+        // cCOPY_BOOKINGS — copy-event Save2 fails unless N
+        '89': 'N',
         '90': 'N',
         '91': 'Y',
         '92': 'N',

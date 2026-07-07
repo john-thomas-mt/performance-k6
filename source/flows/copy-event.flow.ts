@@ -1,6 +1,6 @@
 import { check, group, sleep, fail } from 'k6';
-import { loginToEvents } from './login.flow.ts';
-import { searchEvents, openCopyForm, saveEventCopy, openEventDetail } from '../utils/exports/apis.exp.ts';
+import { login_to_events } from './login.flow.ts';
+import { search_events, open_copy_form, save_event_copy, open_event_detail } from '../utils/exports/apis.exp.ts';
 import { User, SetupData, EventRow } from '../utils/exports/types.exp.ts';
 
 const SOURCE_EVENT = __ENV.SOURCE_EVENT || 'Manual Test Event 1';
@@ -13,15 +13,15 @@ export const copyEventThresholds = {
   'http_req_duration{name:OpenEventDetail}': ['p(95)<5000'],
 };
 
-export function copyEventJourney(user: User, data: SetupData) {
+export function copy_event_journey(user: User, data: SetupData) {
   const runToken = crypto.randomUUID().split('-')[0];
   const newDescription = `Manual Event Perf Test - ${runToken}`;
 
-  const { bearerToken, encUserId } = loginToEvents(user, data.version);
+  const { bearerToken, encUserId } = login_to_events(user, data.version);
 
   let sourceRef: EventRow | null = null;
   group('3. Search Source Event', () => {
-    const rows = searchEvents(bearerToken, data.version, SOURCE_EVENT);
+    const rows = search_events(bearerToken, data.version, SOURCE_EVENT);
     sourceRef = rows.find((r) => r.desc === SOURCE_EVENT && !!r.evtId) || null;
     check(null, { 'Source event found': () => Boolean(sourceRef) });
   });
@@ -29,18 +29,18 @@ export function copyEventJourney(user: User, data: SetupData) {
   const source = sourceRef;
 
   group('4. Open Copy Event Form', () => {
-    openCopyForm(bearerToken, data.version, encUserId, source);
+    open_copy_form(bearerToken, data.version, encUserId, source);
   });
 
   let newEvtIdRef: string | null = null;
   group('5. Save Event Copy', () => {
-    newEvtIdRef = saveEventCopy(bearerToken, data.version, encUserId, source, newDescription);
+    newEvtIdRef = save_event_copy(bearerToken, data.version, encUserId, source, newDescription);
     console.log(`[VU ${__VU}] Created event ${newEvtIdRef} — ${newDescription}`);
   });
   const newEvtId = newEvtIdRef!;
 
   group('6. Confirm New Event in List', () => {
-    const rows = searchEvents(bearerToken, data.version, newDescription, 'SearchNewEvent');
+    const rows = search_events(bearerToken, data.version, newDescription, 'SearchNewEvent');
     const match = rows.find((r) => r.desc === newDescription);
     check(null, {
       'New event appears in search': () => Boolean(match),
@@ -49,7 +49,7 @@ export function copyEventJourney(user: User, data: SetupData) {
   });
 
   group('7. Open New Event & Verify Details', () => {
-    openEventDetail(bearerToken, data.version, newEvtId, newDescription);
+    open_event_detail(bearerToken, data.version, newEvtId, newDescription);
   });
 
   sleep(1);

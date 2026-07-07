@@ -23,7 +23,7 @@ const profiles: { [profile: string]: Profile } = {
   },
 };
 
-export function loadProfile(defaultName = 'smoke') {
+export function load_profile(defaultName = 'smoke') {
   const name = __ENV.PROFILE || defaultName;
   const profile = profiles[name];
   if (!profile) {

@@ -93,7 +93,7 @@ export const editGeneralSavePayload = (
 ];
 
 /* Captured ER100 order-header table for the edit-general Save2. The ENT/UPD_DATE_ISO cells echo the
-   row's current update stamps (correlated via readOrderHeaderStamps) — the server rejects the save
+   row's current update stamps (correlated via read_order_header_stamps) — the server rejects the save
    with "PrimaryKeyRecordChanged" if they don't match. */
 const orderTable = (so: ServiceOrderRow, orderDate: number, stamps: { entDateIso: string; updDateIso: string }): TransportTable => ({
   TableName: String(Date.now()),

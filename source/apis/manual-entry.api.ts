@@ -1,10 +1,10 @@
 import http from 'k6/http';
 import { check, fail } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
-import { salesAiHeaders, bodyText } from '../utils/exports/helpers.exp.ts';
+import { sales_ai_headers, body_text } from '../utils/exports/helpers.exp.ts';
 import { ManualEntryPayload, ManualEntryResult } from '../utils/exports/types.exp.ts';
 
-export function submitManualEntry(salesAiJwt: string, entry: ManualEntryPayload, userId: string) {
+export function submit_manual_entry(salesAiJwt: string, entry: ManualEntryPayload, userId: string) {
   const payload = {
     ...entry,
     metadata: {
@@ -17,7 +17,7 @@ export function submitManualEntry(salesAiJwt: string, entry: ManualEntryPayload,
   };
 
   const res = http.post(`${config.salesAiUrl}/api/manual-entry`, JSON.stringify(payload), {
-    headers: salesAiHeaders(salesAiJwt, 'application/json'),
+    headers: sales_ai_headers(salesAiJwt, 'application/json'),
     tags: { name: 'ManualEntry' },
   });
 
@@ -33,7 +33,7 @@ export function submitManualEntry(salesAiJwt: string, entry: ManualEntryPayload,
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] submitManualEntry failed — HTTP ${res.status}: ${bodyText(res)}`);
-    fail('submitManualEntry did not succeed');
+    console.error(`[VU ${__VU}] submit_manual_entry failed — HTTP ${res.status}: ${body_text(res)}`);
+    fail('submit_manual_entry did not succeed');
   }
 }

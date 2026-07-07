@@ -1,13 +1,13 @@
 import http from 'k6/http';
 import { check, fail } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
-import { buildHeaders, bodyText } from '../utils/exports/helpers.exp.ts';
+import { build_headers, body_text } from '../utils/exports/helpers.exp.ts';
 import { listInitialDataPayload } from '../utils/exports/data.exp.ts';
 import { NavScreen, WindowInfo } from '../utils/exports/types.exp.ts';
 
-export function getWindowInfo(token: string, version: string, windowId: string) {
+export function get_window_info(token: string, version: string, windowId: string) {
   const res = http.get(`${config.baseUrl}/api/WindowServer/GetWindowInfo?astrWindowID=${windowId}`, {
-    headers: buildHeaders(token, version),
+    headers: build_headers(token, version),
     tags: { name: 'GetWindowInfo' },
   });
 
@@ -24,27 +24,27 @@ export function getWindowInfo(token: string, version: string, windowId: string) 
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] getWindowInfo failed for "${windowId}" — HTTP ${res.status}`);
-    fail('getWindowInfo did not succeed');
+    console.error(`[VU ${__VU}] get_window_info failed for "${windowId}" — HTTP ${res.status}`);
+    fail('get_window_info did not succeed');
   }
 
   return (res.json() as WindowInfo[])[0].ObjectID;
 }
 
-export function getListInitialData(token: string, version: string, screen: NavScreen, objectId: number) {
+export function get_list_initial_data(token: string, version: string, screen: NavScreen, objectId: number) {
   const res = http.post(
     `${config.baseUrl}/api/GenericListServer/GetInitialData2`,
     JSON.stringify(listInitialDataPayload(screen, objectId)),
-    { headers: buildHeaders(token, version), tags: { name: 'GetListInitialData' } },
+    { headers: build_headers(token, version), tags: { name: 'GetListInitialData' } },
   );
 
   const ok = check(res, {
     'GetListInitialData: status is 201': (r) => r.status === 201,
-    'GetListInitialData: returns grid data': (r) => bodyText(r).includes('TransportDataTables'),
+    'GetListInitialData: returns grid data': (r) => body_text(r).includes('TransportDataTables'),
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] getListInitialData failed for "${screen.label}" (${screen.windowId}) — HTTP ${res.status}`);
-    fail('getListInitialData did not succeed');
+    console.error(`[VU ${__VU}] get_list_initial_data failed for "${screen.label}" (${screen.windowId}) — HTTP ${res.status}`);
+    fail('get_list_initial_data did not succeed');
   }
 }

@@ -1,10 +1,10 @@
 import http, { FileData } from 'k6/http';
 import { check, fail } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
-import { salesAiHeaders, bodyText } from '../utils/exports/helpers.exp.ts';
+import { sales_ai_headers, body_text } from '../utils/exports/helpers.exp.ts';
 import { UploadResult } from '../utils/exports/types.exp.ts';
 
-export function uploadOpportunityFile(salesAiJwt: string, fileContent: string, filename: string) {
+export function upload_opportunity_file(salesAiJwt: string, fileContent: string, filename: string) {
   const payload: { [field: string]: string | FileData } = {
     'traceId': crypto.randomUUID(),
     'text': 'Process this text as if it may have Event Opportunity information!',
@@ -16,7 +16,7 @@ export function uploadOpportunityFile(salesAiJwt: string, fileContent: string, f
   };
 
   const res = http.post(`${config.salesAiUrl}/api/opportunities/file-upload`, payload, {
-    headers: salesAiHeaders(salesAiJwt),
+    headers: sales_ai_headers(salesAiJwt),
     tags: { name: 'FileUpload' },
   });
 
@@ -32,8 +32,8 @@ export function uploadOpportunityFile(salesAiJwt: string, fileContent: string, f
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] uploadOpportunityFile failed — HTTP ${res.status}: ${bodyText(res)}`);
-    fail('uploadOpportunityFile did not succeed');
+    console.error(`[VU ${__VU}] upload_opportunity_file failed — HTTP ${res.status}: ${body_text(res)}`);
+    fail('upload_opportunity_file did not succeed');
   }
 
   return res.json() as UploadResult;

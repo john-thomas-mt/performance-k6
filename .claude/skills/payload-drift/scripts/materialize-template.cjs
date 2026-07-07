@@ -15,11 +15,11 @@ if (!file || !exportName) {
   process.exit(2);
 }
 
-// Type-faithful stand-ins for the shared payload helpers a builder imports (todayMidnightUtc,
-// majorMinor) — only the return TYPE matters for a shape diff, so they need not be exact.
+// Type-faithful stand-ins for the shared payload helpers a builder imports (today_midnight_utc,
+// major_minor) — only the return TYPE matters for a shape diff, so they need not be exact.
 const helperStub = {
-  todayMidnightUtc: () => 0,
-  majorMinor: () => '0.0',
+  today_midnight_utc: () => 0,
+  major_minor: () => '0.0',
 };
 
 const cache = new Map();

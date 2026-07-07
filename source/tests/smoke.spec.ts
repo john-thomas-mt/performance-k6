@@ -1,23 +1,23 @@
 import { Options, Scenario } from 'k6/options';
 import {
-  serviceOrderItemsJourney,
+  service_order_items_journey,
   serviceOrderItemsThresholds,
-  editServiceOrdersJourney,
+  edit_service_orders_journey,
   editServiceOrdersThresholds,
-  discoverServiceOrderPool,
-  copyEventJourney,
+  discover_service_order_pool,
+  copy_event_journey,
   copyEventThresholds,
-  opportunitiesJourney,
+  opportunities_journey,
   opportunitiesThresholds,
-  fileUploadJourney,
+  file_upload_journey,
   fileUploadThresholds,
-  introductoryEmailJourney,
+  introductory_email_journey,
   introductoryEmailThresholds,
-  navigationJourney,
+  navigation_journey,
   navigationThresholds,
   loginThresholds,
 } from '../utils/exports/flows.exp.ts';
-import { pickUser, fetchServerVersion, decryptUsers } from '../utils/exports/helpers.exp.ts';
+import { pick_user, fetch_server_version, decrypt_users } from '../utils/exports/helpers.exp.ts';
 import { commonThresholds, config } from '../utils/exports/config.exp.ts';
 import { SmokeSetup } from '../utils/exports/types.exp.ts';
 import { userCredentials } from '../utils/exports/data.exp.ts';
@@ -37,21 +37,21 @@ const once = (exec: string): Scenario => ({
 
 const allScenarios: { [scenario: string]: Scenario } = {
   opportunities: once('opportunities'),
-  fileUpload: once('fileUpload'),
-  introductoryEmail: once('introductoryEmail'),
-  copyEvent: once('copyEvent'),
-  serviceOrderItems: once('serviceOrderItems'),
-  editServiceOrders: once('editServiceOrders'),
+  file_upload: once('file_upload'),
+  introductory_email: once('introductory_email'),
+  copy_event: once('copy_event'),
+  service_order_items: once('service_order_items'),
+  edit_service_orders: once('edit_service_orders'),
   navigation: once('navigation'),
 };
 
 const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
   opportunities: opportunitiesThresholds,
-  fileUpload: fileUploadThresholds,
-  introductoryEmail: introductoryEmailThresholds,
-  copyEvent: copyEventThresholds,
-  serviceOrderItems: serviceOrderItemsThresholds,
-  editServiceOrders: editServiceOrdersThresholds,
+  file_upload: fileUploadThresholds,
+  introductory_email: introductoryEmailThresholds,
+  copy_event: copyEventThresholds,
+  service_order_items: serviceOrderItemsThresholds,
+  edit_service_orders: editServiceOrdersThresholds,
   navigation: navigationThresholds,
 };
 
@@ -79,41 +79,41 @@ export async function setup() {
   if (!cryptoKey) {
     throw new Error('No decryption key — write temp/secret.json (npm run secret -- --key <pass>)');
   }
-  const users = await decryptUsers(userCredentials, cryptoKey);
+  const users = await decrypt_users(userCredentials, cryptoKey);
   if (users.length === 0) {
     throw new Error('data/creds/users.data.ts is empty — add at least one user entry');
   }
-  const version = fetchServerVersion();
-  const soPool = discoverServiceOrderPool(version, users[0]);
+  const version = fetch_server_version();
+  const soPool = discover_service_order_pool(version, users[0]);
   console.log(`Server version: ${version}`);
   console.log(`Smoke: ${soPool.length} seeded service order(s) discovered`);
   return { version, users, soPool };
 }
 
 export function opportunities(data: SmokeSetup) {
-  opportunitiesJourney(pickUser(data.users), data);
+  opportunities_journey(pick_user(data.users), data);
 }
 
-export function fileUpload(data: SmokeSetup) {
-  fileUploadJourney(pickUser(data.users), data, opportunityTemplate);
+export function file_upload(data: SmokeSetup) {
+  file_upload_journey(pick_user(data.users), data, opportunityTemplate);
 }
 
-export function introductoryEmail(data: SmokeSetup) {
-  introductoryEmailJourney(pickUser(data.users), data);
+export function introductory_email(data: SmokeSetup) {
+  introductory_email_journey(pick_user(data.users), data);
 }
 
-export function copyEvent(data: SmokeSetup) {
-  copyEventJourney(pickUser(data.users), data);
+export function copy_event(data: SmokeSetup) {
+  copy_event_journey(pick_user(data.users), data);
 }
 
-export function serviceOrderItems(data: SmokeSetup) {
-  serviceOrderItemsJourney(pickUser(data.users), data);
+export function service_order_items(data: SmokeSetup) {
+  service_order_items_journey(pick_user(data.users), data);
 }
 
-export function editServiceOrders(data: SmokeSetup) {
-  editServiceOrdersJourney(pickUser(data.users), data, sampleDocument);
+export function edit_service_orders(data: SmokeSetup) {
+  edit_service_orders_journey(pick_user(data.users), data, sampleDocument);
 }
 
 export function navigation(data: SmokeSetup) {
-  navigationJourney(pickUser(data.users), data);
+  navigation_journey(pick_user(data.users), data);
 }

@@ -1,4 +1,4 @@
-import { todayMidnightUtc } from '../../../utils/exports/helpers.exp.ts';
+import { today_midnight_utc } from '../../../utils/exports/helpers.exp.ts';
 import { TransportTable } from '../../../utils/exports/types.exp.ts';
 
 /* Captured create-event Save2 (window EB8073); the builder rewrites only the description columns
@@ -127,8 +127,8 @@ export const createEventPayload = (description: string) => [
    dated 60 days out (see service-orders/save.data.ts), inside this window, so the item save stays
    clear of the "date/time outside the order function's range" warning. */
 const DAY = 24 * 60 * 60 * 1000;
-const EVT_START = todayMidnightUtc() + 30 * DAY;
-const EVT_END = todayMidnightUtc() + 365 * DAY;
+const EVT_START = today_midnight_utc() + 30 * DAY;
+const EVT_END = today_midnight_utc() + 365 * DAY;
 
 const eventTable = (description: string): TransportTable => ({
   TableName: '1782217389406',
