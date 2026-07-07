@@ -36,6 +36,7 @@ When a capture-derived payload template is reused for a *different* record (e.g.
 - Wrappers that extract a value return the extracted value, or `null` on failure — callers guard with early return
 - List/GET wrappers may return the raw `res` when callers need the body
 - On failure, log before returning: `console.error(`[VU ${__VU}] <wrapper> failed — HTTP ${res.status}`)` — always include the `[VU ${__VU}]` prefix
+- Declare an optional *input* as `param?: T`; reserve `| null` for the failure sentinel above and for fields the server sends as JSON `null`. A `param: T | null = null` that's only truthiness-checked is just an optional argument — use `?`.
 
 ## Polling for async results
 - Async server-side processing (AI extraction, queued jobs) is verified by polling a list/status endpoint with its own tag name (e.g. `PollOpportunities`), a fixed interval, and a hard `maxWaitSeconds` ceiling
