@@ -15,36 +15,24 @@ export function introductoryEmailJourney(user: User, data: SetupData) {
   const entry = manualEntryPayload(runToken);
 
   const { salesAiJwt } = loginToMomentusAssistant(user, data.version);
-  if (!salesAiJwt) return;
-
-  let accepted = false;
 
   group('3. Create Opportunity (Manual Entry)', () => {
-    accepted = Boolean(submitManualEntry(salesAiJwt, entry, user.username.toUpperCase()));
-    if (accepted) {
-      console.log(`[VU ${__VU}] Manual entry accepted — token: ${runToken}`);
-    }
+    submitManualEntry(salesAiJwt, entry, user.username.toUpperCase());
+    console.log(`[VU ${__VU}] Manual entry accepted — token: ${runToken}`);
   });
-
-  if (!accepted) return;
 
   let opportunity: Opportunity | null = null;
-
   group('4. Poll for Created Opportunity', () => {
     opportunity = pollForOpportunity(salesAiJwt, runToken, 60);
-    check(null, {
-      'Opportunity appears in list after manual entry': () => Boolean(opportunity),
-    });
   });
-
-  if (!opportunity) return;
+  const created = opportunity!;
 
   group('5. Open Opportunity Detail', () => {
-    openOpportunityDetail(salesAiJwt, opportunity!.id);
+    openOpportunityDetail(salesAiJwt, created.id);
   });
 
   group('6. Verify Introduce Yourself Task', () => {
-    const res = getTasks(salesAiJwt, opportunity!.id);
+    const res = getTasks(salesAiJwt, created.id);
     check(res, {
       'Introduce Yourself task auto-created': (r) => {
         try {

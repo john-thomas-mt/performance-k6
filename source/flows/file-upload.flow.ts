@@ -1,4 +1,4 @@
-import { check, group, sleep } from 'k6';
+import { group, sleep } from 'k6';
 import { loginToMomentusAssistant } from './login.flow.ts';
 import { uploadOpportunityFile, pollForOpportunity } from '../utils/exports/apis.exp.ts';
 import { User, SetupData } from '../utils/exports/types.exp.ts';
@@ -31,24 +31,14 @@ export function fileUploadJourney(user: User, data: SetupData, template: string)
   const filename = `opportunity-${runToken}.txt`;
 
   const { salesAiJwt } = loginToMomentusAssistant(user, data.version);
-  if (!salesAiJwt) return;
-
-  let traceId: string | undefined;
 
   group('3. Upload Opportunity File', () => {
     const result = uploadOpportunityFile(salesAiJwt, uniqueContent, filename);
-    if (!result) return;
-    traceId = result.traceId;
-    console.log(`[VU ${__VU}] Upload accepted — traceId: ${traceId}, token: ${runToken}`);
+    console.log(`[VU ${__VU}] Upload accepted — traceId: ${result.traceId}, token: ${runToken}`);
   });
 
-  if (!traceId) return;
-
   group('4. Verify Opportunity Created', () => {
-    const found = pollForOpportunity(salesAiJwt, runToken);
-    check(null, {
-      'Opportunity appears in list after upload': () => found !== null,
-    });
+    pollForOpportunity(salesAiJwt, runToken);
   });
 
   sleep(1);

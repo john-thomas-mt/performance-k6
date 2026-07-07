@@ -15,13 +15,11 @@ export function loginToMomentusAssistant(user: User, version: string) {
     bearerToken = signIn(user.username, user.password, version);
   });
 
-  if (!bearerToken) return { bearerToken, salesAiJwt };
-
   group('2. MA Authenticate', () => {
     salesAiJwt = maAuthenticate(bearerToken!, version);
   });
 
-  return { bearerToken, salesAiJwt };
+  return { bearerToken: bearerToken!, salesAiJwt: salesAiJwt! };
 }
 
 export function loginToEvents(user: User, version: string) {
@@ -32,5 +30,5 @@ export function loginToEvents(user: User, version: string) {
     ({ bearerToken, encUserId } = signInSession(user.username, user.password, version));
   });
 
-  return { bearerToken, encUserId };
+  return { bearerToken: bearerToken!, encUserId: encUserId! };
 }

@@ -1,5 +1,5 @@
 import http, { RefinedResponse, ResponseType } from 'k6/http';
-import { check } from 'k6';
+import { check, fail } from 'k6';
 import { b64encode } from 'k6/encoding';
 import { config } from '../utils/exports/config.exp.ts';
 import { buildHeaders } from '../utils/exports/helpers.exp.ts';
@@ -97,7 +97,7 @@ export function openServiceOrderDetail(token: string, version: string, so: Servi
 
   if (!ok) {
     console.error(`[VU ${__VU}] openServiceOrderDetail failed — HTTP ${res.status}`);
-    return null;
+    fail('openServiceOrderDetail did not succeed');
   }
 
   return res;
@@ -131,11 +131,11 @@ export function createServiceOrder(token: string, version: string, encUserId: st
 
   if (!ok) {
     console.error(`[VU ${__VU}] createServiceOrder failed — HTTP ${res.status}: ${String(res.body ?? '').slice(0, 300)}`);
-    return null;
+    fail('createServiceOrder did not succeed');
   }
 
-  const addedKey = (res.json() as unknown as ServiceOrderSaveResult[])[0].AddedRowKeys?.[0];
-  return addedKey ? addedKey.split('|')[1] || null : null;
+  const addedKey = (res.json() as unknown as ServiceOrderSaveResult[])[0].AddedRowKeys![0];
+  return addedKey.split('|')[1];
 }
 
 export function readOrderHeaderStamps(res: Res) {
@@ -158,7 +158,8 @@ export function readOrderHeaderStamps(res: Res) {
   } catch (e) {
     console.error(`[VU ${__VU}] readOrderHeaderStamps failed — ${e}`);
   }
-  return null;
+  check(null, { 'ReadOrderHeaderStamps: header stamps present': () => false });
+  fail('readOrderHeaderStamps: header stamps not found in detail response');
 }
 
 export function editServiceOrderGeneral(
@@ -193,10 +194,8 @@ export function editServiceOrderGeneral(
 
   if (!ok) {
     console.error(`[VU ${__VU}] editServiceOrderGeneral failed — HTTP ${res.status}: ${String(res.body ?? '').slice(0, 300)}`);
-    return null;
+    fail('editServiceOrderGeneral did not succeed');
   }
-
-  return (res.json() as unknown as ServiceOrderSaveResult[])[0];
 }
 
 export function cacheDocumentFile(token: string, version: string, fileName: string, fileContent: ArrayBuffer) {
@@ -219,7 +218,7 @@ export function cacheDocumentFile(token: string, version: string, fileName: stri
 
   if (!ok) {
     console.error(`[VU ${__VU}] cacheDocumentFile failed — HTTP ${res.status}: ${String(res.body ?? '').slice(0, 200)}`);
-    return null;
+    fail('cacheDocumentFile did not succeed');
   }
 
   return (res.json() as unknown as string[][])[0][0];
@@ -237,7 +236,7 @@ export function openDocumentForm(token: string, version: string, so: ServiceOrde
   });
   if (!ok) {
     console.error(`[VU ${__VU}] openDocumentForm failed — HTTP ${res.status}`);
-    return null;
+    fail('openDocumentForm did not succeed');
   }
 
   try {
@@ -259,7 +258,8 @@ export function openDocumentForm(token: string, version: string, so: ServiceOrde
   } catch (e) {
     console.error(`[VU ${__VU}] openDocumentForm parse failed — ${e}`);
   }
-  return null;
+  check(null, { 'OpenDocumentForm: document fields present': () => false });
+  fail('openDocumentForm: document fields not found in form response');
 }
 
 export function saveDocument(token: string, version: string, so: ServiceOrderRow, doc: DocumentFields) {
@@ -289,10 +289,8 @@ export function saveDocument(token: string, version: string, so: ServiceOrderRow
 
   if (!ok) {
     console.error(`[VU ${__VU}] saveDocument failed — HTTP ${res.status}: ${String(res.body ?? '').slice(0, 300)}`);
-    return null;
+    fail('saveDocument did not succeed');
   }
-
-  return (res.json() as unknown as ServiceOrderSaveResult[])[0];
 }
 
 export function saveAndCloseServiceOrder(
@@ -328,10 +326,8 @@ export function saveAndCloseServiceOrder(
 
   if (!ok) {
     console.error(`[VU ${__VU}] saveAndCloseServiceOrder failed — HTTP ${res.status}: ${String(res.body ?? '').slice(0, 300)}`);
-    return null;
+    fail('saveAndCloseServiceOrder did not succeed');
   }
-
-  return (res.json() as unknown as ServiceOrderSaveResult[])[0];
 }
 
 export function saveServiceOrderItems(token: string, version: string, so: ServiceOrderRow, quantity: number) {
@@ -370,8 +366,6 @@ export function saveServiceOrderItems(token: string, version: string, so: Servic
 
   if (!ok) {
     console.error(`[VU ${__VU}] saveServiceOrderItems failed — HTTP ${res.status}: ${String(res.body ?? '').slice(0, 300)}`);
-    return null;
+    fail('saveServiceOrderItems did not succeed');
   }
-
-  return (res.json() as unknown as ServiceOrderSaveResult[])[0];
 }

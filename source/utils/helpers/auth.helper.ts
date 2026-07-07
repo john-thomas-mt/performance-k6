@@ -1,5 +1,5 @@
 import http from 'k6/http';
-import { check } from 'k6';
+import { check, fail } from 'k6';
 import encoding from 'k6/encoding';
 import { config } from '../exports/config.exp.ts';
 import { buildHeaders } from './headers.helper.ts';
@@ -16,7 +16,7 @@ function postSignIn(username: string, password: string, version: string) {
 
   if (!ok) {
     console.error(`[VU ${__VU}] signIn failed for "${username}" — HTTP ${res.status}`);
-    return null;
+    fail('signIn did not succeed');
   }
 
   return res;
@@ -28,19 +28,16 @@ function extractBearerToken(body: unknown) {
 
 export function signIn(username: string, password: string, version: string) {
   const res = postSignIn(username, password, version);
-  if (!res) return null;
 
   const token = extractBearerToken(res.json());
-  if (!token) {
-    console.error(`[VU ${__VU}] signIn: could not extract bearer token from response`);
-  }
+  check(token, { 'SignIn: bearer token present': (t) => t !== null });
+  if (!token) fail('signIn: could not extract bearer token from response');
 
   return token;
 }
 
 export function signInSession(username: string, password: string, version: string) {
   const res = postSignIn(username, password, version);
-  if (!res) return { bearerToken: null, encUserId: null };
 
   const body = res.json();
   const bearerToken = extractBearerToken(body);
@@ -48,8 +45,10 @@ export function signInSession(username: string, password: string, version: strin
     ? ((body as any[]).find((e) => e && typeof e === 'object' && typeof e.EncryptedSN === 'string')?.EncryptedSN ?? null)
     : null;
 
-  if (!bearerToken) console.error(`[VU ${__VU}] signInSession: could not extract bearer token`);
-  if (!encUserId) console.error(`[VU ${__VU}] signInSession: could not extract EncryptedSN`);
+  check(bearerToken, { 'SignIn: bearer token present': (t) => t !== null });
+  check(encUserId, { 'SignIn: encoded user id present': (e) => e !== null });
+  if (!bearerToken) fail('signInSession: could not extract bearer token');
+  if (!encUserId) fail('signInSession: could not extract EncryptedSN');
 
   return { bearerToken, encUserId };
 }
@@ -74,7 +73,7 @@ export function maAuthenticate(bearerToken: string, version: string) {
 
   if (!ok) {
     console.error(`[VU ${__VU}] maAuthenticate failed — HTTP ${res.status}: ${res.body}`);
-    return null;
+    fail('maAuthenticate did not succeed');
   }
 
   return (res.json() as string[])[0];

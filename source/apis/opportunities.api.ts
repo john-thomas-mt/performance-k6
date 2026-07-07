@@ -1,5 +1,5 @@
 import http from 'k6/http';
-import { check, sleep } from 'k6';
+import { check, fail, sleep } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
 import { salesAiHeaders, tenantIdFromJwt } from '../utils/exports/helpers.exp.ts';
 import { Opportunity } from '../utils/exports/types.exp.ts';
@@ -49,7 +49,8 @@ export function pollForOpportunity(salesAiJwt: string, searchToken: string, maxW
   }
 
   console.error(`[VU ${__VU}] Opportunity with token "${searchToken}" not found after ${maxWaitSeconds}s`);
-  return null;
+  check(null, { 'PollOpportunities: opportunity found before timeout': () => false });
+  fail(`PollOpportunities: opportunity "${searchToken}" not found within ${maxWaitSeconds}s`);
 }
 
 type BatchReq = [string, string, null, { headers: Record<string, string>; tags: { name: string } }];
@@ -88,8 +89,6 @@ export function openOpportunityDetail(salesAiJwt: string, opportunityId: string)
 
   if (!ok) {
     console.error(`[VU ${__VU}] openOpportunityDetail failed — HTTP ${detail.status}`);
-    return null;
+    fail('openOpportunityDetail did not succeed');
   }
-
-  return detail;
 }

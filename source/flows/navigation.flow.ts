@@ -23,13 +23,11 @@ function pickScreen() {
 
 export function navigationJourney(user: User, data: SetupData) {
   const { bearerToken } = loginToEvents(user, data.version);
-  if (!bearerToken) return;
 
   const screen = pickScreen();
 
   group('3. Open Navigation Screen', () => {
     const objectId = getWindowInfo(bearerToken, data.version, screen.windowId);
-    if (objectId === null) return;
     getListInitialData(bearerToken, data.version, screen, objectId);
   });
 

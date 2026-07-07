@@ -1,5 +1,5 @@
 import http, { FileData } from 'k6/http';
-import { check } from 'k6';
+import { check, fail } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
 import { salesAiHeaders } from '../utils/exports/helpers.exp.ts';
 import { UploadResult } from '../utils/exports/types.exp.ts';
@@ -33,7 +33,7 @@ export function uploadOpportunityFile(salesAiJwt: string, fileContent: string, f
 
   if (!ok) {
     console.error(`[VU ${__VU}] uploadOpportunityFile failed — HTTP ${res.status}: ${res.body}`);
-    return null;
+    fail('uploadOpportunityFile did not succeed');
   }
 
   return res.json() as unknown as UploadResult;

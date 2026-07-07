@@ -1,4 +1,4 @@
-import { check, group, sleep } from 'k6';
+import { check, group, sleep, fail } from 'k6';
 import { loginToEvents } from './login.flow.ts';
 import { searchEvents, openCopyForm, saveEventCopy, openEventDetail } from '../utils/exports/apis.exp.ts';
 import { User, SetupData, EventRow } from '../utils/exports/types.exp.ts';
@@ -18,18 +18,15 @@ export function copyEventJourney(user: User, data: SetupData) {
   const newDescription = `Manual Event Perf Test - ${runToken}`;
 
   const { bearerToken, encUserId } = loginToEvents(user, data.version);
-  if (!bearerToken || !encUserId) return;
 
   let sourceRef: EventRow | null = null;
   group('3. Search Source Event', () => {
     const rows = searchEvents(bearerToken, data.version, SOURCE_EVENT);
-    sourceRef = rows.find((r) => r.desc === SOURCE_EVENT) || null;
-    check(null, {
-      'Source event found': () => Boolean(sourceRef && sourceRef.evtId),
-    });
+    sourceRef = rows.find((r) => r.desc === SOURCE_EVENT && !!r.evtId) || null;
+    check(null, { 'Source event found': () => Boolean(sourceRef) });
   });
-  const source = sourceRef as EventRow | null;
-  if (!source || !source.evtId) return;
+  if (!sourceRef) fail('source event not found');
+  const source = sourceRef;
 
   group('4. Open Copy Event Form', () => {
     openCopyForm(bearerToken, data.version, encUserId, source);
@@ -38,13 +35,9 @@ export function copyEventJourney(user: User, data: SetupData) {
   let newEvtIdRef: string | null = null;
   group('5. Save Event Copy', () => {
     newEvtIdRef = saveEventCopy(bearerToken, data.version, encUserId, source, newDescription);
-    if (newEvtIdRef) console.log(`[VU ${__VU}] Created event ${newEvtIdRef} — ${newDescription}`);
-    check(null, {
-      'New event created': () => Boolean(newEvtIdRef),
-    });
+    console.log(`[VU ${__VU}] Created event ${newEvtIdRef} — ${newDescription}`);
   });
-  const newEvtId = newEvtIdRef as string | null;
-  if (!newEvtId) return;
+  const newEvtId = newEvtIdRef!;
 
   group('6. Confirm New Event in List', () => {
     const rows = searchEvents(bearerToken, data.version, newDescription, 'SearchNewEvent');

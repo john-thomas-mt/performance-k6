@@ -1,5 +1,5 @@
 import http from 'k6/http';
-import { check } from 'k6';
+import { check, fail } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
 import { buildHeaders } from '../utils/exports/helpers.exp.ts';
 import { listInitialDataPayload } from '../utils/exports/data.exp.ts';
@@ -25,7 +25,7 @@ export function getWindowInfo(token: string, version: string, windowId: string) 
 
   if (!ok) {
     console.error(`[VU ${__VU}] getWindowInfo failed for "${windowId}" — HTTP ${res.status}`);
-    return null;
+    fail('getWindowInfo did not succeed');
   }
 
   return (res.json() as unknown as WindowInfo[])[0].ObjectID;
@@ -45,7 +45,6 @@ export function getListInitialData(token: string, version: string, screen: NavSc
 
   if (!ok) {
     console.error(`[VU ${__VU}] getListInitialData failed for "${screen.label}" (${screen.windowId}) — HTTP ${res.status}`);
+    fail('getListInitialData did not succeed');
   }
-
-  return ok;
 }

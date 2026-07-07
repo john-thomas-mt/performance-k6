@@ -1,5 +1,5 @@
 import http, { RefinedResponse, ResponseType } from 'k6/http';
-import { check } from 'k6';
+import { check, fail } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
 import { buildHeaders } from '../utils/exports/helpers.exp.ts';
 import { searchPayload, copyFormPayload, savePayload, detailPayload, createEventPayload } from '../utils/exports/data.exp.ts';
@@ -63,10 +63,8 @@ export function openCopyForm(token: string, version: string, encUserId: string, 
 
   if (!ok) {
     console.error(`[VU ${__VU}] openCopyForm failed — HTTP ${res.status}`);
-    return null;
+    fail('openCopyForm did not succeed');
   }
-
-  return res;
 }
 
 export function saveEventCopy(token: string, version: string, encUserId: string, source: EventRow, description: string) {
@@ -97,11 +95,11 @@ export function saveEventCopy(token: string, version: string, encUserId: string,
 
   if (!ok) {
     console.error(`[VU ${__VU}] saveEventCopy failed — HTTP ${res.status}: ${String(res.body ?? '').slice(0, 300)}`);
-    return null;
+    fail('saveEventCopy did not succeed');
   }
 
   const addedKey = (res.json() as unknown as EventSaveResult[])[0].AddedRowKeys[0];
-  return addedKey.split('|')[1] || null;
+  return addedKey.split('|')[1];
 }
 
 export function createEvent(token: string, version: string, description: string, name = 'CreateEvent') {
@@ -131,11 +129,11 @@ export function createEvent(token: string, version: string, description: string,
 
   if (!ok) {
     console.error(`[VU ${__VU}] createEvent failed — HTTP ${res.status}: ${String(res.body ?? '').slice(0, 300)}`);
-    return null;
+    fail('createEvent did not succeed');
   }
 
   const addedKey = (res.json() as unknown as EventSaveResult[])[0].AddedRowKeys[0];
-  return addedKey.split('|')[1] || null;
+  return addedKey.split('|')[1];
 }
 
 export function openEventDetail(token: string, version: string, newEvtId: string, expectedDesc: string) {
@@ -151,8 +149,6 @@ export function openEventDetail(token: string, version: string, newEvtId: string
 
   if (!ok) {
     console.error(`[VU ${__VU}] openEventDetail failed — HTTP ${res.status}`);
-    return null;
+    fail('openEventDetail did not succeed');
   }
-
-  return res;
 }

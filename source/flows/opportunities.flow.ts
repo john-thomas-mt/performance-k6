@@ -9,7 +9,6 @@ export const opportunitiesThresholds = {
 
 export function opportunitiesJourney(user: User, data: SetupData) {
   const { salesAiJwt } = loginToMomentusAssistant(user, data.version);
-  if (!salesAiJwt) return;
 
   group('3. Load Opportunities', () => {
     getOpportunities(salesAiJwt);
