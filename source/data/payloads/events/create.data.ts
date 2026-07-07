@@ -1,10 +1,8 @@
 import { todayMidnightUtc } from '../../../utils/exports/helpers.exp.ts';
 import { TransportTable } from '../../../utils/exports/types.exp.ts';
 
-// Captured create-event Save2 request (GenericDetailServer/Save2, window EB8073, from-scratch
-// add-event) built inline per call; the builder rewrites only the description columns to the seed
-// marker so the seeded event is discoverable. Account/dates/status stay as captured — the seeded
-// service orders inherit that context, matching the create-SO template.
+/* Captured create-event Save2 (window EB8073); the builder rewrites only the description columns
+   to the seed marker so the event is discoverable. Account/dates/status stay as captured. */
 export const createEventPayload = (description: string) => [
   1,
   '10',
@@ -125,10 +123,9 @@ export const createEventPayload = (description: string) => [
   },
 ];
 
-// Event date range opening 30 days out and running ~1 year ahead, relative to run time so it never
-// goes stale. The seeded event's auto-created function inherits this range; the items-save dates the
-// order (and thus the added item) 60 days out (see service-orders/save.data.ts), which sits inside
-// this window so the save stays clear of the "date/time outside the order function's range" warning.
+/* Event date range opening 30 days out, relative to run time so it never goes stale. The order is
+   dated 60 days out (see service-orders/save.data.ts), inside this window, so the item save stays
+   clear of the "date/time outside the order function's range" warning. */
 const DAY = 24 * 60 * 60 * 1000;
 const EVT_START = todayMidnightUtc() + 30 * DAY;
 const EVT_END = todayMidnightUtc() + 365 * DAY;

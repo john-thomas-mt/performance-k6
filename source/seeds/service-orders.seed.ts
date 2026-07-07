@@ -7,12 +7,6 @@ import { config } from '../utils/exports/config.exp.ts';
 import { ServiceOrderSeedSetup } from '../utils/exports/types.exp.ts';
 import { userCredentials } from '../utils/exports/data.exp.ts';
 
-// Bulk prerequisite-data seeder for the service-order-items test. Run once after a snapshot
-// reset and before the test: it creates one marker event and SEED_COUNT service orders under it.
-// The snapshot owns cleanup, so this script never deletes. SEED_COUNT must be >= the test's peak
-// concurrent VUs x iterations so every iteration gets its own order.
-//   k6 run -e SEED_COUNT=50 source/seeds/service-orders.seed.ts
-
 const SEED_COUNT = Number(__ENV.SEED_COUNT || 20);
 const SEED_VUS = Number(__ENV.SEED_VUS || 5);
 

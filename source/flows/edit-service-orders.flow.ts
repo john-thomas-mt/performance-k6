@@ -31,11 +31,8 @@ export function editServiceOrdersJourney(user: User, data: ServiceOrderSetup, do
   const { bearerToken } = loginToEvents(user, data.version);
   if (!bearerToken) return;
 
-  // Each iteration edits its OWN order. This journey modifies the order header, which the
-  // server guards with an optimistic-concurrency check — so two concurrent iterations sharing
-  // one row would make the second fail with "PrimaryKeyRecordChanged". A globally-unique
-  // iteration index (not the __VU+__ITER formula, which collides across VU/iter pairs) keeps
-  // every concurrent iteration on a distinct seeded row.
+  /* Optimistic-concurrency: two iterations editing one order header make the second fail with
+     "PrimaryKeyRecordChanged", so give each iteration its own seeded row via a globally-unique index. */
   const serviceOrder = data.soPool[exec.scenario.iterationInTest % data.soPool.length];
 
   let stamps: { entDateIso: string; updDateIso: string } | null = null;
@@ -45,9 +42,8 @@ export function editServiceOrdersJourney(user: User, data: ServiceOrderSetup, do
   });
   if (!stamps) return;
 
-  // The order date is validated against today: >30 days out triggers an
-  // "OrderDateGreaterThan30Days" confirmation prompt (ResultValue 1). Keep the edit
-  // inside that window so the save commits without a proceed round-trip.
+  /* Order dates >30 days out trigger an "OrderDateGreaterThan30Days" confirm prompt; stay inside
+     the window so the save commits without a proceed round-trip. */
   const orderDate = todayMidnightUtc() + 7 * DAY;
 
   group('4. Edit General (rate & order date)', () => {
@@ -70,8 +66,8 @@ export function editServiceOrdersJourney(user: User, data: ServiceOrderSetup, do
   });
 
   group('7. Save & Close', () => {
-    // Each prior save bumps the header's update timestamp, so re-read detail to refresh the
-    // concurrency token before the final commit (mirrors NeoLoad re-reading detail per save).
+    /* Each save bumps the header's update stamp, so re-read detail to refresh the concurrency
+       token before the final commit. */
     const res = openServiceOrderDetail(bearerToken, data.version, serviceOrder);
     const fresh = res ? readOrderHeaderStamps(res) : null;
     if (!fresh) return;

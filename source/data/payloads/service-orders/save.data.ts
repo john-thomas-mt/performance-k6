@@ -76,8 +76,8 @@ export const serviceOrderItemsSavePayload = (so: ServiceOrderRow, quantity: numb
     AdditionalTableKeyDeletedRowKeys: [{ Key: 'ObjectID_457', Value: [] }],
     AdditionalTableKeyUnchangedRowKeys: [{ Key: 'ObjectID_457', Value: [] }],
   },
-  // Order dated 60 days out so it falls inside the seeded event/function window (opens 30 days
-  // out — see events/create.data.ts); the captured 2024 date would be rejected as out of range.
+  /* Order dated 60 days out so it falls inside the seeded event/function window; the captured 2024
+     date would be rejected as out of range. */
   {
     TransportDataTables: [orderTable(so, todayMidnightUtc() + 60 * DAY)],
   },
@@ -105,8 +105,8 @@ export const serviceOrderItemsSavePayload = (so: ServiceOrderRow, quantity: numb
 
 const DAY = 24 * 60 * 60 * 1000;
 
-// Captured order-header table (ER100) for the service order being modified. Identity columns and the
-// edited order date are woven in per picked service order at their captured cells.
+/* Captured ER100 order-header table; identity columns and the edited order date are woven in per
+   picked service order. */
 const orderTable = (so: ServiceOrderRow, orderDate: number): TransportTable => ({
   TableName: String(Date.now()),
   TransportDataColumns: [
@@ -483,8 +483,7 @@ const orderTable = (so: ServiceOrderRow, orderDate: number): TransportTable => (
   ],
 });
 
-// Captured price-list item lines (cheesecake + cherry pie). cQUANTITY and the price list are woven
-// into every row at their captured cells.
+/* Captured price-list item lines; cQUANTITY and the price list are woven into every row. */
 const itemsTable = (so: ServiceOrderRow, quantity: number): TransportTable => ({
   TableName: 'ObjectID_457',
   TransportDataColumns: [

@@ -8,8 +8,7 @@ export function salesAiHeaders(salesAiJwt: string, contentType: string | null = 
 }
 
 export function buildHeaders(token: string | null, version: string): Record<string, string> {
-  // __VU/__ITER are only defined inside a VU iteration; setup()/teardown() (e.g. the seed script's
-  // login + createEvent) run outside one, so guard them — wsid is only a trace string.
+  // __VU/__ITER are undefined outside a VU iteration (e.g. setup()/teardown()), so guard them.
   const vu = typeof __VU !== 'undefined' ? __VU : 0;
   const iter = typeof __ITER !== 'undefined' ? __ITER : 0;
   return {

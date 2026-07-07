@@ -240,8 +240,6 @@ export function openDocumentForm(token: string, version: string, so: ServiceOrde
     return null;
   }
 
-  // The document detail response carries the server-allocated file key plus the generated
-  // description and filename — correlate all three for the import Save2.
   try {
     const body: any = res.json();
     const arr = Array.isArray(body) ? body : [];

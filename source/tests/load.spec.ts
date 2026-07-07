@@ -5,8 +5,6 @@ import { commonThresholds, config, loadProfile } from '../utils/exports/config.e
 import { NavLoadSetup } from '../utils/exports/types.exp.ts';
 import { userCredentials } from '../utils/exports/data.exp.ts';
 
-// Ramp-up / sustain / ramp-down come from the selected profile (defaults to `load`, overridable
-// with -e PROFILE=stress). ramping-vus has no iteration cap — VUs loop the journey for the duration.
 const profile = loadProfile('load');
 if (!profile.stages) {
   throw new Error(`load.spec requires a profile with stages (e.g. PROFILE=load|stress) — "${__ENV.PROFILE}" has none`);

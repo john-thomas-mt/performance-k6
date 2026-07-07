@@ -12,8 +12,6 @@ export function discoverServiceOrderPool(version: string, user: User) {
     throw new Error('setup login failed — cannot discover the seeded pool');
   }
 
-  // Seed events share the configured prefix but carry a unique suffix per run; pick the newest
-  // (highest evtId) so the test binds to the most recent seed, not a stale same-prefixed event.
   const seedEvent = searchEvents(bearerToken, version, config.seedEventDesc)
     .filter((e) => e.desc.startsWith(config.seedEventDesc))
     .reduce<EventRow | null>((newest, e) => (newest && Number(newest.evtId) >= Number(e.evtId) ? newest : e), null);

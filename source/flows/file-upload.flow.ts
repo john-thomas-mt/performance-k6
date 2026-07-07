@@ -15,11 +15,8 @@ const fmtDate = (ms: number) => {
 
 export function fileUploadJourney(user: User, data: SetupData, template: string) {
   const runToken = crypto.randomUUID().split('-')[0];
-  // The AI extraction flags duplicates and routes them to Tasks for review instead of surfacing them
-  // as opportunities — and the dominant dedupe signal is overlapping event dates (a shared start date
-  // alone scores a ~55% match). Per run, give the inquiry a distinct future event date (spread ~50
-  // years off the run token so concurrent VUs don't collide) plus a unique company/contact, so each
-  // upload creates a fresh, non-duplicate opportunity.
+  /* Uploads with overlapping event dates score as duplicates and get routed to Tasks, not
+     opportunities — so each run needs a distinct future event date plus a unique company/contact. */
   const DAY = 24 * 60 * 60 * 1000;
   const evtStart = Date.UTC(2030, 0, 1) + (parseInt(runToken, 16) % 18000) * DAY;
   const uniqueContent = template

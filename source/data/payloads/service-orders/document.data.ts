@@ -1,11 +1,11 @@
 import { ServiceOrderRow, TransportTable } from '../../../utils/exports/types.exp.ts';
 
-// CacheFiles uploads the raw bytes; the server returns a session ref like ["<n>|<filename>"].
-// NeoLoad hardcoded a stale FileKey here instead of correlating it — we use the runtime ref.
+/* CacheFiles uploads the bytes; the server returns a session ref like ["<n>|<filename>"] which we
+   correlate (NeoLoad hardcoded a stale FileKey instead). */
 export const cacheFilesPayload = (filename: string, base64: string) => [[{ Key: filename, Value: base64 }]];
 
-// Open the document detail form (object 26) for the cached file. The response carries the
-// server-allocated FileKey plus the generated document description and filename.
+/* Open the document detail form (object 26); the response carries the server-allocated FileKey plus
+   the generated description and filename. */
 export const documentFormPayload = (so: ServiceOrderRow, fileKey: string, fileName: string) => [
   [
     { Key: 'OrgCode', Value: so.orgCode },
@@ -120,9 +120,8 @@ export const documentSavePayload = (so: ServiceOrderRow, doc: { fileKey: string;
   },
 ];
 
-// Import Save2: create the document row (AddedRowKeys ["10|S|-1"]) linked to the order.
-// The captured MM446 document table is built inline per call; order identity and the correlated
-// file fields (key/name/description) are overridden below.
+/* Import Save2: create the document row linked to the order; order identity and the correlated file
+   fields (key/name/description) are woven in below. */
 const documentTable = (so: ServiceOrderRow, doc: { fileKey: string; fileName: string; docDesc: string }): TransportTable => ({
   TableName: String(Date.now()),
   TransportDataColumns: [

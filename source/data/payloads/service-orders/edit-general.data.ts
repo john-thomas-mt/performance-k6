@@ -1,8 +1,7 @@
 import { ServiceOrderRow, TransportTable } from '../../../utils/exports/types.exp.ts';
 
-// Edit General: re-save the order header with a new order date. Same ER100 Save2 envelope as the
-// add-items save; here the only change is ER100_ORD_DATE and no item table is sent. SaveMode 7 =
-// save & keep editing (edit-general); 0 = save & close — the mode is the only structural difference.
+/* Edit General: re-save the order header with a new order date. Same ER100 Save2 envelope as the
+   add-items save; SaveMode 7 = save & keep editing, 0 = save & close. */
 export const editGeneralSavePayload = (
   so: ServiceOrderRow,
   orderDate: number,
@@ -93,10 +92,9 @@ export const editGeneralSavePayload = (
   },
 ];
 
-// Captured ER100 order-header table for the edit-general (rate & order date) Save2. Per-order
-// identity columns and the edited order date are woven in at their cells. The ENT/UPD_DATE_ISO cells
-// echo the row's current update stamps (correlated via readOrderHeaderStamps) — the server rejects
-// the save with "PrimaryKeyRecordChanged" if they don't match.
+/* Captured ER100 order-header table for the edit-general Save2. The ENT/UPD_DATE_ISO cells echo the
+   row's current update stamps (correlated via readOrderHeaderStamps) — the server rejects the save
+   with "PrimaryKeyRecordChanged" if they don't match. */
 const orderTable = (so: ServiceOrderRow, orderDate: number, stamps: { entDateIso: string; updDateIso: string }): TransportTable => ({
   TableName: String(Date.now()),
   TransportDataColumns: [

@@ -1,8 +1,7 @@
 import { NavScreen } from '../../../utils/exports/types.exp.ts';
 
-// Top-level navigation modules and the window id each one opens (captured from the live nav menu).
-// AcctDesig-scoped screens (Accounts, Contacts) carry the extra list param the app sends for them;
-// every other screen loads with the standard context alone.
+/* Top-level nav modules and the window id each opens. AcctDesig-scoped screens (Accounts, Contacts)
+   carry the extra list param the app sends; every other screen loads with the standard context. */
 export const navScreens: NavScreen[] = [
   {
     label: 'Accounts',
@@ -25,10 +24,9 @@ export const navScreens: NavScreen[] = [
   { label: 'Invoices', windowId: 'AR8157' },
 ];
 
-// GetInitialData2 loads a list screen. The payload is almost entirely defaults; the only values that
-// vary per screen are the window id, the WindowObjectID (correlated from GetWindowInfo), and the
-// screen-specific listParams. Positionals after objectId: saved-view id (0 = server resolves the
-// user's default) then three reserved zeros, matching the captured request shape exactly.
+/* GetInitialData2 loads a list screen; per-screen values are the window id, the WindowObjectID
+   (correlated from GetWindowInfo), and listParams. Positionals after objectId: saved-view id
+   (0 = server default) then three reserved zeros. */
 export const listInitialDataPayload = (screen: NavScreen, objectId: number) => [
   listContext(screen, objectId),
   screen.windowId,
@@ -44,8 +42,7 @@ export const listInitialDataPayload = (screen: NavScreen, objectId: number) => [
   true,
 ];
 
-// Org the pool accounts belong to; the same for every user in users.data.ts. GetWindowInfo does
-// not report it, so it is a shared constant rather than a correlated value.
+/* Org the pool accounts belong to; GetWindowInfo doesn't report it, so it's a shared constant. */
 const ORG_CODE = '10';
 
 const listContext = (screen: NavScreen, objectId: number) => [
@@ -62,8 +59,7 @@ const listContext = (screen: NavScreen, objectId: number) => [
   { Key: 'MenuContextObjectID', Value: 0 },
 ];
 
-// View and search are sent empty so the server resolves the user's default view (the captured
-// saved-view id was per-user, so it is deliberately left at 0).
+/* View and search are sent empty so the server resolves the user's default view. */
 const listView = {
   ID: 0,
   ThemeID: 0,

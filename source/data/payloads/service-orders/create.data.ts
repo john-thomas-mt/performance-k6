@@ -1,10 +1,8 @@
 import { majorMinor } from '../../../utils/exports/helpers.exp.ts';
 import { TransportTable } from '../../../utils/exports/types.exp.ts';
 
-// Captured create-service-order Save2 request (GenericDetailServer/Save2, window EM9131) built inline
-// per call. The session user, version, and event-id references are woven in from the arguments so the
-// order is created under the freshly seeded event. ER100_SO_SEARCH is server-assigned on create
-// (equals the new order number), so it is intentionally left unset here.
+/* Captured create-service-order Save2 (window EM9131); user, version, and event id are woven in so
+   the order is created under the seeded event. ER100_SO_SEARCH is server-assigned, so left unset. */
 export const createServiceOrderPayload = (encUserId: string, evtId: string, version: string) => [
   1,
   '10',
@@ -249,10 +247,8 @@ export const createServiceOrderPayload = (encUserId: string, evtId: string, vers
   },
 ];
 
-// Order-function date range, mirroring the items-save template's captured range
-// (2024-01-01 09:00 .. 2024-01-03 18:00). The seeded SO's function dates must match the item
-// date/times the items-save sends, or the save warns "item date/time outside the order function's
-// range" (ResultValue 1). The captured create defaulted the function to "today", so align it here.
+/* Order-function date range. The seeded SO's function dates must contain the item date/times the
+   items-save sends, or the save warns "item date/time outside the order function's range". */
 const FUNC_START = 1704099600000;
 const FUNC_END = 1704304800000;
 
