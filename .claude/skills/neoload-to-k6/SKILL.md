@@ -54,7 +54,7 @@ unzip -o "team/vus/<VU>/%resources%/recorded-artifacts/<uid>.zip" -d /tmp/x
 
 ## 2. Distill to the transaction spine
 
-A NeoLoad recording captures **everything the browser did**. Keep only the functional server calls; drop the rest (the *why* — static-content vs application/API roles, why replay over-states asset load, and the Momentus same-origin/no-CDN caveat — is in [docs/filtering-recorded-traffic.md](../../../docs/filtering-recorded-traffic.md)):
+A NeoLoad recording captures **everything the browser did**. Keep only the functional server calls; drop the rest (the *why* — static-content vs application/API roles, why replay over-states asset load, and the Momentus same-origin/no-CDN caveat — is in [docs/conversion-strategy-and-roadmap.md](../../../docs/conversion-strategy-and-roadmap.md), "Filtering a recording down to the transaction spine"):
 
 - **Drop** static assets (css/js/html/fonts/images), telemetry (`/v1/traces`, analytics), and pure UI chrome (menu/column-cache/window-info/recently-used/grid-view reads that only paint the UI).
 - **Keep** the writes (the `Save2`/create/update calls) and the reads whose extracted values **feed a later write**.
