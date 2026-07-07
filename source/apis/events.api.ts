@@ -1,35 +1,9 @@
-import http, { RefinedResponse, ResponseType } from 'k6/http';
+import http from 'k6/http';
 import { check, fail } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
-import { build_headers, body_text } from '../utils/exports/helpers.exp.ts';
+import { build_headers, body_text, parse_grid_rows } from '../utils/exports/helpers.exp.ts';
 import { searchPayload, copyFormPayload, savePayload, detailPayload, createEventPayload } from '../utils/exports/data.exp.ts';
-import { EventRow, EventSaveResult, TransportEnvelope, TransportRow, TransportValues } from '../utils/exports/types.exp.ts';
-
-type Res = RefinedResponse<ResponseType | undefined>;
-
-function parse_event_rows(res: Res, name: string): EventRow[] {
-  try {
-    const body = res.json();
-    const arr = Array.isArray(body) ? (body as TransportEnvelope[]) : [];
-    const tdt = arr.find((e) => e && typeof e === 'object' && !Array.isArray(e) && e.TransportDataTables);
-    const table = tdt!.TransportDataTables![0];
-    const cols: string[] = table.TransportDataColumns.map((c) => c.ColumnName);
-    const at = (v: TransportValues, n: string) => String(v[String(cols.indexOf(n))]);
-    return table.TransportDataRows.map((r: TransportRow) => ({
-      desc: at(r.Values, 'EV200_EVT_DESC'),
-      evtId: at(r.Values, 'EV200_EVT_ID'),
-      rowKey: at(r.Values, 'cROW_KEY'),
-      acct: at(r.Values, 'EV200_CUST_NBR'),
-      desig: at(r.Values, 'EV200_EVT_DESIGNATION'),
-      status: at(r.Values, 'EV200_EVT_STATUS'),
-      linkedFuncs: at(r.Values, 'EV200_LINKED_FUNCS'),
-      orgCode: at(r.Values, 'EV200_ORG_CODE'),
-    }));
-  } catch (e) {
-    console.error(`[VU ${__VU}] ${name}: failed to parse event rows — ${e}`);
-    return [];
-  }
-}
+import { EventRow, EventSaveResult } from '../utils/exports/types.exp.ts';
 
 export function search_events(token: string, version: string, searchValue: string, name = 'SearchEvents'): EventRow[] {
   const res = http.post(`${config.baseUrl}/api/USIDataGridServer/GetGridData2`, JSON.stringify(searchPayload(searchValue)), {
@@ -46,7 +20,20 @@ export function search_events(token: string, version: string, searchValue: strin
     return [];
   }
 
-  return parse_event_rows(res, name);
+  return parse_grid_rows(
+    res,
+    {
+      desc: 'EV200_EVT_DESC',
+      evtId: 'EV200_EVT_ID',
+      rowKey: 'cROW_KEY',
+      acct: 'EV200_CUST_NBR',
+      desig: 'EV200_EVT_DESIGNATION',
+      status: 'EV200_EVT_STATUS',
+      linkedFuncs: 'EV200_LINKED_FUNCS',
+      orgCode: 'EV200_ORG_CODE',
+    },
+    name,
+  );
 }
 
 export function open_copy_form(token: string, version: string, encUserId: string, source: EventRow) {
