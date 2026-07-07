@@ -23,7 +23,7 @@ const profiles: Record<string, Profile> = {
   },
 };
 
-export function loadProfile(defaultName = 'smoke'): Profile {
+export function loadProfile(defaultName = 'smoke') {
   const name = __ENV.PROFILE || defaultName;
   const profile = profiles[name];
   if (!profile) {
