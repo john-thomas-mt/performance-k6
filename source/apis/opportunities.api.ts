@@ -37,7 +37,7 @@ export function pollForOpportunity(salesAiJwt: string, searchToken: string, maxW
     try {
       const opportunities = res.json() as Opportunity[];
       if (Array.isArray(opportunities)) {
-        const match = opportunities.find((o) => o.contactEmail?.includes(searchToken));
+        const match = opportunities.find((o) => o.contactEmail.includes(searchToken));
         if (match) {
           console.log(`[VU ${__VU}] Opportunity ${match.id} found after ${attempt * intervalSeconds}s`);
           return match;
