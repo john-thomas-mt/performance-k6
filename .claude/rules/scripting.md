@@ -29,6 +29,7 @@ When a capture-derived payload template is reused for a *different* record (e.g.
 
 ## Checks
 - Every wrapper asserts on its own response with `check(res, {...})`
+- Read a response body as text with `body_text(res)` (helpers barrel), never `res.body` directly — k6 types `body` as `string | ArrayBuffer | null`, so stringifying it in a template or calling `.includes()`/`.match()` on it raw trips the `no-base-to-string` lint rule; `body_text` narrows it to a string
 - Check labels are prefixed with the request tag name: `'SignIn: status is 201'`
 - Assert at minimum: expected status code, and shape of the value the caller depends on (token present, JSON array, traceId present)
 - On a genuine failure — bad status/shape, an unmet expectation, or a poll timeout — the wrapper records the failed `check` and then aborts the iteration with `fail(...)` (see Return contract). The `check` runs *before* the `fail` so the failure lands in the `checks` metric and trips the threshold — `fail()` alone would abort silently without failing the test. A flow does **not** re-check a wrapper's outcome; the wrapper owns its own assertion. Because k6 groups are dynamic-scope, a wrapper's checks called inside `group('N. …', …)` already inherit that group's tag, so per-step attribution is automatic
