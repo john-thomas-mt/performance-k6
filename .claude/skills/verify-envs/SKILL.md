@@ -41,7 +41,7 @@ For each env in the matrix, in order:
 
 1. Point the run at it: `npm run setup -- --env <env>` (rewrites `temp/setup.json`; site stays the `PERF` default).
 2. Run the mode's command.
-3. Record the result against the env's **resolved** version, not the alias — a run correlates the app version at runtime (`fetchServerVersion()`), so report `main → 26.3`, not just `main`. This keeps results unambiguous across branch cuts.
+3. Record the result against the env's **resolved** version, not the alias — a run correlates the app version at runtime (`fetch_server_version()`), so report `main → 26.3`, not just `main`. This keeps results unambiguous across branch cuts.
 
 **`main` first is deliberate.** It's the highest-priority env and the one where next-version drift appears first — a failure there is the early warning for the change that will hit the next release. A clean `main` plus clean released envs is the goal; fail fast on `main` before spending traffic on the rest.
 

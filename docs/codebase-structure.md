@@ -76,7 +76,7 @@ A concrete trace, top to bottom:
    `utils/types/`, credentials from the decrypted pool — feed in from the leaf layers.
 
 The same flow functions are reused by every entry point: the smoke aggregate runs each once as a
-correctness/drift gate; a load spec runs them under a `loadProfile()` shape. Journey logic is never
+correctness/drift gate; a load spec runs them under a `load_profile()` shape. Journey logic is never
 duplicated outside its flow.
 
 ## Two runtime prerequisites (not in `source/`)

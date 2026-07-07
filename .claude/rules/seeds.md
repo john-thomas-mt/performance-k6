@@ -8,7 +8,7 @@ Seed scripts bulk-create the prerequisite data a journey needs to already exist.
 
 ## Structure
 - `source/seeds/<feature>.seed.ts` — a k6 script that composes `source/apis/` wrappers to create records in bulk; it never re-implements an endpoint call (one definition per endpoint, shared with the tests — see `rules/apis.md`).
-- Authenticate once via `loginToEvents` / `loginToMomentusAssistant` from `source/flows/login.flow.ts`, exactly as a test does.
+- Authenticate once via `login_to_events` / `login_to_momentus_assistant` from `source/flows/login.flow.ts`, exactly as a test does.
 
 ## Volume & sizing
 - Drive bulk creation with a high-throughput executor (`shared-iterations` or `per-vu-iterations`) and a `SEED_COUNT` env (default sensible, overridable with `-e SEED_COUNT=`).

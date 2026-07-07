@@ -228,7 +228,7 @@ journeys that need globally-unique rows. Note the current `source/config/profile
 - `source/tests/smoke.spec.ts` — correctness/drift gate: every ported journey once. Registration target
   for each new journey (scenario + `exec` wrapper + `<journey>Thresholds`).
 - `source/tests/load.spec.ts` — currently a **single-journey POC**: runs only `navigation` under
-  `ramping-vus` from `loadProfile('load')`. The batch-rotation model (base-vs-report split, reporting
+  `ramping-vus` from `load_profile('load')`. The batch-rotation model (base-vs-report split, reporting
   spikes, 5-min batch overlap) is **not yet built** — that suite spec, composing all journeys, is the
   load-side deliverable this tracker feeds.
 

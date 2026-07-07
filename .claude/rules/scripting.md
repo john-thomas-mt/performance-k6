@@ -12,16 +12,16 @@ each folder's own rule file (`rules/apis.md`, `rules/flows.md`, `rules/helpers.m
 
 ## Requests
 - Every `http.*` call carries `tags: { name: 'PascalCaseName' }` — this drives per-endpoint thresholds (`http_req_duration{name:...}`)
-- If a wrapper is reused in different scenario contexts, accept the tag name as a parameter with a default (see `getOpportunities(jwt, name = 'GetOpportunities')`) so metrics stay separately tagged
-- Headers are never inlined: use `buildHeaders(token, version)` for the Momentus core API and `salesAiHeaders(jwt)` for the sales-ai API (both from `source/utils/helpers/headers.helper.ts`)
+- If a wrapper is reused in different scenario contexts, accept the tag name as a parameter with a default (see `get_opportunities(jwt, name = 'GetOpportunities')`) so metrics stay separately tagged
+- Headers are never inlined: use `build_headers(token, version)` for the Momentus core API and `sales_ai_headers(jwt)` for the sales-ai API (both from `source/utils/helpers/headers.helper.ts`)
 - URLs are built from `config` values — never hardcode hosts or versions in a wrapper; the sales-ai `tenantId` is correlated from the session JWT (see Correlation), not `config`
 
 ## Correlation — never hardcode dynamic values
 Every value the server generates must be extracted at runtime from a prior response:
-- App `version` header → `fetchServerVersion()` (regex on `app85.cshtml`); throws if the page fetch fails or the `?v=` token is missing (no static fallback)
-- Momentus bearer token (`<id>|<hex>`) → `signIn()` response
-- Sales-ai JWT → `maAuthenticate()` response
-- Sales-ai `tenantId` → decoded from the sales-ai JWT's `tenant_id` claim via `tenantIdFromJwt()`; throws if the claim is absent (no static fallback)
+- App `version` header → `fetch_server_version()` (regex on `app85.cshtml`); throws if the page fetch fails or the `?v=` token is missing (no static fallback)
+- Momentus bearer token (`<id>|<hex>`) → `sign_in()` response
+- Sales-ai JWT → `ma_authenticate()` response
+- Sales-ai `tenantId` → decoded from the sales-ai JWT's `tenant_id` claim via `tenant_id_from_jwt()`; throws if the claim is absent (no static fallback)
 - `traceId` → upload/submit responses; reuse it for follow-up status requests
 Client-generated values (`x-nonce`, `wsid`, sessionIds, timestamps) are produced fresh per request with `crypto.randomUUID()` / `new Date()`, never copied from a capture.
 
@@ -36,7 +36,7 @@ When a capture-derived payload template is reused for a *different* record (e.g.
 
 ## Return contract
 - A wrapper `check`s its response and, on a genuine failure, aborts the iteration with `fail(...)` — it never returns a `null` failure sentinel. On success it returns the value the caller consumes for correlation or a downstream call, or **nothing** (`void`) when the caller only needed the step to succeed (the return type reflects this: a consumed value, or `void` for a gate-only command). `fail()` aborts only the current iteration — the VU proceeds to its next iteration, and a genuinely-failed iteration aborting is correct. This keeps a broken journey from silently completing as a partial iteration that under-generates load. The pass/fail *verdict* comes from thresholds (`checks`, `http_req_failed`), not from `fail()`
-- **Queries are the exception:** a list/GET wrapper reused across tolerant or retry contexts (e.g. the poll loop retries `getOpportunities` on a transient non-200) records its `check` and returns its result — a possibly-empty list or the raw `res` — rather than failing. "Is the row/data I need present?" is then a journey-level judgment the flow makes (see Checks)
+- **Queries are the exception:** a list/GET wrapper reused across tolerant or retry contexts (e.g. the poll loop retries `get_opportunities` on a transient non-200) records its `check` and returns its result — a possibly-empty list or the raw `res` — rather than failing. "Is the row/data I need present?" is then a journey-level judgment the flow makes (see Checks)
 - `setup()` uses `throw` (not `fail`) — a setup failure aborts the whole run, whereas `fail()` is scoped to a VU iteration; a wrapper called from `setup()` that `fail()`s still propagates as a run-aborting throw
 - On failure, log before aborting: `console.error(`[VU ${__VU}] <wrapper> failed — HTTP ${res.status}`)` then `fail(...)` — always include the `[VU ${__VU}]` prefix
 - Declare an optional *input* as `param?: T`; reserve `| null` for fields the server sends as JSON `null`. A `param: T | null = null` that's only truthiness-checked is just an optional argument — use `?`.

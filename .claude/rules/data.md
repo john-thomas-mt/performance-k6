@@ -49,7 +49,7 @@ Request bodies are **TS object builders**, never `.json`/`.txt` templates loaded
   load-bearing (the server rejects the save without it) gets a short why-comment at the cell (see
   `rules/comments.md`).
 - Builders may import types from the types barrel and shared transforms from the helpers barrel, and carry logic. They stay in `source/data/payloads/`, not elsewhere in `source/`.
-- Logic shared across a single module's builders lives in a module-local `helpers.ts`. Once a transform is shared across more than one data module, promote it to `source/utils/helpers/payload.helper.ts` (e.g. `todayMidnightUtc`, shared by the event and service-order date windows) rather than duplicating it per module — see `rules/helpers.md`.
+- Logic shared across a single module's builders lives in a module-local `helpers.ts`. Once a transform is shared across more than one data module, promote it to `source/utils/helpers/payload.helper.ts` (e.g. `today_midnight_utc`, shared by the event and service-order date windows) rather than duplicating it per module — see `rules/helpers.md`.
 - Callers import and call the builder directly in the VU function — no init-context `open()`.
 
 ## Upload fixtures — `source/data/uploads/<module>/<sub>/`
@@ -63,12 +63,12 @@ Anything passed to `http.file()` goes here, never in the request-body folders:
   where the `password` is AES-GCM-encrypted (base64 of `iv | ciphertext`) and the username stays plaintext. The
   AES key is `SHA-256(passphrase)` with no salt or KDF stretching: these are low-value QE accounts and the only
   goal is keeping passwords out of the repo — don't reuse this scheme for anything sensitive.
-- Decrypted once at runtime in a test/seed `setup()` via `decryptUsers(userCredentials, config.cryptoKey)`
+- Decrypted once at runtime in a test/seed `setup()` via `decrypt_users(userCredentials, config.cryptoKey)`
   (`source/utils/helpers/crypto.helper.ts`), returning `User[]`. The passphrase is `config.cryptoKey`, sourced from a
   gitignored `temp/secret.json` (`npm run secret -- --key '<passphrase>'`; in CI, injected from a masked pipeline
   secret), never committed; `setup()` throws if it is missing.
 - Decryption is async (WebCrypto `crypto.subtle`), so it lives in `setup()` — never a `SharedArray`/init context. The
-  decrypted `User[]` is returned in the `setup()` data and picked with `pickUser(data.users)` from
+  decrypted `User[]` is returned in the `setup()` data and picked with `pick_user(data.users)` from
   `source/utils/helpers/users.helper.ts` (see `rules/tests.md`).
 - **Rotate/add accounts** by re-minting the encrypted values and pasting them into `users.data.ts`. The snippet
   reads the passphrase from `temp/secret.json` (write it first with `npm run secret -- --key '<passphrase>'`),
