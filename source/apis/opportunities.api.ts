@@ -1,7 +1,7 @@
 import http from 'k6/http';
 import { check, fail, sleep } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
-import { salesAiHeaders, tenantIdFromJwt } from '../utils/exports/helpers.exp.ts';
+import { salesAiHeaders, tenantIdFromJwt, bodyText } from '../utils/exports/helpers.exp.ts';
 import { Opportunity } from '../utils/exports/types.exp.ts';
 
 export function getOpportunities(salesAiJwt: string, name = 'GetOpportunities') {
@@ -13,8 +13,8 @@ export function getOpportunities(salesAiJwt: string, name = 'GetOpportunities') 
 
   check(res, {
     [`${name}: status is 200`]: (r) => r.status === 200,
-    [`${name}: response is JSON`]: (r) => r.headers['Content-Type'] !== undefined && r.headers['Content-Type'].includes('application/json'),
-    [`${name}: response body is non-empty`]: (r) => String(r.body ?? '').length > 0,
+    [`${name}: response is JSON`]: (r) => (r.headers['Content-Type'] ?? '').includes('application/json'),
+    [`${name}: response body is non-empty`]: (r) => bodyText(r).length > 0,
   });
 
   return res;

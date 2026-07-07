@@ -62,7 +62,7 @@ if (selected && !allScenarios[selected]) {
 
 const activeThresholds: { [metric: string]: string[] } = selected
   ? allThresholds[selected]
-  : Object.assign({}, ...Object.values(allThresholds));
+  : Object.values(allThresholds).reduce<{ [metric: string]: string[] }>((merged, t) => ({ ...merged, ...t }), {});
 
 export const options: Options = {
   scenarios: selected ? { [selected]: allScenarios[selected] } : allScenarios,

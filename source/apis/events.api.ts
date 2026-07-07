@@ -1,7 +1,7 @@
 import http, { RefinedResponse, ResponseType } from 'k6/http';
 import { check, fail } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
-import { buildHeaders } from '../utils/exports/helpers.exp.ts';
+import { buildHeaders, bodyText } from '../utils/exports/helpers.exp.ts';
 import { searchPayload, copyFormPayload, savePayload, detailPayload, createEventPayload } from '../utils/exports/data.exp.ts';
 import { EventRow, EventSaveResult, TransportEnvelope, TransportRow, TransportValues } from '../utils/exports/types.exp.ts';
 
@@ -58,7 +58,7 @@ export function openCopyForm(token: string, version: string, encUserId: string, 
 
   const ok = check(res, {
     'OpenCopyForm: status is 201': (r) => r.status === 201,
-    'OpenCopyForm: returns copy form data': (r) => String(r.body ?? '').length > 1000,
+    'OpenCopyForm: returns copy form data': (r) => bodyText(r).length > 1000,
   });
 
   if (!ok) {
@@ -94,7 +94,7 @@ export function saveEventCopy(token: string, version: string, encUserId: string,
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] saveEventCopy failed — HTTP ${res.status}: ${String(res.body ?? '').slice(0, 300)}`);
+    console.error(`[VU ${__VU}] saveEventCopy failed — HTTP ${res.status}: ${bodyText(res).slice(0, 300)}`);
     fail('saveEventCopy did not succeed');
   }
 
@@ -128,7 +128,7 @@ export function createEvent(token: string, version: string, description: string,
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] createEvent failed — HTTP ${res.status}: ${String(res.body ?? '').slice(0, 300)}`);
+    console.error(`[VU ${__VU}] createEvent failed — HTTP ${res.status}: ${bodyText(res).slice(0, 300)}`);
     fail('createEvent did not succeed');
   }
 
@@ -144,7 +144,7 @@ export function openEventDetail(token: string, version: string, newEvtId: string
 
   const ok = check(res, {
     'OpenEventDetail: status is 201': (r) => r.status === 201,
-    'OpenEventDetail: detail shows copied description': (r) => String(r.body ?? '').includes(expectedDesc),
+    'OpenEventDetail: detail shows copied description': (r) => bodyText(r).includes(expectedDesc),
   });
 
   if (!ok) {

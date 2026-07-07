@@ -2,7 +2,7 @@ import http, { RefinedResponse, ResponseType } from 'k6/http';
 import { check, fail } from 'k6';
 import { b64encode } from 'k6/encoding';
 import { config } from '../utils/exports/config.exp.ts';
-import { buildHeaders } from '../utils/exports/helpers.exp.ts';
+import { buildHeaders, bodyText } from '../utils/exports/helpers.exp.ts';
 import {
   serviceOrdersGridPayload,
   serviceOrderDetailPayload,
@@ -98,7 +98,7 @@ export function openServiceOrderDetail(token: string, version: string, so: Servi
 
   const ok = check(res, {
     'OpenServiceOrderDetail: status is 201': (r) => r.status === 201,
-    'OpenServiceOrderDetail: returns order detail data': (r) => String(r.body ?? '').includes(so.orderNbr),
+    'OpenServiceOrderDetail: returns order detail data': (r) => bodyText(r).includes(so.orderNbr),
   });
 
   if (!ok) {
@@ -136,7 +136,7 @@ export function createServiceOrder(token: string, version: string, encUserId: st
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] createServiceOrder failed — HTTP ${res.status}: ${String(res.body ?? '').slice(0, 300)}`);
+    console.error(`[VU ${__VU}] createServiceOrder failed — HTTP ${res.status}: ${bodyText(res).slice(0, 300)}`);
     fail('createServiceOrder did not succeed');
   }
 
@@ -199,7 +199,7 @@ export function editServiceOrderGeneral(
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] editServiceOrderGeneral failed — HTTP ${res.status}: ${String(res.body ?? '').slice(0, 300)}`);
+    console.error(`[VU ${__VU}] editServiceOrderGeneral failed — HTTP ${res.status}: ${bodyText(res).slice(0, 300)}`);
     fail('editServiceOrderGeneral did not succeed');
   }
 }
@@ -223,7 +223,7 @@ export function cacheDocumentFile(token: string, version: string, fileName: stri
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] cacheDocumentFile failed — HTTP ${res.status}: ${String(res.body ?? '').slice(0, 200)}`);
+    console.error(`[VU ${__VU}] cacheDocumentFile failed — HTTP ${res.status}: ${bodyText(res).slice(0, 200)}`);
     fail('cacheDocumentFile did not succeed');
   }
 
@@ -294,7 +294,7 @@ export function saveDocument(token: string, version: string, so: ServiceOrderRow
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] saveDocument failed — HTTP ${res.status}: ${String(res.body ?? '').slice(0, 300)}`);
+    console.error(`[VU ${__VU}] saveDocument failed — HTTP ${res.status}: ${bodyText(res).slice(0, 300)}`);
     fail('saveDocument did not succeed');
   }
 }
@@ -331,7 +331,7 @@ export function saveAndCloseServiceOrder(
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] saveAndCloseServiceOrder failed — HTTP ${res.status}: ${String(res.body ?? '').slice(0, 300)}`);
+    console.error(`[VU ${__VU}] saveAndCloseServiceOrder failed — HTTP ${res.status}: ${bodyText(res).slice(0, 300)}`);
     fail('saveAndCloseServiceOrder did not succeed');
   }
 }
@@ -371,7 +371,7 @@ export function saveServiceOrderItems(token: string, version: string, so: Servic
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] saveServiceOrderItems failed — HTTP ${res.status}: ${String(res.body ?? '').slice(0, 300)}`);
+    console.error(`[VU ${__VU}] saveServiceOrderItems failed — HTTP ${res.status}: ${bodyText(res).slice(0, 300)}`);
     fail('saveServiceOrderItems did not succeed');
   }
 }

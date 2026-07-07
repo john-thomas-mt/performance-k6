@@ -1,7 +1,7 @@
 import http from 'k6/http';
 import { check, fail } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
-import { buildHeaders } from '../utils/exports/helpers.exp.ts';
+import { buildHeaders, bodyText } from '../utils/exports/helpers.exp.ts';
 import { listInitialDataPayload } from '../utils/exports/data.exp.ts';
 import { NavScreen, WindowInfo } from '../utils/exports/types.exp.ts';
 
@@ -40,7 +40,7 @@ export function getListInitialData(token: string, version: string, screen: NavSc
 
   const ok = check(res, {
     'GetListInitialData: status is 201': (r) => r.status === 201,
-    'GetListInitialData: returns grid data': (r) => String(r.body ?? '').includes('TransportDataTables'),
+    'GetListInitialData: returns grid data': (r) => bodyText(r).includes('TransportDataTables'),
   });
 
   if (!ok) {

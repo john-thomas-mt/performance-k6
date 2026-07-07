@@ -3,6 +3,7 @@ import { check, fail, JSONObject, JSONValue } from 'k6';
 import encoding from 'k6/encoding';
 import { config } from '../exports/config.exp.ts';
 import { buildHeaders } from './headers.helper.ts';
+import { bodyText } from './response.helper.ts';
 function postSignIn(username: string, password: string, version: string) {
   const res = http.post(`${config.baseUrl}/api/GenericServer/SignIn`, JSON.stringify([username, password, '', false, '', '', [], '1']), {
     headers: buildHeaders(null, version),
@@ -76,7 +77,7 @@ export function maAuthenticate(bearerToken: string, version: string) {
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] maAuthenticate failed — HTTP ${res.status}: ${res.body}`);
+    console.error(`[VU ${__VU}] maAuthenticate failed — HTTP ${res.status}: ${bodyText(res)}`);
     fail('maAuthenticate did not succeed');
   }
 
