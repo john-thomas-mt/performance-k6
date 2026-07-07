@@ -75,6 +75,7 @@ Two pipelines in `.azure/workflows/` (the `.yml` files are the authoritative det
 Detailed conventions are in `.claude/rules/` — auto-loaded by file path scope:
 - `rules/exports.md` — source/**: barrels in `source/utils/exports/`; import via the barrel, never your own layer's
 - `rules/comments.md` — source/**: self-documenting code, no explanatory comments or JSDoc
+- `rules/typescript.md` — source/**: type-authoring style (`type` over `interface`, named index signatures over `Record`)
 - `rules/scripting.md` — request-making layer (source/apis, source/flows, source/utils/helpers): tagging, headers, correlation, checks, return contract, polling
 - `rules/apis.md` — source/apis/: one module per endpoint surface, thin wrappers
 - `rules/flows.md` — source/flows/: composed journeys, login owns groups 1–2, session return
