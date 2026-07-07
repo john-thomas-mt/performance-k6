@@ -1,7 +1,7 @@
 import http from 'k6/http';
 import { config } from '../exports/config.exp.ts';
 
-export function fetchServerVersion(): string {
+export function fetchServerVersion() {
   const res = http.get(`${config.baseUrl}/app85.cshtml`, {
     tags: { name: 'FetchServerVersion' },
   });
@@ -18,6 +18,6 @@ export function fetchServerVersion(): string {
   return match[1];
 }
 
-export function majorMinor(version: string): string {
+export function majorMinor(version: string) {
   return version.split('.').slice(0, 2).join('.');
 }

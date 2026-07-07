@@ -1,13 +1,9 @@
-import http, { RefinedResponse, ResponseType } from 'k6/http';
+import http from 'k6/http';
 import { check } from 'k6';
 import encoding from 'k6/encoding';
 import { config } from '../exports/config.exp.ts';
 import { buildHeaders } from './headers.helper.ts';
-import { SessionTokens } from '../exports/types.exp.ts';
-
-type Res = RefinedResponse<ResponseType | undefined>;
-
-function postSignIn(username: string, password: string, version: string): Res | null {
+function postSignIn(username: string, password: string, version: string) {
   const res = http.post(`${config.baseUrl}/api/GenericServer/SignIn`, JSON.stringify([username, password, '', false, '', '', [], '1']), {
     headers: buildHeaders(null, version),
     tags: { name: 'SignIn' },
@@ -26,11 +22,11 @@ function postSignIn(username: string, password: string, version: string): Res | 
   return res;
 }
 
-function extractBearerToken(body: unknown): string | null {
+function extractBearerToken(body: unknown) {
   return Array.isArray(body) ? (body.find((item): item is string => typeof item === 'string' && /^\d+\|/.test(item)) ?? null) : null;
 }
 
-export function signIn(username: string, password: string, version: string): string | null {
+export function signIn(username: string, password: string, version: string) {
   const res = postSignIn(username, password, version);
   if (!res) return null;
 
@@ -42,7 +38,7 @@ export function signIn(username: string, password: string, version: string): str
   return token;
 }
 
-export function signInSession(username: string, password: string, version: string): SessionTokens {
+export function signInSession(username: string, password: string, version: string) {
   const res = postSignIn(username, password, version);
   if (!res) return { bearerToken: null, encUserId: null };
 
@@ -58,7 +54,7 @@ export function signInSession(username: string, password: string, version: strin
   return { bearerToken, encUserId };
 }
 
-export function maAuthenticate(bearerToken: string, version: string): string | null {
+export function maAuthenticate(bearerToken: string, version: string) {
   const res = http.post(`${config.baseUrl}/api/MomentusAssistantServer/Authenticate`, null, {
     headers: buildHeaders(bearerToken, version),
     tags: { name: 'MAAuthenticate' },
@@ -84,7 +80,7 @@ export function maAuthenticate(bearerToken: string, version: string): string | n
   return (res.json() as string[])[0];
 }
 
-export function tenantIdFromJwt(salesAiJwt: string): string {
+export function tenantIdFromJwt(salesAiJwt: string) {
   const payload = encoding.b64decode(salesAiJwt.split('.')[1], 'rawurl', 's');
   const tenantId = (JSON.parse(payload) as { tenant_id?: string }).tenant_id;
   if (!tenantId) {

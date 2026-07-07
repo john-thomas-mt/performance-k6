@@ -1,12 +1,10 @@
-import http, { RefinedResponse, ResponseType } from 'k6/http';
+import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
 import { salesAiHeaders, tenantIdFromJwt } from '../utils/exports/helpers.exp.ts';
 import { Opportunity } from '../utils/exports/types.exp.ts';
 
-type Res = RefinedResponse<ResponseType | undefined>;
-
-export function getOpportunities(salesAiJwt: string, name = 'GetOpportunities'): Res {
+export function getOpportunities(salesAiJwt: string, name = 'GetOpportunities') {
   const tenantId = tenantIdFromJwt(salesAiJwt);
   const res = http.get(`${config.salesAiUrl}/api/opportunities?tenantId=${tenantId}`, {
     headers: salesAiHeaders(salesAiJwt),
@@ -22,7 +20,7 @@ export function getOpportunities(salesAiJwt: string, name = 'GetOpportunities'):
   return res;
 }
 
-export function pollForOpportunity(salesAiJwt: string, searchToken: string, maxWaitSeconds = 120): Opportunity | null {
+export function pollForOpportunity(salesAiJwt: string, searchToken: string, maxWaitSeconds = 120) {
   const intervalSeconds = 5;
   const maxAttempts = Math.ceil(maxWaitSeconds / intervalSeconds);
 
@@ -56,7 +54,7 @@ export function pollForOpportunity(salesAiJwt: string, searchToken: string, maxW
 
 type BatchReq = [string, string, null, { headers: Record<string, string>; tags: { name: string } }];
 
-export function openOpportunityDetail(salesAiJwt: string, opportunityId: string): Res | null {
+export function openOpportunityDetail(salesAiJwt: string, opportunityId: string) {
   const headers = salesAiHeaders(salesAiJwt);
   const get = (path: string, name: string): BatchReq => ['GET', `${config.salesAiUrl}${path}`, null, { headers, tags: { name } }];
 

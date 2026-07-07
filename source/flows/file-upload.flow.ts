@@ -8,12 +8,12 @@ export const fileUploadThresholds: Record<string, string[]> = {
 };
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const fmtDate = (ms: number): string => {
+const fmtDate = (ms: number) => {
   const d = new Date(ms);
   return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
 };
 
-export function fileUploadJourney(user: User, data: SetupData, template: string): void {
+export function fileUploadJourney(user: User, data: SetupData, template: string) {
   const runToken = crypto.randomUUID().split('-')[0];
   // The AI extraction flags duplicates and routes them to Tasks for review instead of surfacing them
   // as opportunities — and the dominant dedupe signal is overlapping event dates (a shared start date

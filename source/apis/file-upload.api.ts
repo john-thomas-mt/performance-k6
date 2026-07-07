@@ -1,10 +1,10 @@
-import http, { FileData, RefinedResponse, ResponseType } from 'k6/http';
+import http, { FileData } from 'k6/http';
 import { check } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
 import { salesAiHeaders } from '../utils/exports/helpers.exp.ts';
 import { UploadResult } from '../utils/exports/types.exp.ts';
 
-export function uploadOpportunityFile(salesAiJwt: string, fileContent: string, filename: string): UploadResult | null {
+export function uploadOpportunityFile(salesAiJwt: string, fileContent: string, filename: string) {
   const payload: Record<string, string | FileData> = {
     'traceId': crypto.randomUUID(),
     'text': 'Process this text as if it may have Event Opportunity information!',
@@ -15,7 +15,7 @@ export function uploadOpportunityFile(salesAiJwt: string, fileContent: string, f
     'metadata.referrer': `${config.salesAiUrl}/dashboard`,
   };
 
-  const res: RefinedResponse<ResponseType | undefined> = http.post(`${config.salesAiUrl}/api/opportunities/file-upload`, payload, {
+  const res = http.post(`${config.salesAiUrl}/api/opportunities/file-upload`, payload, {
     headers: salesAiHeaders(salesAiJwt),
     tags: { name: 'FileUpload' },
   });

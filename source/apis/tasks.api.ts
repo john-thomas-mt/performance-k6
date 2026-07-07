@@ -1,10 +1,10 @@
-import http, { RefinedResponse, ResponseType } from 'k6/http';
+import http from 'k6/http';
 import { check } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
 import { salesAiHeaders } from '../utils/exports/helpers.exp.ts';
 import { TasksResponse } from '../utils/exports/types.exp.ts';
 
-export function getTasks(salesAiJwt: string, recordId: string, recordType = 'Opportunity'): RefinedResponse<ResponseType | undefined> {
+export function getTasks(salesAiJwt: string, recordId: string, recordType = 'Opportunity') {
   const res = http.get(`${config.salesAiUrl}/api/Tasks?associatedRecordId=${recordId}&associatedRecordType=${recordType}`, {
     headers: salesAiHeaders(salesAiJwt),
     tags: { name: 'GetTasks' },

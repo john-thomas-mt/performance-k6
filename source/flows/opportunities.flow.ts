@@ -7,7 +7,7 @@ export const opportunitiesThresholds: Record<string, string[]> = {
   'http_req_duration{name:GetOpportunities}': ['p(95)<3000'],
 };
 
-export function opportunitiesJourney(user: User, data: SetupData): void {
+export function opportunitiesJourney(user: User, data: SetupData) {
   const { salesAiJwt } = loginToMomentusAssistant(user, data.version);
   if (!salesAiJwt) return;
 

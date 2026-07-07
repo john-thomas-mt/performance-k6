@@ -26,7 +26,7 @@ function parseServiceOrderRows(res: Res, name: string): ServiceOrderRow[] {
       t.TransportDataColumns.some((c: { ColumnName: string }) => c.ColumnName === 'ER100_ORD_NBR'),
     );
     const cols: string[] = table.TransportDataColumns.map((c: { ColumnName: string }) => c.ColumnName);
-    const at = (v: Record<string, unknown>, n: string): string => {
+    const at = (v: Record<string, unknown>, n: string) => {
       const i = cols.indexOf(n);
       const raw = i >= 0 ? v[String(i)] : '';
       return raw === null || raw === undefined ? '' : String(raw);
@@ -84,7 +84,7 @@ export function loadServiceOrders(token: string, version: string, event: EventRo
   return parseServiceOrderRows(res, name);
 }
 
-export function openServiceOrderDetail(token: string, version: string, so: ServiceOrderRow): Res | null {
+export function openServiceOrderDetail(token: string, version: string, so: ServiceOrderRow) {
   const res = http.post(`${config.baseUrl}/api/GenericDetailServer/GetInitialData2`, JSON.stringify(serviceOrderDetailPayload(so)), {
     headers: buildHeaders(token, version),
     tags: { name: 'OpenServiceOrderDetail' },
@@ -103,13 +103,7 @@ export function openServiceOrderDetail(token: string, version: string, so: Servi
   return res;
 }
 
-export function createServiceOrder(
-  token: string,
-  version: string,
-  encUserId: string,
-  evtId: string,
-  name = 'CreateServiceOrder',
-): string | null {
+export function createServiceOrder(token: string, version: string, encUserId: string, evtId: string, name = 'CreateServiceOrder') {
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/Save2`,
     JSON.stringify(createServiceOrderPayload(encUserId, evtId, version)),
@@ -144,7 +138,7 @@ export function createServiceOrder(
   return addedKey ? addedKey.split('|')[1] || null : null;
 }
 
-export function readOrderHeaderStamps(res: Res): { entDateIso: string; updDateIso: string } | null {
+export function readOrderHeaderStamps(res: Res) {
   try {
     const body: any = res.json();
     const arr = Array.isArray(body) ? body : [];
@@ -173,7 +167,7 @@ export function editServiceOrderGeneral(
   so: ServiceOrderRow,
   orderDate: number,
   stamps: { entDateIso: string; updDateIso: string },
-): ServiceOrderSaveResult | null {
+) {
   const res = http.post(`${config.baseUrl}/api/GenericDetailServer/Save2`, JSON.stringify(editGeneralSavePayload(so, orderDate, stamps)), {
     headers: buildHeaders(token, version),
     tags: { name: 'EditServiceOrderGeneral' },
@@ -205,7 +199,7 @@ export function editServiceOrderGeneral(
   return (res.json() as unknown as ServiceOrderSaveResult[])[0];
 }
 
-export function cacheDocumentFile(token: string, version: string, fileName: string, fileContent: ArrayBuffer): string | null {
+export function cacheDocumentFile(token: string, version: string, fileName: string, fileContent: ArrayBuffer) {
   const res = http.post(
     `${config.baseUrl}/api/GenericServer/CacheFiles`,
     JSON.stringify(cacheFilesPayload(fileName, b64encode(fileContent))),
@@ -231,13 +225,7 @@ export function cacheDocumentFile(token: string, version: string, fileName: stri
   return (res.json() as unknown as string[][])[0][0];
 }
 
-export function openDocumentForm(
-  token: string,
-  version: string,
-  so: ServiceOrderRow,
-  fileKey: string,
-  fileName: string,
-): DocumentFields | null {
+export function openDocumentForm(token: string, version: string, so: ServiceOrderRow, fileKey: string, fileName: string) {
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/GetInitialData2`,
     JSON.stringify(documentFormPayload(so, fileKey, fileName)),
@@ -265,7 +253,7 @@ export function openDocumentForm(
         const di = cols.indexOf('MM446_DOC_DESC');
         if (di >= 0 && t.TransportDataRows?.[0]) {
           const v = t.TransportDataRows[0].Values;
-          const at = (n: string): string => String(v[String(cols.indexOf(n))] ?? '');
+          const at = (n: string) => String(v[String(cols.indexOf(n))] ?? '');
           return { fileKey: at('cFILE_KEY'), fileName: at('cDOC_FILE_NAME'), docDesc: at('MM446_DOC_DESC') };
         }
       }
@@ -276,7 +264,7 @@ export function openDocumentForm(
   return null;
 }
 
-export function saveDocument(token: string, version: string, so: ServiceOrderRow, doc: DocumentFields): ServiceOrderSaveResult | null {
+export function saveDocument(token: string, version: string, so: ServiceOrderRow, doc: DocumentFields) {
   const res = http.post(`${config.baseUrl}/api/GenericDetailServer/Save2`, JSON.stringify(documentSavePayload(so, doc)), {
     headers: buildHeaders(token, version),
     tags: { name: 'SaveDocument' },
@@ -315,7 +303,7 @@ export function saveAndCloseServiceOrder(
   so: ServiceOrderRow,
   orderDate: number,
   stamps: { entDateIso: string; updDateIso: string },
-): ServiceOrderSaveResult | null {
+) {
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/Save2`,
     JSON.stringify(editGeneralSavePayload(so, orderDate, stamps, 0)),
@@ -348,18 +336,13 @@ export function saveAndCloseServiceOrder(
   return (res.json() as unknown as ServiceOrderSaveResult[])[0];
 }
 
-export function saveServiceOrderItems(
-  token: string,
-  version: string,
-  so: ServiceOrderRow,
-  quantity: number,
-): ServiceOrderSaveResult | null {
+export function saveServiceOrderItems(token: string, version: string, so: ServiceOrderRow, quantity: number) {
   const res = http.post(`${config.baseUrl}/api/GenericDetailServer/Save2`, JSON.stringify(serviceOrderItemsSavePayload(so, quantity)), {
     headers: buildHeaders(token, version),
     tags: { name: 'SaveServiceOrderItems' },
   });
 
-  const addedItemCount = (r: Res): number => {
+  const addedItemCount = (r: Res) => {
     try {
       const map = (r.json() as unknown as ServiceOrderSaveResult[])[0].AdditionalTableNameAddedRowKeys ?? {};
       return Object.keys(map).reduce((sum, k) => sum + (map[k]?.length ?? 0), 0);

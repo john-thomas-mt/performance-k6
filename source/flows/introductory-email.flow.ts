@@ -10,7 +10,7 @@ export const introductoryEmailThresholds: Record<string, string[]> = {
   'http_req_duration{name:GetTasks}': ['p(95)<3000'],
 };
 
-export function introductoryEmailJourney(user: User, data: SetupData): void {
+export function introductoryEmailJourney(user: User, data: SetupData) {
   const runToken = crypto.randomUUID().split('-')[0];
   const entry = manualEntryPayload(runToken);
 

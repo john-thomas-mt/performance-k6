@@ -14,7 +14,7 @@ function parseEventRows(res: Res, name: string): EventRow[] {
     const tdt = arr.find((e) => e && typeof e === 'object' && !Array.isArray(e) && e.TransportDataTables);
     const table = tdt.TransportDataTables[0];
     const cols: string[] = table.TransportDataColumns.map((c: { ColumnName: string }) => c.ColumnName);
-    const at = (v: Record<string, unknown>, n: string): string => String(v[String(cols.indexOf(n))]);
+    const at = (v: Record<string, unknown>, n: string) => String(v[String(cols.indexOf(n))]);
     return table.TransportDataRows.map((r: { Values: Record<string, unknown> }) => ({
       desc: at(r.Values, 'EV200_EVT_DESC'),
       evtId: at(r.Values, 'EV200_EVT_ID'),
@@ -49,7 +49,7 @@ export function searchEvents(token: string, version: string, searchValue: string
   return parseEventRows(res, name);
 }
 
-export function openCopyForm(token: string, version: string, encUserId: string, source: EventRow): Res | null {
+export function openCopyForm(token: string, version: string, encUserId: string, source: EventRow) {
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/GetInitialData2`,
     JSON.stringify(copyFormPayload(encUserId, source, version)),
@@ -69,7 +69,7 @@ export function openCopyForm(token: string, version: string, encUserId: string, 
   return res;
 }
 
-export function saveEventCopy(token: string, version: string, encUserId: string, source: EventRow, description: string): string | null {
+export function saveEventCopy(token: string, version: string, encUserId: string, source: EventRow, description: string) {
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/Save2`,
     JSON.stringify(savePayload(encUserId, source, description, version)),
@@ -104,7 +104,7 @@ export function saveEventCopy(token: string, version: string, encUserId: string,
   return addedKey.split('|')[1] || null;
 }
 
-export function createEvent(token: string, version: string, description: string, name = 'CreateEvent'): string | null {
+export function createEvent(token: string, version: string, description: string, name = 'CreateEvent') {
   const res = http.post(`${config.baseUrl}/api/GenericDetailServer/Save2`, JSON.stringify(createEventPayload(description)), {
     headers: buildHeaders(token, version),
     tags: { name },
@@ -138,7 +138,7 @@ export function createEvent(token: string, version: string, description: string,
   return addedKey.split('|')[1] || null;
 }
 
-export function openEventDetail(token: string, version: string, newEvtId: string, expectedDesc: string): Res | null {
+export function openEventDetail(token: string, version: string, newEvtId: string, expectedDesc: string) {
   const res = http.post(`${config.baseUrl}/api/GenericDetailServer/GetInitialData2`, JSON.stringify(detailPayload(newEvtId)), {
     headers: buildHeaders(token, version),
     tags: { name: 'OpenEventDetail' },

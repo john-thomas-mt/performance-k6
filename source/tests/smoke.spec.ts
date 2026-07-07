@@ -72,7 +72,7 @@ export const options: Options = {
   },
 };
 
-export async function setup(): Promise<SmokeSetup> {
+export async function setup() {
   const cryptoKey = config.cryptoKey;
   if (!cryptoKey) {
     throw new Error('No decryption key — write temp/secret.json (npm run secret -- --key <pass>)');

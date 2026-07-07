@@ -5,7 +5,7 @@ import { buildHeaders } from '../utils/exports/helpers.exp.ts';
 import { listInitialDataPayload } from '../utils/exports/data.exp.ts';
 import { NavScreen, WindowInfo } from '../utils/exports/types.exp.ts';
 
-export function getWindowInfo(token: string, version: string, windowId: string): number | null {
+export function getWindowInfo(token: string, version: string, windowId: string) {
   const res = http.get(`${config.baseUrl}/api/WindowServer/GetWindowInfo?astrWindowID=${windowId}`, {
     headers: buildHeaders(token, version),
     tags: { name: 'GetWindowInfo' },
@@ -31,7 +31,7 @@ export function getWindowInfo(token: string, version: string, windowId: string):
   return (res.json() as unknown as WindowInfo[])[0].ObjectID;
 }
 
-export function getListInitialData(token: string, version: string, screen: NavScreen, objectId: number): boolean {
+export function getListInitialData(token: string, version: string, screen: NavScreen, objectId: number) {
   const res = http.post(
     `${config.baseUrl}/api/GenericListServer/GetInitialData2`,
     JSON.stringify(listInitialDataPayload(screen, objectId)),

@@ -13,7 +13,7 @@ export const copyEventThresholds: Record<string, string[]> = {
   'http_req_duration{name:OpenEventDetail}': ['p(95)<5000'],
 };
 
-export function copyEventJourney(user: User, data: SetupData): void {
+export function copyEventJourney(user: User, data: SetupData) {
   const runToken = crypto.randomUUID().split('-')[0];
   const newDescription = `Manual Event Perf Test - ${runToken}`;
 

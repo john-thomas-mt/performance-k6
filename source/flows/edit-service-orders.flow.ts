@@ -27,7 +27,7 @@ export const editServiceOrdersThresholds: Record<string, string[]> = {
   'http_req_duration{name:SaveAndCloseServiceOrder}': ['p(95)<5000'],
 };
 
-export function editServiceOrdersJourney(user: User, data: ServiceOrderSetup, documentFile: ArrayBuffer): void {
+export function editServiceOrdersJourney(user: User, data: ServiceOrderSetup, documentFile: ArrayBuffer) {
   const { bearerToken } = loginToEvents(user, data.version);
   if (!bearerToken) return;
 

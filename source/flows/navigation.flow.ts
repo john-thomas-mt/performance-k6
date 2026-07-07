@@ -2,14 +2,14 @@ import { group, sleep } from 'k6';
 import { loginToEvents } from './login.flow.ts';
 import { getWindowInfo, getListInitialData } from '../utils/exports/apis.exp.ts';
 import { navScreens } from '../utils/exports/data.exp.ts';
-import { User, SetupData, NavScreen } from '../utils/exports/types.exp.ts';
+import { User, SetupData } from '../utils/exports/types.exp.ts';
 
 export const navigationThresholds: Record<string, string[]> = {
   'http_req_duration{name:GetWindowInfo}': ['p(95)<2000'],
   'http_req_duration{name:GetListInitialData}': ['p(95)<3000'],
 };
 
-function pickScreen(): NavScreen {
+function pickScreen() {
   const override = __ENV.SCREEN;
   if (override) {
     const found = navScreens.find((s) => s.label === override);
@@ -21,7 +21,7 @@ function pickScreen(): NavScreen {
   return navScreens[Math.floor(Math.random() * navScreens.length)];
 }
 
-export function navigationJourney(user: User, data: SetupData): void {
+export function navigationJourney(user: User, data: SetupData) {
   const { bearerToken } = loginToEvents(user, data.version);
   if (!bearerToken) return;
 

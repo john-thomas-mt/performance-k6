@@ -2,11 +2,11 @@ import { check, group, sleep } from 'k6';
 import { loginToEvents } from './login.flow.ts';
 import { searchEvents, loadServiceOrders, openServiceOrderDetail, saveServiceOrderItems } from '../utils/exports/apis.exp.ts';
 import { config } from '../utils/exports/config.exp.ts';
-import { User, ServiceOrderSetup, ServiceOrderRow, EventRow } from '../utils/exports/types.exp.ts';
+import { User, ServiceOrderSetup, EventRow } from '../utils/exports/types.exp.ts';
 
 const ITEM_QUANTITY = Number(__ENV.ITEM_QUANTITY || 2);
 
-export function discoverServiceOrderPool(version: string, user: User): ServiceOrderRow[] {
+export function discoverServiceOrderPool(version: string, user: User) {
   const { bearerToken } = loginToEvents(user, version);
   if (!bearerToken) {
     throw new Error('setup login failed — cannot discover the seeded pool');
@@ -33,7 +33,7 @@ export const serviceOrderItemsThresholds: Record<string, string[]> = {
   'http_req_duration{name:SaveServiceOrderItems}': ['p(95)<5000'],
 };
 
-export function serviceOrderItemsJourney(user: User, data: ServiceOrderSetup): void {
+export function serviceOrderItemsJourney(user: User, data: ServiceOrderSetup) {
   const { bearerToken } = loginToEvents(user, data.version);
   if (!bearerToken) return;
 

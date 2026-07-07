@@ -1,13 +1,13 @@
 import { group } from 'k6';
 import { signIn, signInSession, maAuthenticate } from '../utils/exports/helpers.exp.ts';
-import { User, MomentusAuth, SessionTokens } from '../utils/exports/types.exp.ts';
+import { User } from '../utils/exports/types.exp.ts';
 
 export const loginThresholds: Record<string, string[]> = {
   'http_req_duration{name:SignIn}': ['p(95)<2000'],
   'http_req_duration{name:MAAuthenticate}': ['p(95)<2000'],
 };
 
-export function loginToMomentusAssistant(user: User, version: string): MomentusAuth {
+export function loginToMomentusAssistant(user: User, version: string) {
   let bearerToken: string | null = null;
   let salesAiJwt: string | null = null;
 
@@ -24,7 +24,7 @@ export function loginToMomentusAssistant(user: User, version: string): MomentusA
   return { bearerToken, salesAiJwt };
 }
 
-export function loginToEvents(user: User, version: string): SessionTokens {
+export function loginToEvents(user: User, version: string) {
   let bearerToken: string | null = null;
   let encUserId: string | null = null;
 
