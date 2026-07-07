@@ -3,7 +3,7 @@ import { check, fail } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
 import { buildHeaders } from '../utils/exports/helpers.exp.ts';
 import { searchPayload, copyFormPayload, savePayload, detailPayload, createEventPayload } from '../utils/exports/data.exp.ts';
-import { EventRow, EventSaveResult } from '../utils/exports/types.exp.ts';
+import { EventRow, EventSaveResult, TransportRow, TransportValues } from '../utils/exports/types.exp.ts';
 
 type Res = RefinedResponse<ResponseType | undefined>;
 
@@ -14,8 +14,8 @@ function parseEventRows(res: Res, name: string): EventRow[] {
     const tdt = arr.find((e) => e && typeof e === 'object' && !Array.isArray(e) && e.TransportDataTables);
     const table = tdt.TransportDataTables[0];
     const cols: string[] = table.TransportDataColumns.map((c: { ColumnName: string }) => c.ColumnName);
-    const at = (v: { [columnIndex: string]: unknown }, n: string) => String(v[String(cols.indexOf(n))]);
-    return table.TransportDataRows.map((r: { Values: { [columnIndex: string]: unknown } }) => ({
+    const at = (v: TransportValues, n: string) => String(v[String(cols.indexOf(n))]);
+    return table.TransportDataRows.map((r: TransportRow) => ({
       desc: at(r.Values, 'EV200_EVT_DESC'),
       evtId: at(r.Values, 'EV200_EVT_ID'),
       rowKey: at(r.Values, 'cROW_KEY'),

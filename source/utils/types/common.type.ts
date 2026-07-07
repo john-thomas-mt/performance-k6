@@ -17,15 +17,19 @@ export type MomentusAuth = {
   salesAiJwt: string | null;
 };
 
+export type JsonScalar = string | number | boolean | null;
+
+export type TransportValues = { [columnIndex: string]: JsonScalar };
+
 export type TransportColumn = {
   ColumnName: string;
   DataType?: string;
-  DefaultValue?: unknown;
+  DefaultValue?: JsonScalar;
   ColumnID?: number;
 };
 
 export type TransportRow = {
-  Values: { [columnIndex: string]: unknown };
+  Values: TransportValues;
 };
 
 export type TransportTable = {

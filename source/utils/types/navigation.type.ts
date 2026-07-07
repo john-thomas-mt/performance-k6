@@ -1,8 +1,8 @@
-import { SetupData, User } from './common.type.ts';
+import { JsonScalar, SetupData, User } from './common.type.ts';
 
 export type NavListParam = {
   Key: string;
-  Value: unknown;
+  Value: JsonScalar;
 };
 
 export type NavScreen = {

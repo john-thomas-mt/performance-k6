@@ -13,7 +13,14 @@ import {
   documentFormPayload,
   documentSavePayload,
 } from '../utils/exports/data.exp.ts';
-import { EventRow, ServiceOrderRow, ServiceOrderSaveResult, DocumentFields } from '../utils/exports/types.exp.ts';
+import {
+  EventRow,
+  ServiceOrderRow,
+  ServiceOrderSaveResult,
+  DocumentFields,
+  TransportRow,
+  TransportValues,
+} from '../utils/exports/types.exp.ts';
 
 type Res = RefinedResponse<ResponseType | undefined>;
 
@@ -26,12 +33,12 @@ function parseServiceOrderRows(res: Res, name: string): ServiceOrderRow[] {
       t.TransportDataColumns.some((c: { ColumnName: string }) => c.ColumnName === 'ER100_ORD_NBR'),
     );
     const cols: string[] = table.TransportDataColumns.map((c: { ColumnName: string }) => c.ColumnName);
-    const at = (v: { [columnIndex: string]: unknown }, n: string) => {
+    const at = (v: TransportValues, n: string) => {
       const i = cols.indexOf(n);
       const raw = i >= 0 ? v[String(i)] : '';
       return raw === null || raw === undefined ? '' : String(raw);
     };
-    return table.TransportDataRows.map((r: { Values: { [columnIndex: string]: unknown } }) => ({
+    return table.TransportDataRows.map((r: TransportRow) => ({
       orderNbr: at(r.Values, 'ER100_ORD_NBR'),
       soSearch: at(r.Values, 'ER100_SO_SEARCH'),
       rowKey: at(r.Values, 'cROW_KEY'),
