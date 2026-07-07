@@ -5,7 +5,7 @@ import { salesAiHeaders } from '../utils/exports/helpers.exp.ts';
 import { UploadResult } from '../utils/exports/types.exp.ts';
 
 export function uploadOpportunityFile(salesAiJwt: string, fileContent: string, filename: string) {
-  const payload: Record<string, string | FileData> = {
+  const payload: { [field: string]: string | FileData } = {
     'traceId': crypto.randomUUID(),
     'text': 'Process this text as if it may have Event Opportunity information!',
     'files': http.file(fileContent, filename, 'text/plain'),
@@ -24,7 +24,7 @@ export function uploadOpportunityFile(salesAiJwt: string, fileContent: string, f
     'FileUpload: status is 202': (r) => r.status === 202,
     'FileUpload: response has traceId': (r) => {
       try {
-        return Boolean((r.json() as unknown as UploadResult).traceId);
+        return Boolean((r.json() as UploadResult).traceId);
       } catch {
         return false;
       }
@@ -36,5 +36,5 @@ export function uploadOpportunityFile(salesAiJwt: string, fileContent: string, f
     fail('uploadOpportunityFile did not succeed');
   }
 
-  return res.json() as unknown as UploadResult;
+  return res.json() as UploadResult;
 }

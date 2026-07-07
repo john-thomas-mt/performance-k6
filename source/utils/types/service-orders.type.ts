@@ -1,6 +1,6 @@
 import { SetupData, User } from './common.type.ts';
 
-export interface ServiceOrderRow {
+export type ServiceOrderRow = {
   orderNbr: string;
   soSearch: string;
   rowKey: string;
@@ -28,32 +28,32 @@ export interface ServiceOrderRow {
   occurrence: string;
   eventSuiteId: string;
   ordCatSeq: string;
-}
+};
 
-export interface DocumentFields {
+export type DocumentFields = {
   fileKey: string;
   fileName: string;
   docDesc: string;
-}
+};
 
-export interface ServiceOrderSaveResult {
+export type ServiceOrderSaveResult = {
   ResultValue: number;
   ModifiedRowKeys: string[] | null;
   AddedRowKeys: string[] | null;
-  AdditionalTableNameAddedRowKeys: Record<string, string[]> | null;
-}
+  AdditionalTableNameAddedRowKeys: { [tableName: string]: string[] } | null;
+};
 
-export interface ServiceOrderSetup extends SetupData {
+export type ServiceOrderSetup = SetupData & {
   soPool: ServiceOrderRow[];
-}
+};
 
-export interface SmokeSetup extends ServiceOrderSetup {
+export type SmokeSetup = ServiceOrderSetup & {
   users: User[];
-}
+};
 
-export interface ServiceOrderSeedSetup {
+export type ServiceOrderSeedSetup = {
   version: string;
   evtId: string;
   bearerToken: string;
   encUserId: string;
-}
+};

@@ -1,5 +1,5 @@
 export function salesAiHeaders(salesAiJwt: string, contentType?: string) {
-  const headers: Record<string, string> = {
+  const headers: { [header: string]: string } = {
     authorization: `Bearer ${salesAiJwt}`,
     accept: 'application/json, text/plain, */*',
   };

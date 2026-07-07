@@ -4,7 +4,7 @@ import { config } from '../utils/exports/config.exp.ts';
 import { salesAiHeaders } from '../utils/exports/helpers.exp.ts';
 import { ManualEntryResult } from '../utils/exports/types.exp.ts';
 
-export function submitManualEntry(salesAiJwt: string, entry: Record<string, unknown>, userId: string) {
+export function submitManualEntry(salesAiJwt: string, entry: { [field: string]: unknown }, userId: string) {
   const payload = {
     ...entry,
     metadata: {

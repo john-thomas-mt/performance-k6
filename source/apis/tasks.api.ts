@@ -14,7 +14,7 @@ export function getTasks(salesAiJwt: string, recordId: string, recordType = 'Opp
     'GetTasks: status is 200': (r) => r.status === 200,
     'GetTasks: response has items array': (r) => {
       try {
-        return Array.isArray((r.json() as unknown as TasksResponse).items);
+        return Array.isArray((r.json() as TasksResponse).items);
       } catch {
         return false;
       }

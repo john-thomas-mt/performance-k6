@@ -1,9 +1,9 @@
-export interface TaskItem {
+export type TaskItem = {
   category: string;
   [key: string]: unknown;
-}
+};
 
-export interface TasksResponse {
+export type TasksResponse = {
   totalCount: number;
   items: TaskItem[];
-}
+};

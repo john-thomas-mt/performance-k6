@@ -2,7 +2,7 @@ import { Options } from 'k6/options';
 
 type Profile = Pick<Options, 'vus' | 'iterations' | 'stages'>;
 
-const profiles: Record<string, Profile> = {
+const profiles: { [profile: string]: Profile } = {
   smoke: {
     vus: 1,
     iterations: 1,

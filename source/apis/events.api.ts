@@ -14,8 +14,8 @@ function parseEventRows(res: Res, name: string): EventRow[] {
     const tdt = arr.find((e) => e && typeof e === 'object' && !Array.isArray(e) && e.TransportDataTables);
     const table = tdt.TransportDataTables[0];
     const cols: string[] = table.TransportDataColumns.map((c: { ColumnName: string }) => c.ColumnName);
-    const at = (v: Record<string, unknown>, n: string) => String(v[String(cols.indexOf(n))]);
-    return table.TransportDataRows.map((r: { Values: Record<string, unknown> }) => ({
+    const at = (v: { [columnIndex: string]: unknown }, n: string) => String(v[String(cols.indexOf(n))]);
+    return table.TransportDataRows.map((r: { Values: { [columnIndex: string]: unknown } }) => ({
       desc: at(r.Values, 'EV200_EVT_DESC'),
       evtId: at(r.Values, 'EV200_EVT_ID'),
       rowKey: at(r.Values, 'cROW_KEY'),
@@ -78,14 +78,14 @@ export function saveEventCopy(token: string, version: string, encUserId: string,
     'SaveEventCopy: status is 201': (r) => r.status === 201,
     'SaveEventCopy: ResultValue is 0 (success)': (r) => {
       try {
-        return (r.json() as unknown as EventSaveResult[])[0].ResultValue === 0;
+        return (r.json() as EventSaveResult[])[0].ResultValue === 0;
       } catch {
         return false;
       }
     },
     'SaveEventCopy: returns new event row key': (r) => {
       try {
-        const k = (r.json() as unknown as EventSaveResult[])[0].AddedRowKeys;
+        const k = (r.json() as EventSaveResult[])[0].AddedRowKeys;
         return Array.isArray(k) && k.length > 0;
       } catch {
         return false;
@@ -98,7 +98,7 @@ export function saveEventCopy(token: string, version: string, encUserId: string,
     fail('saveEventCopy did not succeed');
   }
 
-  const addedKey = (res.json() as unknown as EventSaveResult[])[0].AddedRowKeys[0];
+  const addedKey = (res.json() as EventSaveResult[])[0].AddedRowKeys[0];
   return addedKey.split('|')[1];
 }
 
@@ -112,14 +112,14 @@ export function createEvent(token: string, version: string, description: string,
     [`${name}: status is 201`]: (r) => r.status === 201,
     [`${name}: ResultValue is 0 (success)`]: (r) => {
       try {
-        return (r.json() as unknown as EventSaveResult[])[0].ResultValue === 0;
+        return (r.json() as EventSaveResult[])[0].ResultValue === 0;
       } catch {
         return false;
       }
     },
     [`${name}: returns new event row key`]: (r) => {
       try {
-        const k = (r.json() as unknown as EventSaveResult[])[0].AddedRowKeys;
+        const k = (r.json() as EventSaveResult[])[0].AddedRowKeys;
         return Array.isArray(k) && k.length > 0;
       } catch {
         return false;
@@ -132,7 +132,7 @@ export function createEvent(token: string, version: string, description: string,
     fail('createEvent did not succeed');
   }
 
-  const addedKey = (res.json() as unknown as EventSaveResult[])[0].AddedRowKeys[0];
+  const addedKey = (res.json() as EventSaveResult[])[0].AddedRowKeys[0];
   return addedKey.split('|')[1];
 }
 

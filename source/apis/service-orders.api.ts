@@ -26,12 +26,12 @@ function parseServiceOrderRows(res: Res, name: string): ServiceOrderRow[] {
       t.TransportDataColumns.some((c: { ColumnName: string }) => c.ColumnName === 'ER100_ORD_NBR'),
     );
     const cols: string[] = table.TransportDataColumns.map((c: { ColumnName: string }) => c.ColumnName);
-    const at = (v: Record<string, unknown>, n: string) => {
+    const at = (v: { [columnIndex: string]: unknown }, n: string) => {
       const i = cols.indexOf(n);
       const raw = i >= 0 ? v[String(i)] : '';
       return raw === null || raw === undefined ? '' : String(raw);
     };
-    return table.TransportDataRows.map((r: { Values: Record<string, unknown> }) => ({
+    return table.TransportDataRows.map((r: { Values: { [columnIndex: string]: unknown } }) => ({
       orderNbr: at(r.Values, 'ER100_ORD_NBR'),
       soSearch: at(r.Values, 'ER100_SO_SEARCH'),
       rowKey: at(r.Values, 'cROW_KEY'),
@@ -114,14 +114,14 @@ export function createServiceOrder(token: string, version: string, encUserId: st
     [`${name}: status is 201`]: (r) => r.status === 201,
     [`${name}: ResultValue is 0 (success)`]: (r) => {
       try {
-        return (r.json() as unknown as ServiceOrderSaveResult[])[0].ResultValue === 0;
+        return (r.json() as ServiceOrderSaveResult[])[0].ResultValue === 0;
       } catch {
         return false;
       }
     },
     [`${name}: returns new order row key`]: (r) => {
       try {
-        const k = (r.json() as unknown as ServiceOrderSaveResult[])[0].AddedRowKeys;
+        const k = (r.json() as ServiceOrderSaveResult[])[0].AddedRowKeys;
         return Array.isArray(k) && k.length > 0;
       } catch {
         return false;
@@ -134,7 +134,7 @@ export function createServiceOrder(token: string, version: string, encUserId: st
     fail('createServiceOrder did not succeed');
   }
 
-  const addedKey = (res.json() as unknown as ServiceOrderSaveResult[])[0].AddedRowKeys![0];
+  const addedKey = (res.json() as ServiceOrderSaveResult[])[0].AddedRowKeys![0];
   return addedKey.split('|')[1];
 }
 
@@ -178,14 +178,14 @@ export function editServiceOrderGeneral(
     'EditServiceOrderGeneral: status is 201': (r) => r.status === 201,
     'EditServiceOrderGeneral: ResultValue is 0 (success)': (r) => {
       try {
-        return (r.json() as unknown as ServiceOrderSaveResult[])[0].ResultValue === 0;
+        return (r.json() as ServiceOrderSaveResult[])[0].ResultValue === 0;
       } catch {
         return false;
       }
     },
     'EditServiceOrderGeneral: order row was modified': (r) => {
       try {
-        return (r.json() as unknown as ServiceOrderSaveResult[])[0].ModifiedRowKeys?.includes(so.rowKey) ?? false;
+        return (r.json() as ServiceOrderSaveResult[])[0].ModifiedRowKeys?.includes(so.rowKey) ?? false;
       } catch {
         return false;
       }
@@ -209,7 +209,7 @@ export function cacheDocumentFile(token: string, version: string, fileName: stri
     'CacheFiles: status is 201': (r) => r.status === 201,
     'CacheFiles: returns a cached file ref': (r) => {
       try {
-        return typeof (r.json() as unknown as string[][])[0][0] === 'string';
+        return typeof (r.json() as string[][])[0][0] === 'string';
       } catch {
         return false;
       }
@@ -221,7 +221,7 @@ export function cacheDocumentFile(token: string, version: string, fileName: stri
     fail('cacheDocumentFile did not succeed');
   }
 
-  return (res.json() as unknown as string[][])[0][0];
+  return (res.json() as string[][])[0][0];
 }
 
 export function openDocumentForm(token: string, version: string, so: ServiceOrderRow, fileKey: string, fileName: string) {
@@ -272,14 +272,14 @@ export function saveDocument(token: string, version: string, so: ServiceOrderRow
     'SaveDocument: status is 201': (r) => r.status === 201,
     'SaveDocument: ResultValue is 0 (success)': (r) => {
       try {
-        return (r.json() as unknown as ServiceOrderSaveResult[])[0].ResultValue === 0;
+        return (r.json() as ServiceOrderSaveResult[])[0].ResultValue === 0;
       } catch {
         return false;
       }
     },
     'SaveDocument: document row was added': (r) => {
       try {
-        const k = (r.json() as unknown as ServiceOrderSaveResult[])[0].AddedRowKeys;
+        const k = (r.json() as ServiceOrderSaveResult[])[0].AddedRowKeys;
         return Array.isArray(k) && k.length > 0;
       } catch {
         return false;
@@ -310,14 +310,14 @@ export function saveAndCloseServiceOrder(
     'SaveAndCloseServiceOrder: status is 201': (r) => r.status === 201,
     'SaveAndCloseServiceOrder: ResultValue is 0 (success)': (r) => {
       try {
-        return (r.json() as unknown as ServiceOrderSaveResult[])[0].ResultValue === 0;
+        return (r.json() as ServiceOrderSaveResult[])[0].ResultValue === 0;
       } catch {
         return false;
       }
     },
     'SaveAndCloseServiceOrder: order row was modified': (r) => {
       try {
-        return (r.json() as unknown as ServiceOrderSaveResult[])[0].ModifiedRowKeys?.includes(so.rowKey) ?? false;
+        return (r.json() as ServiceOrderSaveResult[])[0].ModifiedRowKeys?.includes(so.rowKey) ?? false;
       } catch {
         return false;
       }
@@ -338,7 +338,7 @@ export function saveServiceOrderItems(token: string, version: string, so: Servic
 
   const addedItemCount = (r: Res) => {
     try {
-      const map = (r.json() as unknown as ServiceOrderSaveResult[])[0].AdditionalTableNameAddedRowKeys ?? {};
+      const map = (r.json() as ServiceOrderSaveResult[])[0].AdditionalTableNameAddedRowKeys ?? {};
       return Object.keys(map).reduce((sum, k) => sum + (map[k]?.length ?? 0), 0);
     } catch {
       return 0;
@@ -349,14 +349,14 @@ export function saveServiceOrderItems(token: string, version: string, so: Servic
     'SaveServiceOrderItems: status is 201': (r) => r.status === 201,
     'SaveServiceOrderItems: ResultValue is 0 (success)': (r) => {
       try {
-        return (r.json() as unknown as ServiceOrderSaveResult[])[0].ResultValue === 0;
+        return (r.json() as ServiceOrderSaveResult[])[0].ResultValue === 0;
       } catch {
         return false;
       }
     },
     'SaveServiceOrderItems: order row was modified': (r) => {
       try {
-        return (r.json() as unknown as ServiceOrderSaveResult[])[0].ModifiedRowKeys?.includes(so.rowKey) ?? false;
+        return (r.json() as ServiceOrderSaveResult[])[0].ModifiedRowKeys?.includes(so.rowKey) ?? false;
       } catch {
         return false;
       }

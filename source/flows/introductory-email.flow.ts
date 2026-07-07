@@ -36,7 +36,7 @@ export function introductoryEmailJourney(user: User, data: SetupData) {
     check(res, {
       'Introduce Yourself task auto-created': (r) => {
         try {
-          const body = r.json() as unknown as TasksResponse;
+          const body = r.json() as TasksResponse;
           return body.totalCount >= 1 && body.items.some((t) => t.category === 'IntroductoryEmail');
         } catch {
           return false;

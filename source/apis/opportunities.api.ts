@@ -53,7 +53,7 @@ export function pollForOpportunity(salesAiJwt: string, searchToken: string, maxW
   fail(`PollOpportunities: opportunity "${searchToken}" not found within ${maxWaitSeconds}s`);
 }
 
-type BatchReq = [string, string, null, { headers: Record<string, string>; tags: { name: string } }];
+type BatchReq = [string, string, null, { headers: { [header: string]: string }; tags: { name: string } }];
 
 export function openOpportunityDetail(salesAiJwt: string, opportunityId: string) {
   const headers = salesAiHeaders(salesAiJwt);

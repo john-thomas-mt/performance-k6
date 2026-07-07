@@ -1,4 +1,4 @@
-export interface EventRow {
+export type EventRow = {
   desc: string;
   evtId: string;
   rowKey: string;
@@ -7,9 +7,9 @@ export interface EventRow {
   status: string;
   linkedFuncs: string;
   orgCode: string;
-}
+};
 
-export interface EventSaveResult {
+export type EventSaveResult = {
   ResultValue: number;
   AddedRowKeys: string[];
-}
+};

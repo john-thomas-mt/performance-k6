@@ -35,7 +35,7 @@ const once = (exec: string): Scenario => ({
   exec,
 });
 
-const allScenarios: Record<string, Scenario> = {
+const allScenarios: { [scenario: string]: Scenario } = {
   opportunities: once('opportunities'),
   fileUpload: once('fileUpload'),
   introductoryEmail: once('introductoryEmail'),
@@ -45,7 +45,7 @@ const allScenarios: Record<string, Scenario> = {
   navigation: once('navigation'),
 };
 
-const allThresholds: Record<string, Record<string, string[]>> = {
+const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
   opportunities: opportunitiesThresholds,
   fileUpload: fileUploadThresholds,
   introductoryEmail: introductoryEmailThresholds,
@@ -60,7 +60,9 @@ if (selected && !allScenarios[selected]) {
   throw new Error(`Unknown SCENARIO "${selected}" — valid: ${Object.keys(allScenarios).join(', ')}`);
 }
 
-const activeThresholds: Record<string, string[]> = selected ? allThresholds[selected] : Object.assign({}, ...Object.values(allThresholds));
+const activeThresholds: { [metric: string]: string[] } = selected
+  ? allThresholds[selected]
+  : Object.assign({}, ...Object.values(allThresholds));
 
 export const options: Options = {
   scenarios: selected ? { [selected]: allScenarios[selected] } : allScenarios,

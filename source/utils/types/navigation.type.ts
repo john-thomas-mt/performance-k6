@@ -1,21 +1,21 @@
 import { SetupData, User } from './common.type.ts';
 
-export interface NavListParam {
+export type NavListParam = {
   Key: string;
   Value: unknown;
-}
+};
 
-export interface NavScreen {
+export type NavScreen = {
   label: string;
   windowId: string;
   listParams?: NavListParam[];
-}
+};
 
-export interface WindowInfo {
+export type WindowInfo = {
   WindowID: string;
   ObjectID: number;
-}
+};
 
-export interface NavLoadSetup extends SetupData {
+export type NavLoadSetup = SetupData & {
   users: User[];
-}
+};

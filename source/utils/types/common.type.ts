@@ -1,35 +1,35 @@
-export interface User {
+export type User = {
   username: string;
   password: string;
-}
+};
 
-export interface SetupData {
+export type SetupData = {
   version: string;
-}
+};
 
-export interface SessionTokens {
+export type SessionTokens = {
   bearerToken: string | null;
   encUserId: string | null;
-}
+};
 
-export interface MomentusAuth {
+export type MomentusAuth = {
   bearerToken: string | null;
   salesAiJwt: string | null;
-}
+};
 
-export interface TransportColumn {
+export type TransportColumn = {
   ColumnName: string;
   DataType?: string;
   DefaultValue?: unknown;
   ColumnID?: number;
-}
+};
 
-export interface TransportRow {
-  Values: Record<string, unknown>;
-}
+export type TransportRow = {
+  Values: { [columnIndex: string]: unknown };
+};
 
-export interface TransportTable {
+export type TransportTable = {
   TransportDataColumns: TransportColumn[];
   TransportDataRows: TransportRow[];
   TableName?: string;
-}
+};

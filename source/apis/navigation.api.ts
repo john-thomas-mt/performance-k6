@@ -15,7 +15,7 @@ export function getWindowInfo(token: string, version: string, windowId: string) 
     'GetWindowInfo: status is 201': (r) => r.status === 201,
     'GetWindowInfo: returns ObjectID': (r) => {
       try {
-        const body = r.json() as unknown as WindowInfo[];
+        const body = r.json() as WindowInfo[];
         return typeof body[0]?.ObjectID === 'number';
       } catch {
         return false;
@@ -28,7 +28,7 @@ export function getWindowInfo(token: string, version: string, windowId: string) 
     fail('getWindowInfo did not succeed');
   }
 
-  return (res.json() as unknown as WindowInfo[])[0].ObjectID;
+  return (res.json() as WindowInfo[])[0].ObjectID;
 }
 
 export function getListInitialData(token: string, version: string, screen: NavScreen, objectId: number) {
