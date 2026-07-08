@@ -26,7 +26,7 @@ Ground rules:
 - The app is heavy and behind a VPN: first page load can take 30s+ — generous Bash timeout for `open`/`goto`, retry once before declaring a blocker.
 - `resize 1920 1080` immediately after `open`.
 - Every action prints a snapshot file path — Grep it for the element you need; explicit `snapshot` only when refs are stale.
-- Auth: log in through the UI so auth requests are captured, then `state-save temp/auth-state.json`; `state-load` it when it exists.
+- Auth: in a fresh session, always log in through the UI (this captures the auth requests) and then `state-save temp/auth-state.json` — don't `state-load` a pre-existing file, since a stale/expired state hangs the SPA bootstrap ("Preparing Your Momentus Experience") instead of prompting re-login. Reserve `state-load` for recovering *this* session after a crash/`kill-all`, when the saved state is known-current.
 
 After each **meaningful UI action** (not every intermediate click):
 
