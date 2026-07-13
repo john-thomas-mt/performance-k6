@@ -17,6 +17,7 @@ One continuous pass: read the NeoLoad script as the **source of truth** (the tra
 2. Confirm the target flow and scope with the user — a recorded VU can be 100+ requests; agree on which operations to port.
 3. **Target `main` on PERF** — port against the unreleased, highest-priority env so the port matches the newest schema and trickles down to released envs. A bare `npm run setup` writes exactly this (site `PERF`, env `main` are the defaults). Read `source/config/env.config.ts` for the target env, and check `temp/setup.json`/`temp/secret.json` exist (the run prerequisites).
 4. **Get approval once, upfront, for the 3-step verification run sequence** — that is the only traffic this skill sends (parsing the tree sends none). This journey may **write** (each `Save2` mutates data); the DB snapshot reset owns cleanup, so journeys stay pure (no `teardown()`).
+5. **Recon the k6 repo (delegated).** Dispatch `k6-authoring-analyst` for an *authoring kit* — reusable wrappers/endpoints, the closest existing journey template, the right `login_*` entry, the `SetupData` slice, and the barrel + `smoke.spec.ts` wiring points. It writes the full kit to `temp/recon-kit.md` and returns a short index; work from the index and `grep temp/recon-kit.md` for specifics, so the repo-side reuse picture stays out of the main context (the NeoLoad tree, §1, is still parsed in the loop — it's the source of truth the analyst doesn't have).
 
 ## 1. Parse the NeoLoad tree (zero traffic)
 
@@ -50,6 +51,9 @@ ls "team/vus/<VU>/actions-container"    # step folders + think-times
 # pull a concrete request body from its zip (real values, valid JSON)
 unzip -o "team/vus/<VU>/%resources%/recorded-artifacts/<uid>.zip" -d /tmp/x
 #   req_*.txt is a raw HTTP request: body is after the first blank line
+
+# dissect a pulled JSON body (shape + populated transport cells + correlation candidates)
+node scripts/inspect-capture.js /tmp/x/recorded-requests/req_1.txt.json
 ```
 
 ## 2. Distill to the transaction spine
@@ -76,12 +80,12 @@ NeoLoad already solved correlation; translate it. Classify each dynamic value (s
 
 ## 4. Script — reuse first, embed captured payloads, override identity
 
-- **Grep `source/` for each endpoint path first — reuse existing wrappers.** Momentus journeys share a lot (login, search, open-detail, the `Save2` envelope). Often the recording's login and several reads/writes already exist as wrappers; only the genuinely new operations need scripting.
+- **Reuse existing wrappers first** — the recon digest lists them; confirm against `source/` rather than re-reading. Momentus journeys share a lot (login, search, open-detail, the `Save2` envelope), so often the recording's login and several reads/writes already exist as wrappers and only the genuinely new operations need scripting.
 - New endpoints get a thin wrapper in `source/apis/<feature>.api.ts`; new payloads a builder in `source/data/payloads/<feature>/`. The path-scoped rules (`apis`, `flows`, `data`, `scripting`, `exports`, `tests`) auto-load when you edit those files — follow them; don't re-derive conventions here.
 - **Upload steps: bring the fixture, restore real multipart.** An upload journey needs its file bytes copied from `custom-resources/` (§1) into `source/data/uploads/<feature>/` and `open()`-ed in the spec init context (per the data/tests rules). Script the real `http.file()` multipart — do **not** reproduce NeoLoad's raw-body multipart workaround (its as-code YAML can't do binary multipart, so the recording fakes it); the k6 port restores the real upload.
 - Port each step's `sla_profile="…SLA"` into the journey's `<journey>Thresholds` using the real latency targets from `sla_profiles/*.xml` (§1), not guessed values.
 - **Decide the prerequisite-data strategy before scripting the journey** (mirrors `generate-test` §3). If the journey has a paired `@u*` *data-script* VU (found via its test-data population, §1), that VU **creates** the records the journey reads — recognizable by `errorPolicy="STOP_AND_START"`, no SLA profile, `MODE_NO_PACING`/zero think-time, and a tail `DataWrite_*` js-action. Port its create-spine (the numbered create steps plus any `loop.xml` for bulk volume) into `source/seeds/<feature>.seed.ts` reusing existing api wrappers — a **separate seed pass**, not folded into the journey. Replace NeoLoad's `DataWrite`→`.txt`→`<variable-file>` handoff with the repo's seed-marker discovery (the journey finds its own rows at runtime); never replay the captured keys. The seeds rule auto-loads when you edit `source/seeds/`.
-- **Large captured payloads: generate, don't transcribe.** Extract the concrete body from the request zip and build it as a single self-contained object literal *inside* the `source/data/payloads/` builder — weave each runtime-varying cell in at its position (in a columnar transport table, the numeric `Values` key matching the column's `ColumnID`), rather than hand-transcribing or hoisting the body to a shared constant. Re-correlate per-record identity fields the same way — weave the runtime `source` value into its cell, not a post-build mutation — and lift each transport table into its own module-level `: TransportTable` builder the payload plugs in. This mirrors the repo's `copy-form`/`save` builders and the "regenerate/diff-verify, don't hand-edit" convention.
+- **Large captured payloads: generate, don't transcribe.** Extract the concrete body from the request zip, then emit the builder with `node scripts/gen-payload-builder.js <capture> <spec.json>` (the spec maps runtime-varying cells to `params`, client-side values to `regenerate`, and lifts each transport table via `extractTable`) rather than hand-transcribing or hoisting the body to a shared constant. The generated builder must weave each runtime-varying cell in at its position (in a columnar transport table, the numeric `Values` key matching the column's `ColumnID`). Re-correlate per-record identity fields the same way — weave the runtime `source` value into its cell, not a post-build mutation — and lift each transport table into its own module-level `: TransportTable` builder the payload plugs in. This mirrors the repo's `copy-form`/`save` builders and the "regenerate/diff-verify, don't hand-edit" convention.
 - **Override every per-record identity field** from the correlated row (order nbr, account, event id, search key). A captured unique key left in place makes the server reject or mis-target the save.
 - **Optimistic-concurrency tokens are load-bearing echo fields.** A header/record save often carries the row's last-update timestamp; the server rejects the save (`PrimaryKeyRecordChanged`) unless it matches the row's **current** value. Correlate it from the open-detail response and thread it into the save — do not replay the captured stamp. If a builder *omits* the timestamp columns it sidesteps the check (some do); if it *includes* them, you must correlate them.
 - **Chain the token across sequential saves.** Each save bumps the row's timestamp, so re-read detail (or read it from the prior save's response, which returns the refreshed row) before the next header save.
@@ -100,17 +104,17 @@ Then the same escalation as `generate-test` §4:
 | 2 | `… -e VUS=2 -e ITERS=2 -e USER_MODE=single …` | concurrency, one shared login |
 | 3 | `… -e VUS=2 -e ITERS=2 -e USER_MODE=pool …` | per-user correlation & data isolation |
 
-Read the summary for concrete signals: `checks` 100%, `http_req_failed` 0, `dropped_iterations` 0.
+Run each step via `k6-run-reporter` (hand it the exact command, and note the journey creates/modifies data so it checks per-VU token isolation); act on its verdict — `checks` 100%, `http_req_failed` 0, `dropped_iterations` 0, `iterations` > 0 — rather than reading the full summary. It saves each run's log under `temp/` for the response-body decode below.
 
 **Decode the response before changing inputs.** A `Save2` frequently returns **HTTP 201 with `ResultValue ≠ 0`** — a server-side *validation* failure, not a transport error. The body's `MessageInfoList[].MessageKey` names the exact problem (`OrderDateGreaterThan30Days`, `PrimaryKeyRecordChanged`, a search-key clash, …). Log the body on failure and read it — never guess-and-iterate on inputs. `MessageMode: 2` is a confirmation prompt ("do you wish to proceed?"), not a hard reject; keep the input inside the allowed range rather than replaying an out-of-range captured value.
 
 Loop rules (per `generate-test`): fix, re-run; if the fix touched correlation/shared state, re-run from step 1; cap at ~2–3 attempts per step, then surface to the user. A `p(95)` latency threshold crossing under 2-VU load is a performance observation, not a correctness failure — the ladder proves correctness, not SLO.
 
-**Targeted live fallback:** if a step fails and decoding points to drift (the recorded shape no longer matches the current app), drive just that one request with `playwright-cli` to see the current traffic — not a full re-record.
+**Targeted live fallback:** if a step fails and decoding points to drift (the recorded shape no longer matches the current app), drive just that one request with `playwright-cli` to see the current traffic — not a full re-record (expect the first `open` to hit the SPA nav timeout — poll `snapshot` rather than retrying; see `generate-test` §1).
 
 ## 6. Refactor & report
 
-Final structural pass against the auto-loaded rules. Then the static hardcode scan from `generate-test` §5 — but note the embedded payload constants **intentionally** contain captured values (that's the embed-and-override pattern); the scan targets the **flow/wrapper logic**, which must carry no hardcoded dynamic ids.
+Final structural pass against the auto-loaded rules. Delegate the compliance scan to `k6-authoring-analyst` (as in `generate-test` §5) over the new `source/` files — but tell it the embedded payload constants **intentionally** contain captured values (the embed-and-override pattern), so the hardcoded-value scan targets the **flow/wrapper logic**, which must carry no hardcoded dynamic ids. Apply its findings in the loop.
 
 Report: NeoLoad steps ported vs dropped-as-chrome, wrappers reused vs created, correlation decisions (and any NeoLoad smells corrected), the 3-step results, and the run commands.
 

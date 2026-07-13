@@ -28,13 +28,14 @@ This sends real traffic to QE (VPN required). Tell the user before running, and 
 once for the whole sequence.
 
 ## 1. Run the smoke test
+Run the full smoke suite via `k6-run-reporter` — hand it the command below and tell it the journeys create data, so its verdict names any failed save-success check (and the failing wrapper's logged `HTTP <status>`) without pulling the verbose summary into the main context:
 ```
 k6 run source/tests/smoke.spec.ts
 ```
-Every journey runs once (one iteration per k6 scenario). Read the end-of-test summary:
+Every journey runs once (one iteration per k6 scenario). From the reporter's verdict:
 - **All checks pass** → no drift. Done.
 - **A check fails** → note which one. Check names are unique per journey, so a failure identifies the
-  journey and step even though scenario logs interleave.
+  journey and step even though scenario logs interleave. The reporter saves the run log under `temp/` for the §2 body-level triage.
 
 ## 2. Triage a failure
 A failed save-success check (e.g. `New event created`, `Service order items saved`) on a journey

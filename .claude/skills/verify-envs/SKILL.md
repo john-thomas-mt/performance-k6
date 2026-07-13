@@ -40,12 +40,12 @@ Invocation: `/verify-envs <journey>` for per-journey; `/verify-envs --suite` (or
 For each env in the matrix, in order:
 
 1. Point the run at it: `npm run setup -- --env <env>` (rewrites `temp/setup.json`; site stays the `PERF` default).
-2. Run the mode's command.
+2. Run the mode's command via `k6-run-reporter` (hand it the exact command, and whether the target journey(s) create data so it checks per-VU token isolation).
 3. Record the result against the env's **resolved** version, not the alias — a run correlates the app version at runtime (`fetch_server_version()`), so report `main → 26.3`, not just `main`. This keeps results unambiguous across branch cuts.
 
 **`main` first is deliberate.** It's the highest-priority env and the one where next-version drift appears first — a failure there is the early warning for the change that will hit the next release. A clean `main` plus clean released envs is the goal; fail fast on `main` before spending traffic on the rest.
 
-Read each summary for the same concrete signals the 3-step run uses: `checks` 100%, `http_req_failed` 0, `dropped_iterations` 0, no threshold crossed, no `WARN`/`ERRO`.
+The reporter returns each env's verdict — the same signals the 3-step run uses (`checks` 100%, `http_req_failed` 0, `dropped_iterations` 0, `iterations` > 0, no threshold crossed, no `WARN`/`ERRO`) — so triage from its verdict rather than reading every env's full summary into context. It saves each run's log under `temp/` if a failure needs a deeper look.
 
 ## 2. Triage a failure
 
