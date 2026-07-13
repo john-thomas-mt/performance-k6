@@ -21,9 +21,10 @@ everything else in reading order.
 
 ## Project reference
 
-| Doc                                              | What it covers                                                                                         |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
-| [codebase-structure.md](./codebase-structure.md) | How the `source/` test suite is organized — layers, dependency order, and how a run flows through them |
+| Doc                                                                | What it covers                                                                                                                                            |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [codebase-structure.md](./codebase-structure.md)                   | How the `source/` test suite is organized — layers, dependency order, and how a run flows through them                                                    |
+| [runtime-correlated-payloads.md](./runtime-correlated-payloads.md) | Design & risk analysis for fetching save payloads at runtime instead of hardcoding column tables — metric-skew and bug-coverage risks, with live evidence |
 
 ## Conventions for these docs
 
