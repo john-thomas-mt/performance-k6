@@ -1,4 +1,6 @@
 export * from '../../flows/login.flow.ts';
+export * from '../../flows/create-account.flow.ts';
+export * from '../../flows/create-event.flow.ts';
 export * from '../../flows/service-order-items.flow.ts';
 export * from '../../flows/edit-service-orders.flow.ts';
 export * from '../../flows/copy-event.flow.ts';

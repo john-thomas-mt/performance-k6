@@ -1,3 +1,6 @@
+export * from '../../data/payloads/accounts/create.data.ts';
+export * from '../../data/payloads/accounts/detail.data.ts';
+export * from '../../data/payloads/accounts/search.data.ts';
 export * from '../../data/payloads/events/copy-form.data.ts';
 export * from '../../data/payloads/events/create.data.ts';
 export * from '../../data/payloads/events/detail.data.ts';

@@ -1,3 +1,4 @@
+export * from '../../apis/accounts.api.ts';
 export * from '../../apis/events.api.ts';
 export * from '../../apis/file-upload.api.ts';
 export * from '../../apis/manual-entry.api.ts';

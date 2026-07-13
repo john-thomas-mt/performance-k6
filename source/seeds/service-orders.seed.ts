@@ -1,6 +1,6 @@
 import { Options } from 'k6/options';
 import { login_to_events } from '../utils/exports/flows.exp.ts';
-import { create_event, create_service_order } from '../utils/exports/apis.exp.ts';
+import { open_event_create_form, create_event, create_service_order } from '../utils/exports/apis.exp.ts';
 import { fetch_server_version, decrypt_users } from '../utils/exports/helpers.exp.ts';
 import { config } from '../utils/exports/config.exp.ts';
 import { ServiceOrderSeedSetup } from '../utils/exports/types.exp.ts';
@@ -33,7 +33,8 @@ export async function setup() {
   const { bearerToken, encUserId } = login_to_events(users[0], version);
 
   const seedEventDesc = `${config.seedEventDesc} ${crypto.randomUUID().split('-')[0]}`;
-  const evtId = create_event(bearerToken, version, seedEventDesc);
+  const eventTable = open_event_create_form(bearerToken, version);
+  const evtId = create_event(bearerToken, version, eventTable, seedEventDesc);
 
   console.log(`Server version: ${version}`);
   console.log(`Seed event "${seedEventDesc}" created: ${evtId}`);

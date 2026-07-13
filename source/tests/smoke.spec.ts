@@ -7,6 +7,10 @@ import {
   discover_service_order_pool,
   copy_event_journey,
   copyEventThresholds,
+  create_account_journey,
+  createAccountThresholds,
+  create_event_journey,
+  createEventThresholds,
   opportunities_journey,
   opportunitiesThresholds,
   file_upload_journey,
@@ -40,6 +44,8 @@ const allScenarios: { [scenario: string]: Scenario } = {
   file_upload: once('file_upload'),
   introductory_email: once('introductory_email'),
   copy_event: once('copy_event'),
+  create_account: once('create_account'),
+  create_event: once('create_event'),
   service_order_items: once('service_order_items'),
   edit_service_orders: once('edit_service_orders'),
   navigation: once('navigation'),
@@ -50,6 +56,8 @@ const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
   file_upload: fileUploadThresholds,
   introductory_email: introductoryEmailThresholds,
   copy_event: copyEventThresholds,
+  create_account: createAccountThresholds,
+  create_event: createEventThresholds,
   service_order_items: serviceOrderItemsThresholds,
   edit_service_orders: editServiceOrdersThresholds,
   navigation: navigationThresholds,
@@ -104,6 +112,14 @@ export function introductory_email(data: SmokeSetup) {
 
 export function copy_event(data: SmokeSetup) {
   copy_event_journey(pick_user(data.users), data);
+}
+
+export function create_account(data: SmokeSetup) {
+  create_account_journey(pick_user(data.users), data);
+}
+
+export function create_event(data: SmokeSetup) {
+  create_event_journey(pick_user(data.users), data);
 }
 
 export function service_order_items(data: SmokeSetup) {

@@ -1,9 +1,16 @@
 import http from 'k6/http';
 import { check, fail } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
-import { build_headers, body_text, parse_grid_rows } from '../utils/exports/helpers.exp.ts';
-import { searchPayload, copyFormPayload, savePayload, detailPayload, createEventPayload } from '../utils/exports/data.exp.ts';
-import { EventRow, EventSaveResult } from '../utils/exports/types.exp.ts';
+import { build_headers, body_text, parse_grid_rows, initial_data_table } from '../utils/exports/helpers.exp.ts';
+import {
+  searchPayload,
+  copyFormPayload,
+  savePayload,
+  detailPayload,
+  eventCreateFormPayload,
+  eventSavePayload,
+} from '../utils/exports/data.exp.ts';
+import { EventRow, EventSaveResult, TransportTable } from '../utils/exports/types.exp.ts';
 
 export function search_events(token: string, version: string, searchValue: string, name = 'SearchEvents'): EventRow[] {
   const res = http.post(`${config.baseUrl}/api/USIDataGridServer/GetGridData2`, JSON.stringify(searchPayload(searchValue)), {
@@ -89,8 +96,26 @@ export function save_event_copy(token: string, version: string, encUserId: strin
   return addedKey.split('|')[1];
 }
 
-export function create_event(token: string, version: string, description: string, name = 'CreateEvent') {
-  const res = http.post(`${config.baseUrl}/api/GenericDetailServer/Save2`, JSON.stringify(createEventPayload(description)), {
+export function open_event_create_form(token: string, version: string, name = 'OpenEventCreateForm'): TransportTable {
+  const res = http.post(`${config.baseUrl}/api/GenericDetailServer/GetInitialData2`, JSON.stringify(eventCreateFormPayload()), {
+    headers: build_headers(token, version),
+    tags: { name },
+  });
+
+  const ok = check(res, {
+    [`${name}: status is 201`]: (r) => r.status === 201,
+  });
+
+  if (!ok) {
+    console.error(`[VU ${__VU}] open_event_create_form failed — HTTP ${res.status}`);
+    fail('open_event_create_form did not succeed');
+  }
+
+  return initial_data_table(res, name);
+}
+
+export function create_event(token: string, version: string, table: TransportTable, description: string, name = 'CreateEvent') {
+  const res = http.post(`${config.baseUrl}/api/GenericDetailServer/Save2`, JSON.stringify(eventSavePayload(table, description)), {
     headers: build_headers(token, version),
     tags: { name },
   });

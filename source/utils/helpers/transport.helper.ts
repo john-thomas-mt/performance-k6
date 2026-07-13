@@ -1,5 +1,6 @@
+import { fail } from 'k6';
 import { RefinedResponse, ResponseType } from 'k6/http';
-import { TransportEnvelope, TransportRow, TransportTable, TransportValues } from '../exports/types.exp.ts';
+import { JsonScalar, TransportEnvelope, TransportRow, TransportTable, TransportValues } from '../exports/types.exp.ts';
 
 type Res = RefinedResponse<ResponseType | undefined>;
 
@@ -31,4 +32,38 @@ export function parse_grid_rows<M extends { [field: string]: string }>(
     console.error(`[VU ${__VU}] ${name}: failed to parse grid rows — ${e}`);
     return [];
   }
+}
+
+export function initial_data_table(res: Res, name: string): TransportTable {
+  const body = res.json();
+  const arr = Array.isArray(body) ? (body as TransportEnvelope[]) : [];
+  const envelope = arr.find((e) => e && typeof e === 'object' && !Array.isArray(e) && e.TransportDataTables);
+  const table = envelope?.TransportDataTables?.[0];
+  if (!table) {
+    console.error(`[VU ${__VU}] ${name}: no transport table in GetInitialData2 response`);
+    fail(`${name}: no transport table in response`);
+  }
+  return table;
+}
+
+export function find_transport_table(res: Res, columnName: string, name: string): TransportTable {
+  const body = res.json();
+  const arr = Array.isArray(body) ? (body as TransportEnvelope[]) : [];
+  for (const el of arr) {
+    if (!el || typeof el !== 'object' || Array.isArray(el) || !Array.isArray(el.TransportDataTables)) continue;
+    for (const t of el.TransportDataTables) {
+      if (t.TransportDataColumns.some((c) => c.ColumnName === columnName)) return t;
+    }
+  }
+  console.error(`[VU ${__VU}] ${name}: no transport table with column ${columnName} in response`);
+  fail(`${name}: table with column ${columnName} not found`);
+}
+
+export function set_cell(table: TransportTable, columnName: string, value: JsonScalar, name = 'set_cell') {
+  const i = table.TransportDataColumns.findIndex((c) => c.ColumnName === columnName);
+  if (i < 0) {
+    console.error(`[VU ${__VU}] ${name}: column ${columnName} not in transport table`);
+    fail(`${name}: column ${columnName} not found`);
+  }
+  table.TransportDataRows[0].Values[String(i)] = value;
 }

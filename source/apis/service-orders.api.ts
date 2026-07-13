@@ -2,18 +2,26 @@ import http, { RefinedResponse, ResponseType } from 'k6/http';
 import { check, fail } from 'k6';
 import { b64encode } from 'k6/encoding';
 import { config } from '../utils/exports/config.exp.ts';
-import { build_headers, body_text, parse_grid_rows } from '../utils/exports/helpers.exp.ts';
+import { build_headers, body_text, parse_grid_rows, find_transport_table } from '../utils/exports/helpers.exp.ts';
 import {
   serviceOrdersGridPayload,
   serviceOrderDetailPayload,
   serviceOrderItemsSavePayload,
+  orderItemCatalogPayload,
   createServiceOrderPayload,
   editGeneralSavePayload,
   cacheFilesPayload,
   documentFormPayload,
   documentSavePayload,
 } from '../utils/exports/data.exp.ts';
-import { EventRow, ServiceOrderRow, ServiceOrderSaveResult, DocumentFields, TransportEnvelope } from '../utils/exports/types.exp.ts';
+import {
+  EventRow,
+  ServiceOrderRow,
+  ServiceOrderSaveResult,
+  DocumentFields,
+  TransportEnvelope,
+  TransportTable,
+} from '../utils/exports/types.exp.ts';
 
 type Res = RefinedResponse<ResponseType | undefined>;
 
@@ -68,7 +76,7 @@ export function load_service_orders(token: string, version: string, event: Event
   );
 }
 
-export function open_service_order_detail(token: string, version: string, so: ServiceOrderRow) {
+export function open_service_order_detail(token: string, version: string, so: ServiceOrderRow): TransportTable {
   const res = http.post(`${config.baseUrl}/api/GenericDetailServer/GetInitialData2`, JSON.stringify(serviceOrderDetailPayload(so)), {
     headers: build_headers(token, version),
     tags: { name: 'OpenServiceOrderDetail' },
@@ -84,7 +92,7 @@ export function open_service_order_detail(token: string, version: string, so: Se
     fail('open_service_order_detail did not succeed');
   }
 
-  return res;
+  return find_transport_table(res, 'ER100_ORD_DATE', 'OpenServiceOrderDetail');
 }
 
 export function create_service_order(token: string, version: string, encUserId: string, evtId: string, name = 'CreateServiceOrder') {
@@ -122,38 +130,8 @@ export function create_service_order(token: string, version: string, encUserId: 
   return addedKey.split('|')[1];
 }
 
-export function read_order_header_stamps(res: Res) {
-  try {
-    const body = res.json();
-    const arr = Array.isArray(body) ? (body as TransportEnvelope[]) : [];
-    for (const el of arr) {
-      const tables = el && typeof el === 'object' && !Array.isArray(el) && el.TransportDataTables;
-      if (!Array.isArray(tables)) continue;
-      for (const t of tables) {
-        const cols: string[] = (t.TransportDataColumns || []).map((c) => c.ColumnName);
-        const ui = cols.indexOf('ER100_UPD_DATE_ISO');
-        const ei = cols.indexOf('ER100_ENT_DATE_ISO');
-        if (ui >= 0 && t.TransportDataRows?.[0]) {
-          const v = t.TransportDataRows[0].Values;
-          return { entDateIso: String(v[String(ei)]), updDateIso: String(v[String(ui)]) };
-        }
-      }
-    }
-  } catch (e) {
-    console.error(`[VU ${__VU}] read_order_header_stamps failed — ${e}`);
-  }
-  check(null, { 'ReadOrderHeaderStamps: header stamps present': () => false });
-  fail('read_order_header_stamps: header stamps not found in detail response');
-}
-
-export function edit_service_order_general(
-  token: string,
-  version: string,
-  so: ServiceOrderRow,
-  orderDate: number,
-  stamps: { entDateIso: string; updDateIso: string },
-) {
-  const res = http.post(`${config.baseUrl}/api/GenericDetailServer/Save2`, JSON.stringify(editGeneralSavePayload(so, orderDate, stamps)), {
+export function edit_service_order_general(token: string, version: string, so: ServiceOrderRow, orderDate: number, table: TransportTable) {
+  const res = http.post(`${config.baseUrl}/api/GenericDetailServer/Save2`, JSON.stringify(editGeneralSavePayload(so, orderDate, table)), {
     headers: build_headers(token, version),
     tags: { name: 'EditServiceOrderGeneral' },
   });
@@ -282,11 +260,11 @@ export function save_and_close_service_order(
   version: string,
   so: ServiceOrderRow,
   orderDate: number,
-  stamps: { entDateIso: string; updDateIso: string },
+  table: TransportTable,
 ) {
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/Save2`,
-    JSON.stringify(editGeneralSavePayload(so, orderDate, stamps, 0)),
+    JSON.stringify(editGeneralSavePayload(so, orderDate, table, 0)),
     { headers: build_headers(token, version), tags: { name: 'SaveAndCloseServiceOrder' } },
   );
 
@@ -314,11 +292,45 @@ export function save_and_close_service_order(
   }
 }
 
-export function save_service_order_items(token: string, version: string, so: ServiceOrderRow, quantity: number) {
-  const res = http.post(`${config.baseUrl}/api/GenericDetailServer/Save2`, JSON.stringify(serviceOrderItemsSavePayload(so, quantity)), {
+export function load_order_item_catalog(
+  token: string,
+  version: string,
+  so: ServiceOrderRow,
+  filterValue: string,
+  name = 'LoadItemCatalog',
+): TransportTable {
+  const res = http.post(`${config.baseUrl}/api/USIDataGridServer/GetGridData2`, JSON.stringify(orderItemCatalogPayload(so, filterValue)), {
     headers: build_headers(token, version),
-    tags: { name: 'SaveServiceOrderItems' },
+    tags: { name },
   });
+
+  const ok = check(res, {
+    [`${name}: status is 201`]: (r) => r.status === 201,
+  });
+
+  if (!ok) {
+    console.error(`[VU ${__VU}] load_order_item_catalog failed — HTTP ${res.status}`);
+    fail('load_order_item_catalog did not succeed');
+  }
+
+  return find_transport_table(res, 'CC716_SEQ', name);
+}
+
+export function save_service_order_items(
+  token: string,
+  version: string,
+  so: ServiceOrderRow,
+  itemsTable: TransportTable,
+  rowKeys: string[],
+) {
+  const res = http.post(
+    `${config.baseUrl}/api/GenericDetailServer/Save2`,
+    JSON.stringify(serviceOrderItemsSavePayload(so, itemsTable, rowKeys)),
+    {
+      headers: build_headers(token, version),
+      tags: { name: 'SaveServiceOrderItems' },
+    },
+  );
 
   const addedItemCount = (r: Res) => {
     try {

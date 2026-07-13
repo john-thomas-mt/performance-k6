@@ -4,15 +4,14 @@ import { login_to_events } from './login.flow.ts';
 import {
   open_service_order_detail,
   edit_service_order_general,
-  save_service_order_items,
   cache_document_file,
   open_document_form,
   save_document,
   save_and_close_service_order,
-  read_order_header_stamps,
 } from '../utils/exports/apis.exp.ts';
+import { add_service_order_items } from './service-order-items.flow.ts';
 import { today_midnight_utc } from '../utils/exports/helpers.exp.ts';
-import { User, ServiceOrderSetup } from '../utils/exports/types.exp.ts';
+import { User, ServiceOrderSetup, TransportTable } from '../utils/exports/types.exp.ts';
 
 const DAY = 24 * 60 * 60 * 1000;
 const ITEM_QUANTITY = Number(__ENV.ITEM_QUANTITY || 2);
@@ -21,6 +20,7 @@ const DOCUMENT_FILE_NAME = 'sample-document.txt';
 export const editServiceOrdersThresholds = {
   'http_req_duration{name:OpenServiceOrderDetail}': ['p(95)<5000'],
   'http_req_duration{name:EditServiceOrderGeneral}': ['p(95)<5000'],
+  'http_req_duration{name:LoadItemCatalog}': ['p(95)<5000'],
   'http_req_duration{name:SaveServiceOrderItems}': ['p(95)<5000'],
   'http_req_duration{name:CacheFiles}': ['p(95)<5000'],
   'http_req_duration{name:SaveDocument}': ['p(95)<5000'],
@@ -34,23 +34,22 @@ export function edit_service_orders_journey(user: User, data: ServiceOrderSetup,
      "PrimaryKeyRecordChanged", so give each iteration its own seeded row via a globally-unique index. */
   const serviceOrder = data.soPool[exec.scenario.iterationInTest % data.soPool.length];
 
-  let stamps: { entDateIso: string; updDateIso: string } | null = null;
+  let headerTableRef: TransportTable | null = null;
   group('3. Open Service Order', () => {
-    const res = open_service_order_detail(bearerToken, data.version, serviceOrder);
-    stamps = read_order_header_stamps(res);
+    headerTableRef = open_service_order_detail(bearerToken, data.version, serviceOrder);
   });
-  const orderStamps = stamps!;
+  const headerTable = headerTableRef!;
 
   /* Order dates >30 days out trigger an "OrderDateGreaterThan30Days" confirm prompt; stay inside
      the window so the save commits without a proceed round-trip. */
   const orderDate = today_midnight_utc() + 7 * DAY;
 
   group('4. Edit General (rate & order date)', () => {
-    edit_service_order_general(bearerToken, data.version, serviceOrder, orderDate, orderStamps);
+    edit_service_order_general(bearerToken, data.version, serviceOrder, orderDate, headerTable);
   });
 
   group('5. Add & Save Service Order Items', () => {
-    save_service_order_items(bearerToken, data.version, serviceOrder, ITEM_QUANTITY);
+    add_service_order_items(bearerToken, data.version, serviceOrder, ITEM_QUANTITY);
   });
 
   group('6. Upload & Import Document', () => {
@@ -60,10 +59,9 @@ export function edit_service_orders_journey(user: User, data: ServiceOrderSetup,
   });
 
   group('7. Save & Close', () => {
-    /* Each save bumps the header's update stamp, so re-read detail to refresh the concurrency
-       token before the final commit. */
-    const res = open_service_order_detail(bearerToken, data.version, serviceOrder);
-    const fresh = read_order_header_stamps(res);
+    /* Each save bumps the header's update stamp, so re-fetch detail to get the fresh table (its
+       concurrency stamps ride along) before the final commit. */
+    const fresh = open_service_order_detail(bearerToken, data.version, serviceOrder);
     save_and_close_service_order(bearerToken, data.version, serviceOrder, orderDate, fresh);
   });
 
