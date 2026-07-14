@@ -9,6 +9,7 @@ import {
   functionGridPayload,
   bookingSavePayload,
   functionSavePayload,
+  bookingAccountSearchPayload,
 } from '../utils/exports/data.exp.ts';
 import { TransportTable, EventSaveResult } from '../utils/exports/types.exp.ts';
 
@@ -69,6 +70,21 @@ export function open_booking_form(token: string, version: string, date: string, 
   }
 
   return initial_data_table(res, name);
+}
+
+export function search_booking_account(token: string, version: string, account: string, name = 'SearchBookingAccount') {
+  const res = http.post(
+    `${config.baseUrl}/api/USISearchComboServer/GetDynamicSearchResults`,
+    JSON.stringify(bookingAccountSearchPayload(account)),
+    { headers: build_headers(token, version), tags: { name } },
+  );
+  check(res, { [`${name}: status is 201`]: (r) => r.status === 201 });
+  try {
+    const rows = JSON.parse(String((res.json() as unknown[])[0])) as { Key: string }[];
+    return rows[0]?.Key ?? '';
+  } catch {
+    return '';
+  }
 }
 
 export function save_booking(

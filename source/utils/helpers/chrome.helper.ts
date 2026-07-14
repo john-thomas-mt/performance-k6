@@ -6,15 +6,26 @@ import { ChromeRequest, StaticRequest } from '../exports/types.exp.ts';
 
 type BatchReq = [string, string, string | null, { headers: { [header: string]: string }; tags: { name: string } }];
 
-export function fire_ui_chrome(token: string, version: string, requests: ChromeRequest[]) {
+const apply_subs = (s: string, subs: { [token: string]: string }) =>
+  s.replace(/\$\{([^}]+)\}/g, (m, key: string) => (key in subs ? subs[key] : m));
+
+export function fire_ui_chrome(token: string, version: string, requests: ChromeRequest[], subs: { [token: string]: string } = {}) {
   if (requests.length === 0) return;
   const headers = build_headers(token, version);
-  const batch = requests.map((r): BatchReq => [
-    r.method,
-    `${config.baseUrl}${r.path}`,
-    r.body ?? null,
-    { headers, tags: { name: 'UIChrome' } },
-  ]);
+  const batch: BatchReq[] = [];
+  const skipped: string[] = [];
+  for (const r of requests) {
+    const path = apply_subs(r.path, subs);
+    const body = r.body !== undefined ? apply_subs(r.body, subs) : null;
+    if (/\$\{[^}]+\}/.test(path) || (body !== null && /\$\{[^}]+\}/.test(body))) {
+      skipped.push(r.path);
+      continue;
+    }
+    batch.push([r.method, `${config.baseUrl}${path}`, body, { headers, tags: { name: 'UIChrome' } }]);
+  }
+  if (skipped.length)
+    console.log(`[VU ${__VU}] UIChrome skipped ${skipped.length} with unresolved tokens: ${skipped.slice(0, 4).join(', ')}`);
+  if (batch.length === 0) return;
 
   const responses = Object.values(http.batch(batch));
   check(null, {

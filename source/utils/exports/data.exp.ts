@@ -4,6 +4,7 @@ export * from '../../data/payloads/booking/create-rows.data.ts';
 export * from '../../data/payloads/booking/grid.data.ts';
 export * from '../../data/payloads/booking/save.data.ts';
 export * from '../../data/payloads/booking/save-context.data.ts';
+export * from '../../data/payloads/booking/search.data.ts';
 export * from '../../data/chrome/book-event.chrome.ts';
 export * from '../../data/static/book-event.static.ts';
 export * from '../../data/payloads/accounts/create.data.ts';

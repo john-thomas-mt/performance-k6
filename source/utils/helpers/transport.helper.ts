@@ -68,6 +68,13 @@ export function set_cell(table: TransportTable, columnName: string, value: JsonS
   table.TransportDataRows[0].Values[String(i)] = value;
 }
 
+export function get_cell(table: TransportTable, column: string | number) {
+  const i = typeof column === 'number' ? column : table.TransportDataColumns.findIndex((c) => c.ColumnName === column);
+  if (i < 0) return '';
+  const v = table.TransportDataRows[0]?.Values[String(i)];
+  return v === null || v === undefined ? '' : String(v);
+}
+
 const numericDataTypes = new Set(['System.Int32', 'System.Int64', 'System.Decimal', 'System.Double', 'System.DateTime']);
 
 export function coerce_transport_types(table: TransportTable) {
