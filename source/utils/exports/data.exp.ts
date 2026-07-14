@@ -15,6 +15,8 @@ export * from '../../data/payloads/events/create.data.ts';
 export * from '../../data/payloads/events/detail.data.ts';
 export * from '../../data/payloads/events/save.data.ts';
 export * from '../../data/payloads/events/search.data.ts';
+export * from '../../data/chrome/copy-event.chrome.ts';
+export * from '../../data/static/copy-event.static.ts';
 export * from '../../data/payloads/service-orders/create.data.ts';
 export * from '../../data/payloads/service-orders/edit-general.data.ts';
 export * from '../../data/payloads/service-orders/document.data.ts';
