@@ -41,9 +41,11 @@ export const bookEventThresholds = {
 
 type Subs = { [token: string]: string };
 
-function chrome_and_static(token: string, version: string, level: FidelityLevel, step: string, subs: Subs) {
-  if (include_ui(level)) fire_ui_chrome(token, version, bookEventChrome[step] ?? [], subs);
-  if (include_static(level)) fire_static_assets(bookEventStatic[step] ?? []);
+function chrome_and_static(token: string, version: string, level: FidelityLevel, steps: string[], subs: Subs) {
+  for (const step of steps) {
+    if (include_ui(level)) fire_ui_chrome(token, version, bookEventChrome[step] ?? [], subs);
+    if (include_static(level)) fire_static_assets(bookEventStatic[step] ?? []);
+  }
 }
 
 export function book_event_journey(user: User, data: SetupData) {
@@ -69,21 +71,21 @@ export function book_event_journey(user: User, data: SetupData) {
     'P_IterationNumber': String(__ITER),
     'P_EpochTimestamp': String(Date.now()),
   };
-  chrome_and_static(bearerToken, data.version, level, '02', subs);
+  chrome_and_static(bearerToken, data.version, level, ['01', '02'], subs);
 
   let windowVersion = '';
   group('3. Open Booking Calendar', () => {
     windowVersion = get_window_version(bearerToken, data.version, 'EB8776');
     subs.C_Version = windowVersion;
-    chrome_and_static(bearerToken, data.version, level, '03', subs);
+    chrome_and_static(bearerToken, data.version, level, ['03', '04'], subs);
   });
   think(3);
 
   let spaceTableRef: TransportTable | null = null;
   group('4. Stage Booked Space', () => {
     spaceTableRef = stage_booking_space(bearerToken, data.version, date, spaceCode);
-    subs.C_BKD_SPACE = get_cell(spaceTableRef, 0);
-    chrome_and_static(bearerToken, data.version, level, '05', subs);
+    subs.C_BKD_SPACE = get_cell(spaceTableRef, 'EV802_BKD_SPACE');
+    chrome_and_static(bearerToken, data.version, level, ['05'], subs);
   });
   think(2);
 
@@ -95,7 +97,7 @@ export function book_event_journey(user: User, data: SetupData) {
     subs.C_ADV_CUTOFF_DATE = get_cell(formTableRef, 'EV200_ADV_CUTOFF_DATE');
     subs.C_STD_CUTOFF_DATE = get_cell(formTableRef, 'EV200_STD_CUTOFF_DATE');
     subs.C_RELEASE_DATE = get_cell(formTableRef, 'EV200_RELEASE_DATE');
-    chrome_and_static(bearerToken, data.version, level, '06', subs);
+    chrome_and_static(bearerToken, data.version, level, ['06'], subs);
   });
   think(5);
 
@@ -116,7 +118,7 @@ export function book_event_journey(user: User, data: SetupData) {
     subs.C_AddedRowKeys = booked.addedRowKey;
     console.log(`[VU ${__VU}] Booked event ${booked.evtId} — ${eventDesc}`);
     if (include_ui(level)) subs.C_BE_searchResultKey = search_booking_account(bearerToken, data.version, BOOKING_ACCOUNT);
-    chrome_and_static(bearerToken, data.version, level, '07', subs);
+    chrome_and_static(bearerToken, data.version, level, ['07'], subs);
   });
   const booking = bookingRef!;
   think(4);
@@ -145,7 +147,7 @@ export function book_event_journey(user: User, data: SetupData) {
       windowVersion,
       format_retrieve_stamp(stamp),
     );
-    chrome_and_static(bearerToken, data.version, level, '09', subs);
+    chrome_and_static(bearerToken, data.version, level, ['08'], subs);
   });
   think(3);
 
@@ -172,13 +174,12 @@ export function book_event_journey(user: User, data: SetupData) {
       encUserId,
       windowVersion,
     );
-    chrome_and_static(bearerToken, data.version, level, '10', subs);
   });
   think(2);
 
   group('9. Sign Out', () => {
     sign_out(bearerToken, data.version);
-    chrome_and_static(bearerToken, data.version, level, '11', subs);
+    chrome_and_static(bearerToken, data.version, level, ['11'], subs);
   });
 
   sleep(1);
