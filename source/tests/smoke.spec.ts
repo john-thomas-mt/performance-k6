@@ -72,6 +72,9 @@ if (selected && !allScenarios[selected]) {
   throw new Error(`Unknown SCENARIO "${selected}" — valid: ${Object.keys(allScenarios).join(', ')}`);
 }
 
+const soPoolScenarios = new Set(['service_order_items', 'edit_service_orders']);
+const needsSoPool = !selected || soPoolScenarios.has(selected);
+
 const activeThresholds: { [metric: string]: string[] } = selected
   ? allThresholds[selected]
   : Object.values(allThresholds).reduce<{ [metric: string]: string[] }>((merged, t) => ({ ...merged, ...t }), {});
@@ -96,9 +99,11 @@ export async function setup() {
     throw new Error('data/creds/users.data.ts is empty — add at least one user entry');
   }
   const version = fetch_server_version();
-  const soPool = discover_service_order_pool(version, users[0]);
+  const soPool = needsSoPool ? discover_service_order_pool(version, users[0]) : [];
   console.log(`Server version: ${version}`);
-  console.log(`Smoke: ${soPool.length} seeded service order(s) discovered`);
+  if (needsSoPool) {
+    console.log(`Smoke: ${soPool.length} seeded service order(s) discovered`);
+  }
   return { version, users, soPool };
 }
 
