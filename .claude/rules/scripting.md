@@ -27,6 +27,11 @@ Client-generated values (`x-nonce`, `wsid`, sessionIds, timestamps) are produced
 
 When a capture-derived payload template is reused for a *different* record (e.g. a templated detail/`Save2` body sent for another service order), re-correlate every **per-record-unique** field from the target row — weave the `source` value into its cell in the table builder (the numeric `Values` key matching that column's `ColumnID`), don't leave the captured value. A unique search key such as `ER100_SO_SEARCH` left at the captured order's value makes the server reject the save ("the value entered in the search field already exists for another order"). These fields read like static template data but are identity, not shape.
 
+When you re-send a transport table **echoed from a `CreateNewRows`/read response** into a grid `Save2`, the
+response encodes every cell as a **string**, but the grid `Save2` requires each column's **native type**
+(Int32/Decimal/DateTime as numbers). Coerce the echoed row to its column `DataType` (`coerce_transport_types`)
+before sending — the browser type-coerces implicitly, so a raw string echo fails server-side validation.
+
 ## Checks
 - Every wrapper asserts on its own response with `check(res, {...})`
 - Read a response body as text with `body_text(res)` (helpers barrel), never `res.body` directly — k6 types `body` as `string | ArrayBuffer | null`, so stringifying it in a template or calling `.includes()`/`.match()` on it raw trips the `no-base-to-string` lint rule; `body_text` narrows it to a string

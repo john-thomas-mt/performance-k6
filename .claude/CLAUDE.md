@@ -16,6 +16,7 @@ k6 performance test scripts for Momentus, produced via an AI-assisted workflow: 
 - **Every `k6 run` needs the decryption passphrase** — in a `temp/secret.json` written by `npm run secret -- --key '<passphrase>'` (omitted from the command examples below for brevity); `k6 inspect` does not (it never runs `setup()`). See Credentials.
 - `k6 run source/tests/smoke.spec.ts` — the smoke aggregate: every journey once (one iteration per k6 scenario) as a correctness/drift gate. New journeys must be registered here (see `rules/tests.md`); used by the `payload-drift` skill
 - `k6 run -e SCENARIO=<journey> source/tests/smoke.spec.ts` — run a single journey (scale the dev run with `-e VUS=`/`-e ITERS=`); the scripting-time verification entry point
+- `-e FIDELITY=<lean|ui|full>` raises a journey's fidelity: `lean` (spine only, default) → `ui` (adds the UI-chrome replay tier) → `full` (adds static assets). The chrome/static tiers are generated from a NeoLoad recording and correlated at runtime — see `rules/fidelity.md`. `-e THINK_TIME` sets inter-step pacing
 - Load profiles (`load`, `stress`) are scaffolded in `source/config/profiles.config.ts` (`load_profile()`) but **not yet wired to a spec** — no test currently reads `-e PROFILE=`, so it has no effect today. Real load will run through a dedicated load spec that spreads `load_profile()` + `commonThresholds` (pending; see `rules/tests.md`)
 - `npm run smoke:local` / `npm run smoke:cloud` — run `source/tests/smoke.spec.ts` (local OSS `k6 run`, or `k6 cloud run --local-execution` streaming to Grafana Cloud). Both set `K6_WEB_DASHBOARD*` env vars (via `cross-env` for Windows) so k6's built-in web dashboard is always exported to a static `temp/report.html` (gitignored, overwritten each run). The dashboard file is skipped on very short runs (it needs a duration greater than 3× the aggregation period) — use a longer run or a load profile. Forward extra k6 args after a `--`, e.g. `npm run smoke:local -- -e VUS=2 -e ITERS=2`. Sends traffic — the pre-run passphrase/secret prerequisites apply
 - `k6 inspect source/tests/<file>.spec.ts` — validate syntax/imports/options with zero traffic; use after every script change
@@ -84,6 +85,7 @@ Detailed conventions are in `.claude/rules/` — auto-loaded by file path scope:
 - `rules/types.md` — source/utils/types/: per-feature type modules, no cycles, unique export names, layer barrel
 - `rules/config.md` — source/config/: env values, profiles + common thresholds
 - `rules/data.md` — source/data/: module layout, builders vs upload fixtures, user pool
+- `rules/fidelity.md` — fidelity tiers (source/data/chrome|static, chrome.helper): `-e FIDELITY` levels, generated replay lists, runtime token substitution, think-time
 - `rules/tests.md` — source/tests/: entry-point test specs, smoke gate + single-journey runs, profiles, thresholds, data loading, snapshot-based cleanup
 - `rules/seeds.md` — source/seeds/: bulk prerequisite-data scripts that reuse api wrappers, seed-marker discovery
 

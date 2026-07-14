@@ -64,6 +64,7 @@ A NeoLoad recording captures **everything the browser did**. Keep only the funct
 - **Keep** the writes (the `Save2`/create/update calls) and the reads whose extracted values **feed a later write**.
 - **The `<variable-extractor>` blocks tell you which reads are load-bearing.** A read whose `C_…` extract is consumed by a downstream request stays; a read nothing consumes is chrome. (A 100-call recording is often ~10–15 functional calls.)
 - **Reads between writes can be load-bearing, not chrome** — e.g. a detail re-read that refreshes an optimistic-concurrency token (see §4). Don't drop a read just because it looks like a repaint; check whether a write consumes its extract.
+- **Dropped ≠ gone.** What you drop here (static assets + UI chrome) can be replayed as **optional additive fidelity tiers** (`-e FIDELITY=ui|full`) for a lean-vs-browser-realistic comparison — a pass *after* the spine is green (see §4a and `rules/fidelity.md`).
 
 ## 3. Correlate — translate NeoLoad's extractors, don't re-derive
 
@@ -91,6 +92,24 @@ NeoLoad already solved correlation; translate it. Classify each dynamic value (s
 - **Chain the token across sequential saves.** Each save bumps the row's timestamp, so re-read detail (or read it from the prior save's response, which returns the refreshed row) before the next header save.
 - **Data isolation is stricter for record-modifying journeys.** An add-only journey tolerates two iterations sharing a seeded row; a header-modifying journey does not — the concurrency check turns a shared row into a failure. Give each iteration a **globally-unique** row (`exec.scenario.iterationInTest % pool.length`), not the `(__VU-1+__ITER)` formula (which collides across VU/iter pairs). Don't infer isolation from the recording: NeoLoad's data-script files are `global` scope with `CYCLE_VALUES`, which per the docs *shares rows across VUs and recycles them once exhausted* — only NeoLoad's `Unique` scope reserved a row per VU — so the port must impose uniqueness in k6, not trust the ported policy.
 - Pick the VU's user with `pick_user` and register the journey in `smoke.spec.ts` (scenario + `exec` wrapper + `<journey>Thresholds`), per the tests rule.
+
+## 4a. Fidelity tiers — optional, additive (only if the user wants lean-vs-full)
+
+Beyond the spine, the recording's UI-chrome and static requests replay as env-gated tiers so a run can
+compare lean vs. browser-realistic load. Do this only after the spine (§4) is green, and only if the user
+asks for it.
+
+- Generate the lists from the tree: `node scripts/gen-fidelity-lists.js "<VU tree>" source/data/chrome/<journey>.chrome.ts source/data/static/<journey>.static.ts` (do-not-hand-edit; regenerate on re-record).
+- Wire the flow to fire each step's slice behind the `include_ui` / `include_static` gates alongside that
+  step's spine call, and correlate the requests' `${…}` tokens through a subs map built from the
+  correlation the spine already extracts.
+- The conventions — what the generator normalises (query strings, Base64 bodies, kept tokens, excluded
+  spine dups, pruned stale endpoints), the substitute-or-skip contract, building the subs map, coarse
+  tolerant tagging, think-time — live in `rules/fidelity.md`, which auto-loads when you edit the
+  chrome/static/helper files. Don't re-derive them here.
+- Verify with a `-e FIDELITY=full` run (§5): `http_req_failed` must stay 0 and no request may be skipped
+  for an unresolved token. A chrome request that needs a response-derived value the spine doesn't produce
+  gets its own gated wrapper (per the rule), not a blanked token.
 
 ## 5. Verify — 3-step progressive run
 
