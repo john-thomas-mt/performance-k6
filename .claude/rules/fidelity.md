@@ -36,6 +36,12 @@ is faithful on the current app, and each of these is load-bearing (skipping one 
   renamed/removed endpoint 404s. Distinguish a stale endpoint from one merely missing its query string by
   cross-checking the live app (the browser either calls it under a new name, or with the query args).
 
+These normalizations are what let a single recording's replay hold across the whole live version matrix, not
+just the version it was recorded on: query-string recovery and Base64 decode make each request well-formed
+everywhere, runtime token substitution re-correlates per-run values, and the stale-endpoint prune keeps the
+list to endpoints the release actually serves. `verify-envs` at `-e FIDELITY=full` is the cross-version check —
+a tier that drifts on an older release surfaces there as `http_req_failed` > 0 or an unresolved-token skip.
+
 ## Runtime correlation — substitute, never fire a blanked body
 Chrome requests carry `${token}` placeholders; `fire_ui_chrome` / `fire_static_assets` take a **subs map**
 and substitute every `${token}` in path and body at fire time. A request left with an **unresolved**
