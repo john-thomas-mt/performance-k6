@@ -84,6 +84,14 @@ export function ma_authenticate(bearerToken: string, version: string) {
   return (res.json() as string[])[0];
 }
 
+export function sign_out(token: string, version: string, name = 'SignOut') {
+  const res = http.get(`${config.baseUrl}/api/GenericServer/ApplicationUnloading`, {
+    headers: build_headers(token, version),
+    tags: { name },
+  });
+  check(res, { [`${name}: status is 200 or 201`]: (r) => r.status === 200 || r.status === 201 });
+}
+
 export function tenant_id_from_jwt(salesAiJwt: string) {
   const payload = encoding.b64decode(salesAiJwt.split('.')[1], 'rawurl', 's');
   const tenantId = (JSON.parse(payload) as { tenant_id?: string }).tenant_id;

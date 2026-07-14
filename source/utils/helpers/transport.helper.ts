@@ -67,3 +67,20 @@ export function set_cell(table: TransportTable, columnName: string, value: JsonS
   }
   table.TransportDataRows[0].Values[String(i)] = value;
 }
+
+const numericDataTypes = new Set(['System.Int32', 'System.Int64', 'System.Decimal', 'System.Double', 'System.DateTime']);
+
+export function coerce_transport_types(table: TransportTable) {
+  const cols = table.TransportDataColumns;
+  for (const row of table.TransportDataRows) {
+    for (let i = 0; i < cols.length; i++) {
+      const key = String(i);
+      const v = row.Values[key];
+      if (typeof v !== 'string' || v === '') continue;
+      if (numericDataTypes.has(cols[i].DataType ?? '') && !isNaN(Number(v))) {
+        row.Values[key] = Number(v);
+      }
+    }
+  }
+  return table;
+}

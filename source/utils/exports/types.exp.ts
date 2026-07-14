@@ -2,6 +2,7 @@ export * from '../types/accounts.type.ts';
 export * from '../types/common.type.ts';
 export * from '../types/config.type.ts';
 export * from '../types/events.type.ts';
+export * from '../types/fidelity.type.ts';
 export * from '../types/file-upload.type.ts';
 export * from '../types/manual-entry.type.ts';
 export * from '../types/navigation.type.ts';

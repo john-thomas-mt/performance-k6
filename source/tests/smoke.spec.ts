@@ -11,6 +11,8 @@ import {
   createAccountThresholds,
   create_event_journey,
   createEventThresholds,
+  book_event_journey,
+  bookEventThresholds,
   opportunities_journey,
   opportunitiesThresholds,
   file_upload_journey,
@@ -46,6 +48,7 @@ const allScenarios: { [scenario: string]: Scenario } = {
   copy_event: once('copy_event'),
   create_account: once('create_account'),
   create_event: once('create_event'),
+  book_event: once('book_event'),
   service_order_items: once('service_order_items'),
   edit_service_orders: once('edit_service_orders'),
   navigation: once('navigation'),
@@ -58,6 +61,7 @@ const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
   copy_event: copyEventThresholds,
   create_account: createAccountThresholds,
   create_event: createEventThresholds,
+  book_event: bookEventThresholds,
   service_order_items: serviceOrderItemsThresholds,
   edit_service_orders: editServiceOrdersThresholds,
   navigation: navigationThresholds,
@@ -120,6 +124,10 @@ export function create_account(data: SmokeSetup) {
 
 export function create_event(data: SmokeSetup) {
   create_event_journey(pick_user(data.users), data);
+}
+
+export function book_event(data: SmokeSetup) {
+  book_event_journey(pick_user(data.users), data);
 }
 
 export function service_order_items(data: SmokeSetup) {

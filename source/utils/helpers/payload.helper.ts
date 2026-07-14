@@ -5,6 +5,12 @@ export function today_midnight_utc() {
   return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
 }
 
+export function format_retrieve_stamp(epoch: string) {
+  const d = new Date(Number(epoch));
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 export const save2CreateChangeTracking = {
   SaveMode: 7,
   Delete: false,
