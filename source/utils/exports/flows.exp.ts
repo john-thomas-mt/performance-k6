@@ -5,6 +5,7 @@ export * from '../../flows/book-event.flow.ts';
 export * from '../../flows/service-order-items.flow.ts';
 export * from '../../flows/edit-service-orders.flow.ts';
 export * from '../../flows/copy-event.flow.ts';
+export * from '../../flows/crystal-report.flow.ts';
 export * from '../../flows/opportunities.flow.ts';
 export * from '../../flows/file-upload.flow.ts';
 export * from '../../flows/introductory-email.flow.ts';

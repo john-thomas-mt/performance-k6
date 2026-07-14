@@ -7,6 +7,8 @@ import {
   discover_service_order_pool,
   copy_event_journey,
   copyEventThresholds,
+  crystal_report_journey,
+  crystalReportThresholds,
   create_account_journey,
   createAccountThresholds,
   create_event_journey,
@@ -46,6 +48,7 @@ const allScenarios: { [scenario: string]: Scenario } = {
   file_upload: once('file_upload'),
   introductory_email: once('introductory_email'),
   copy_event: once('copy_event'),
+  crystal_report: once('crystal_report'),
   create_account: once('create_account'),
   create_event: once('create_event'),
   book_event: once('book_event'),
@@ -59,6 +62,7 @@ const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
   file_upload: fileUploadThresholds,
   introductory_email: introductoryEmailThresholds,
   copy_event: copyEventThresholds,
+  crystal_report: crystalReportThresholds,
   create_account: createAccountThresholds,
   create_event: createEventThresholds,
   book_event: bookEventThresholds,
@@ -121,6 +125,10 @@ export function introductory_email(data: SmokeSetup) {
 
 export function copy_event(data: SmokeSetup) {
   copy_event_journey(pick_user(data.users), data);
+}
+
+export function crystal_report(data: SmokeSetup) {
+  crystal_report_journey(pick_user(data.users), data);
 }
 
 export function create_account(data: SmokeSetup) {
