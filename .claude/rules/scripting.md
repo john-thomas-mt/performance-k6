@@ -25,6 +25,8 @@ Every value the server generates must be extracted at runtime from a prior respo
 - `traceId` → upload/submit responses; reuse it for follow-up status requests
 Client-generated values (`x-nonce`, `wsid`, sessionIds, timestamps) are produced fresh per request with `crypto.randomUUID()` / `new Date()`, never copied from a capture.
 
+Momentus **window-session ids** (`wdwid`/`EditWdwID`, format `SA<digits>`) are client-generated the same way: the client allocates them and sends them in the request, and the server merely echoes them back in its response context. Generate them per iteration (unique per window), never extract them from a response even though they appear there. The one server-derived value in that flow is `ContextObjectID`: `WindowServer/GetWindowInfo?astrWindowID=<wdwid>` takes the client-held wdwid and returns it, so that one you do extract.
+
 When a capture-derived payload template is reused for a *different* record (e.g. a templated detail/`Save2` body sent for another service order), re-correlate every **per-record-unique** field from the target row — weave the `source` value into its cell in the table builder (the numeric `Values` key matching that column's `ColumnID`), don't leave the captured value. A unique search key such as `ER100_SO_SEARCH` left at the captured order's value makes the server reject the save ("the value entered in the search field already exists for another order"). These fields read like static template data but are identity, not shape.
 
 When you re-send a transport table **echoed from a `CreateNewRows`/read response** into a grid `Save2`, the
