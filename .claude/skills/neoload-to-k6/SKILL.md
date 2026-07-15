@@ -17,7 +17,13 @@ One continuous pass: read the NeoLoad script as the **source of truth** (the tra
 2. Confirm the target flow and scope with the user — a recorded VU can be 100+ requests; agree on which operations to port.
 3. **Target `main` on PERF** — port against the unreleased, highest-priority env so the port matches the newest schema and trickles down to released envs. A bare `npm run setup` writes exactly this (site `PERF`, env `main` are the defaults). Read `source/config/env.config.ts` for the target env, and check `temp/setup.json`/`temp/secret.json` exist (the run prerequisites).
 4. **Get approval once, upfront, for the 3-step verification run sequence** — that is the only traffic this skill sends (parsing the tree sends none). This journey may **write** (each `Save2` mutates data); the DB snapshot reset owns cleanup, so journeys stay pure (no `teardown()`).
-5. **Recon the k6 repo (delegated).** Dispatch `k6-authoring-analyst` for an *authoring kit* — reusable wrappers/endpoints, the closest existing journey template, the right `login_*` entry, the `SetupData` slice, and the barrel + `smoke.spec.ts` wiring points. It writes the full kit to `temp/recon-kit.md` and returns a short index; work from the index and `grep temp/recon-kit.md` for specifics, so the repo-side reuse picture stays out of the main context (the NeoLoad tree, §1, is still parsed in the loop — it's the source of truth the analyst doesn't have). Ask the analyst to put in the kit the **exact skeleton of the closest payload builder** (its `TransportTable` column list and which cells are parameterized) and the **signatures of the wrappers to reuse or mirror** — not just `file:line` pointers. Authoring from those skeletons avoids re-reading large analog modules (a 500-line `document.data.ts`, a full `<feature>.api.ts`) into the main context, which is the real token cost.
+5. **Recon the k6 repo (delegated).** Dispatch `k6-authoring-analyst` for an *authoring kit* — reusable wrappers/endpoints, the closest existing journey template, the right `login_*` entry, the `SetupData` slice, and the barrel + `smoke.spec.ts` wiring points. It writes the full kit to `temp/recon-kit.md` and returns a short index; work from the index and `grep temp/recon-kit.md` for specifics, so the repo-side reuse picture stays out of the main context (the NeoLoad tree, §1, is distilled by `neoload-digest.js` — the analyst doesn't have it). Require the kit to be **self-sufficient to author from** — so demand, not just `file:line` pointers:
+   - the **exact signature** of every wrapper to reuse or mirror (name + param list + return shape);
+   - the **full payload-arrow skeleton** of the closest builder — its positional envelope, its `TransportTable` column list, and exactly which cells are parameterized vs captured constants;
+   - the **exact `smoke.spec.ts` insertion lines** (scenario entry, threshold-map entry, `exec` wrapper, seed-pool gate) and the barrel `export *` lines;
+   - the **seed decision** — pass the analyst the paired data-script VU name from the §1 digest and have it report whether an equivalent `source/seeds/<feature>.seed.ts` **already exists** (reuse it — the journey discovers its pool in `setup()` via the existing marker) or a new seed pass must be ported. A recorded journey's data-script often maps to a seed already in the repo, so this is the difference between reusing one line of `setup()` wiring and porting a whole create-spine.
+
+   Then **author from the kit alone — do not reopen the analog `source/` modules it summarizes.** If a detail you need is missing, ask the analyst to extend the kit (a cheap sub-agent round-trip) rather than reading the 300–500-line module (`<feature>.api.ts`, a big `*.data.ts`) into the main context yourself. Re-reading model files the kit already covered is the second-biggest main-context token sink, after hand-dumping the tree (§1).
 
 ## 1. Parse the NeoLoad tree (zero traffic)
 
@@ -37,28 +43,26 @@ Three project-root folders (siblings of `team/`) hold data the steps only refere
 - **`variables/version_<ver>/*.txt`** — the concrete **values** behind the `team/variables/*.xml` defs: real column layout and sample rows (e.g. `P_26_2_DataScript_VoucherProcessing.txt` → column `supplierName`). The extractor names the variable; this gives the shape/values to embed in a `source/data/` builder or match as a seed marker, and exposes seed→journey file chaining (the seed writes one file, the journey reads another).
 - **`sla_profiles/*.xml`** — the actual **latency targets** behind each step's `sla_profile="…SLA"` name; port these numbers into the journey's `<journey>Thresholds` (§4) instead of guessing.
 
-Useful commands (adapt paths; use `node -e`, not `jq`/`python`):
+**Parse the whole tree in one pass with the digest script** (zero traffic, deterministic):
 
 ```bash
-# journey step order + names
-cat "team/vus/<VU>.xml"                 # weighted-embedded-action order
-ls "team/vus/<VU>/actions-container"    # step folders + think-times
-
-# dump transactional requests across the journey (method/path/extractors/body),
-# filtering asset + telemetry noise — write a small node walker over the step folders
-# (match method= and path=, skip .css/.js/.html/.ico, print <variable-extractor name=…>)
-
-# pull a concrete request body from its zip (real values, valid JSON)
-unzip -o "team/vus/<VU>/%resources%/recorded-artifacts/<uid>.zip" -d /tmp/x
-#   req_*.txt is a raw HTTP request: body is after the first blank line
-
-# dissect a pulled JSON body (shape + populated transport cells + correlation candidates)
-node scripts/inspect-capture.js /tmp/x/recorded-requests/req_1.txt.json
+node scripts/neoload-digest.js "team/vus/<VU>"
 ```
 
-The helper scripts (`inspect-capture.js`, `gen-payload-builder.js`, `gen-fidelity-lists.js`) live at **repo-root `scripts/`** — run them from the repo root as shown, not from the skill folder.
+It prints one compact digest: step order, the transaction **spine** (each request classified SPINE / CHROME / DROP with its `<variable-extractor>` names), the solved **correlation map**, the **paired data-script VU** (from the test-data population), and a **dissection of each write / detail-form-open body** — resolved values pulled from the recorded-artifacts zips: envelope shape, populated transport-table cells by column name, and the `{Key,Value}` context arrays. **Read the digest, not the raw tree** — it keeps the XML, the extractor blocks, and the multi-KB captured bodies out of the main context. Hand-dumping the tree (`cat` the xml, ad-hoc node walkers, manual `unzip` + per-body dumps) instead of running the digest first is the main avoidable token sink in this workflow.
 
-**Dissect and generate from the ZIP body, not the VU xml.** The `<textPostContent>` body inside a `<request>.xml` is *templated* — it carries `${…}` correlation tokens, so it is **not valid JSON** and `inspect-capture.js` / `gen-payload-builder.js` will throw on the leading `$`. The recorded-artifacts `req_*.txt` body has the **resolved real values** (valid JSON) — feed *that* to the tools, and read the VU xml only for the `<variable-extractor>` list and which cells are `${…}` tokens (that mapping is the input to the gen spec's `params`/`regenerate`). If you must parse an xml body directly (before a zip exists), scrub the tokens to placeholders in one pass first — replace `"?${…}"?` (optional surrounding quotes) with a single quoted placeholder — or the parse fails. Reaching for the xml body and hand-writing scrub/dump scripts instead of using the zip is the main avoidable token sink in this workflow.
+The digest is **advisory** on the SPINE/CHROME split — it flags likely UI-chrome by endpoint suffix, but the final keep decision is yours (§2): a read is load-bearing if a downstream write consumes its extract, which the digest's per-request extractor list makes visible.
+
+For a body the digest doesn't dissect (a grid/search read, or a second capture), pull and dissect it directly:
+
+```bash
+unzip -o "team/vus/<VU>/%resources%/recorded-artifacts/<uid>.zip" -d /tmp/x   # req_*.txt body is after the first blank line
+node scripts/inspect-capture.js /tmp/x/recorded-requests/req_*.txt            # shape + populated cells + correlation candidates
+```
+
+All helper scripts (`neoload-digest.js`, `inspect-capture.js`, `gen-payload-builder.js`, `gen-fidelity-lists.js`) live at **repo-root `scripts/`** — run them from the repo root, not the skill folder. Use `node -e`, not `jq`/`python`.
+
+**Feed the tools the ZIP body, never the VU xml.** The `<textPostContent>` body in a `<request>.xml` is *templated* — it carries `${…}` correlation tokens, so it is **not valid JSON** and `inspect-capture.js` / `gen-payload-builder.js` throw on the leading `$`. The recorded-artifacts `req_*.txt` body has the **resolved real values** (valid JSON); `neoload-digest.js` already reads from the zips. Read the VU xml directly only for the `<variable-extractor>` list and which cells are `${…}` tokens (the input to a gen spec's `params`/`regenerate`).
 
 ## 2. Distill to the transaction spine
 
@@ -111,6 +115,14 @@ asks for it.
 - Wire the flow to fire each step's slice behind the `include_ui` / `include_static` gates alongside that
   step's spine call, and correlate the requests' `${…}` tokens through a subs map built from the
   correlation the spine already extracts.
+- **Never `Read` the generated `*.chrome.ts` / `*.static.ts` into the main context** — they carry multi-KB
+  opaque replay bodies the flow never touches by hand (tokens are substituted at fire time). To build the
+  subs map, run `node scripts/fidelity-tokens.js source/data/chrome/<journey>.chrome.ts source/data/static/<journey>.static.ts`:
+  it prints the tokens per step and the **subs-map contract** (the full token-key set the flow must supply).
+  Cross-check each contract token against what the spine already correlates — a token that is *not* a standard
+  spine output (an event row key, an event name) needs its own `include_ui`-gated lookup wrapper that produces
+  it into the subs map before the batch consumes it. If you must see one specific generated request, `grep` its
+  path — don't `Read` the file.
 - The conventions — what the generator normalises (query strings, Base64 bodies, kept tokens, excluded
   spine dups, pruned stale endpoints), the substitute-or-skip contract, building the subs map, coarse
   tolerant tagging, think-time — live in `rules/fidelity.md`, which auto-loads when you edit the

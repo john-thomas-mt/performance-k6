@@ -42,6 +42,11 @@ everywhere, runtime token substitution re-correlates per-run values, and the sta
 list to endpoints the release actually serves. `verify-envs` at `-e FIDELITY=full` is the cross-version check —
 a tier that drifts on an older release surfaces there as `http_req_failed` > 0 or an unresolved-token skip.
 
+**Never `Read` these files into an agent's context** — the replay bodies are multi-KB and opaque (tokens are
+substituted at fire time, so nothing here is hand-edited). To wire a flow's subs map, run
+`node scripts/fidelity-tokens.js <chrome-file> [static-file]` for the tokens-per-step and the full token-key
+contract the subs map must satisfy; `grep` a path if you need one specific request.
+
 ## Runtime correlation — substitute, never fire a blanked body
 Chrome requests carry `${token}` placeholders; `fire_ui_chrome` / `fire_static_assets` take a **subs map**
 and substitute every `${token}` in path and body at fire time. A request left with an **unresolved**
