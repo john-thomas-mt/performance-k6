@@ -9,6 +9,8 @@ import {
   copyEventThresholds,
   crystal_report_journey,
   crystalReportThresholds,
+  room_diagram_upload_journey,
+  roomDiagramUploadThresholds,
   create_account_journey,
   createAccountThresholds,
   create_event_journey,
@@ -29,6 +31,7 @@ import { pick_user, fetch_server_version, decrypt_users } from '../utils/exports
 import { commonThresholds, config } from '../utils/exports/config.exp.ts';
 import { SmokeSetup } from '../utils/exports/types.exp.ts';
 import { userCredentials } from '../utils/exports/data.exp.ts';
+import { roomDiagramFiles } from '../data/uploads/events/room-diagrams.index.ts';
 
 const opportunityTemplate = open('../data/uploads/opportunities/sample-opportunity.txt');
 const sampleDocument = open('../data/uploads/service-orders/sample-document.txt', 'b');
@@ -49,6 +52,7 @@ const allScenarios: { [scenario: string]: Scenario } = {
   introductory_email: once('introductory_email'),
   copy_event: once('copy_event'),
   crystal_report: once('crystal_report'),
+  room_diagram_upload: once('room_diagram_upload'),
   create_account: once('create_account'),
   create_event: once('create_event'),
   book_event: once('book_event'),
@@ -63,6 +67,7 @@ const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
   introductory_email: introductoryEmailThresholds,
   copy_event: copyEventThresholds,
   crystal_report: crystalReportThresholds,
+  room_diagram_upload: roomDiagramUploadThresholds,
   create_account: createAccountThresholds,
   create_event: createEventThresholds,
   book_event: bookEventThresholds,
@@ -129,6 +134,10 @@ export function copy_event(data: SmokeSetup) {
 
 export function crystal_report(data: SmokeSetup) {
   crystal_report_journey(pick_user(data.users), data);
+}
+
+export function room_diagram_upload(data: SmokeSetup) {
+  room_diagram_upload_journey(pick_user(data.users), data, roomDiagramFiles);
 }
 
 export function create_account(data: SmokeSetup) {

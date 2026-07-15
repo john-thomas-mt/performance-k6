@@ -223,12 +223,12 @@ export function save_and_close_report(token: string, version: string) {
   open_report_master_list(token, version, 'SaveAndCloseReport');
 }
 
-export function report_application_unloading(token: string, version: string) {
+export function report_application_unloading(token: string, version: string, name = 'ReportApplicationUnloading') {
   const res = http.get(`${config.baseUrl}/api/GenericServer/ApplicationUnloading`, {
     headers: build_headers(token, version),
-    tags: { name: 'ReportApplicationUnloading' },
+    tags: { name },
   });
-  const ok = check(res, { 'ReportApplicationUnloading: status is 201': (r) => r.status === 201 });
+  const ok = check(res, { [`${name}: status is 201`]: (r) => r.status === 201 });
   if (!ok) {
     console.error(`[VU ${__VU}] report_application_unloading failed — HTTP ${res.status}`);
     fail('report_application_unloading did not succeed');
