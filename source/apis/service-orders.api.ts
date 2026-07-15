@@ -13,6 +13,8 @@ import {
   cacheFilesPayload,
   documentFormPayload,
   documentSavePayload,
+  copyServiceOrdersFormPayload,
+  copyServiceOrdersSavePayload,
 } from '../utils/exports/data.exp.ts';
 import {
   EventRow,
@@ -364,4 +366,62 @@ export function save_service_order_items(
     console.error(`[VU ${__VU}] save_service_order_items failed — HTTP ${res.status}: ${body_text(res).slice(0, 300)}`);
     fail('save_service_order_items did not succeed');
   }
+}
+
+export function open_service_order_copy_form(
+  token: string,
+  version: string,
+  encUserId: string,
+  orders: ServiceOrderRow[],
+  refreshKey: number,
+) {
+  const res = http.post(
+    `${config.baseUrl}/api/GenericDetailServer/GetInitialData2`,
+    JSON.stringify(copyServiceOrdersFormPayload(encUserId, orders, version, refreshKey)),
+    { headers: build_headers(token, version), tags: { name: 'OpenCopyServiceOrdersForm' } },
+  );
+
+  const ok = check(res, {
+    'OpenCopyServiceOrdersForm: status is 201': (r) => r.status === 201,
+    'OpenCopyServiceOrdersForm: returns copy form data': (r) => body_text(r).length > 1000,
+  });
+
+  if (!ok) {
+    console.error(`[VU ${__VU}] open_service_order_copy_form failed — HTTP ${res.status}`);
+    fail('open_service_order_copy_form did not succeed');
+  }
+}
+
+export function save_service_order_copy(token: string, version: string, encUserId: string, orders: ServiceOrderRow[], refreshKey: number) {
+  const res = http.post(
+    `${config.baseUrl}/api/GenericDetailServer/Save2`,
+    JSON.stringify(copyServiceOrdersSavePayload(encUserId, orders, version, refreshKey)),
+    { headers: build_headers(token, version), tags: { name: 'SaveServiceOrderCopy' } },
+  );
+
+  const ok = check(res, {
+    'SaveServiceOrderCopy: status is 201': (r) => r.status === 201,
+    'SaveServiceOrderCopy: ResultValue is 0 (success)': (r) => {
+      try {
+        return (r.json() as ServiceOrderSaveResult[])[0].ResultValue === 0;
+      } catch {
+        return false;
+      }
+    },
+    'SaveServiceOrderCopy: new orders were created': (r) => {
+      try {
+        const k = (r.json() as ServiceOrderSaveResult[])[0].AddedRowKeys;
+        return Array.isArray(k) && k.length > 0;
+      } catch {
+        return false;
+      }
+    },
+  });
+
+  if (!ok) {
+    console.error(`[VU ${__VU}] save_service_order_copy failed — HTTP ${res.status}: ${body_text(res).slice(0, 300)}`);
+    fail('save_service_order_copy did not succeed');
+  }
+
+  return (res.json() as ServiceOrderSaveResult[])[0].AddedRowKeys ?? [];
 }

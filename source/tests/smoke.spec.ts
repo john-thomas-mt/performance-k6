@@ -7,6 +7,8 @@ import {
   discover_service_order_pool,
   copy_event_journey,
   copyEventThresholds,
+  copy_service_orders_journey,
+  copyServiceOrdersThresholds,
   crystal_report_journey,
   crystalReportThresholds,
   room_diagram_upload_journey,
@@ -51,6 +53,7 @@ const allScenarios: { [scenario: string]: Scenario } = {
   file_upload: once('file_upload'),
   introductory_email: once('introductory_email'),
   copy_event: once('copy_event'),
+  copy_service_orders: once('copy_service_orders'),
   crystal_report: once('crystal_report'),
   room_diagram_upload: once('room_diagram_upload'),
   create_account: once('create_account'),
@@ -66,6 +69,7 @@ const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
   file_upload: fileUploadThresholds,
   introductory_email: introductoryEmailThresholds,
   copy_event: copyEventThresholds,
+  copy_service_orders: copyServiceOrdersThresholds,
   crystal_report: crystalReportThresholds,
   room_diagram_upload: roomDiagramUploadThresholds,
   create_account: createAccountThresholds,
@@ -81,7 +85,7 @@ if (selected && !allScenarios[selected]) {
   throw new Error(`Unknown SCENARIO "${selected}" — valid: ${Object.keys(allScenarios).join(', ')}`);
 }
 
-const soPoolScenarios = new Set(['service_order_items', 'edit_service_orders']);
+const soPoolScenarios = new Set(['service_order_items', 'edit_service_orders', 'copy_service_orders']);
 const needsSoPool = !selected || soPoolScenarios.has(selected);
 
 const activeThresholds: { [metric: string]: string[] } = selected
@@ -130,6 +134,10 @@ export function introductory_email(data: SmokeSetup) {
 
 export function copy_event(data: SmokeSetup) {
   copy_event_journey(pick_user(data.users), data);
+}
+
+export function copy_service_orders(data: SmokeSetup) {
+  copy_service_orders_journey(pick_user(data.users), data);
 }
 
 export function crystal_report(data: SmokeSetup) {
