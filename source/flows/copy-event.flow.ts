@@ -1,4 +1,4 @@
-import { check, group, sleep, fail } from 'k6';
+import { check, group, fail } from 'k6';
 import { login_to_events } from './login.flow.ts';
 import { search_events, open_copy_form, save_event_copy, open_event_detail, get_window_version } from '../utils/exports/apis.exp.ts';
 import { fidelity_level, include_ui, include_static, fire_ui_chrome, fire_static_assets, think } from '../utils/exports/helpers.exp.ts';
@@ -41,7 +41,7 @@ export function copy_event_journey(user: User, data: SetupData) {
     'C_RefreshDependentKey': String(Date.now()),
   };
   chrome_and_static(bearerToken, data.version, level, ['01', '02'], subs);
-  think(2);
+  think();
 
   let sourceRef: EventRow | null = null;
   group('3. Search Source Event', () => {
@@ -57,14 +57,14 @@ export function copy_event_journey(user: User, data: SetupData) {
   });
   if (!sourceRef) fail('source event not found');
   const source = sourceRef;
-  think(3);
+  think();
 
   group('4. Open Copy Event Form', () => {
     open_copy_form(bearerToken, data.version, encUserId, source);
     if (include_ui(level)) subs.C_Version = get_window_version(bearerToken, data.version, COPY_WINDOW_ID, 'CopyWindowInfo');
     chrome_and_static(bearerToken, data.version, level, ['05'], subs);
   });
-  think(3);
+  think();
 
   let newEvtIdRef: string | null = null;
   group('5. Save Event Copy', () => {
@@ -74,7 +74,7 @@ export function copy_event_journey(user: User, data: SetupData) {
     chrome_and_static(bearerToken, data.version, level, ['06'], subs);
   });
   const newEvtId = newEvtIdRef!;
-  think(3);
+  think();
 
   group('6. Confirm New Event in List', () => {
     const rows = search_events(bearerToken, data.version, newDescription, 'SearchNewEvent');
@@ -85,12 +85,12 @@ export function copy_event_journey(user: User, data: SetupData) {
     });
     chrome_and_static(bearerToken, data.version, level, ['07'], subs);
   });
-  think(2);
+  think();
 
   group('7. Open New Event & Verify Details', () => {
     open_event_detail(bearerToken, data.version, newEvtId, newDescription);
     chrome_and_static(bearerToken, data.version, level, ['08'], subs);
   });
 
-  sleep(1);
+  think();
 }

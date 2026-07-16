@@ -1,4 +1,4 @@
-import { group, sleep } from 'k6';
+import { group } from 'k6';
 import { login_to_events } from './login.flow.ts';
 import {
   get_window_version,
@@ -79,7 +79,7 @@ export function book_event_journey(user: User, data: SetupData) {
     subs.C_Version = windowVersion;
     chrome_and_static(bearerToken, data.version, level, ['03', '04'], subs);
   });
-  think(3);
+  think();
 
   let spaceTableRef: TransportTable | null = null;
   group('4. Stage Booked Space', () => {
@@ -87,7 +87,7 @@ export function book_event_journey(user: User, data: SetupData) {
     subs.C_BKD_SPACE = get_cell(spaceTableRef, 'EV802_BKD_SPACE');
     chrome_and_static(bearerToken, data.version, level, ['05'], subs);
   });
-  think(2);
+  think();
 
   let formTableRef: TransportTable | null = null;
   group('5. Open Booking Form', () => {
@@ -99,7 +99,7 @@ export function book_event_journey(user: User, data: SetupData) {
     subs.C_RELEASE_DATE = get_cell(formTableRef, 'EV200_RELEASE_DATE');
     chrome_and_static(bearerToken, data.version, level, ['06'], subs);
   });
-  think(5);
+  think();
 
   let bookingRef: { addedRowKey: string; evtId: string } | null = null;
   group('6. Save Booking', () => {
@@ -121,7 +121,7 @@ export function book_event_journey(user: User, data: SetupData) {
     chrome_and_static(bearerToken, data.version, level, ['07'], subs);
   });
   const booking = bookingRef!;
-  think(4);
+  think();
 
   let funcTableRef: TransportTable | null = null;
   group('7. Stage Event Function', () => {
@@ -149,7 +149,7 @@ export function book_event_journey(user: User, data: SetupData) {
     );
     chrome_and_static(bearerToken, data.version, level, ['08'], subs);
   });
-  think(3);
+  think();
 
   group('8. Save Event Function', () => {
     read_event_functions(
@@ -175,12 +175,12 @@ export function book_event_journey(user: User, data: SetupData) {
       windowVersion,
     );
   });
-  think(2);
+  think();
 
   group('9. Sign Out', () => {
     sign_out(bearerToken, data.version);
     chrome_and_static(bearerToken, data.version, level, ['11'], subs);
   });
 
-  sleep(1);
+  think();
 }

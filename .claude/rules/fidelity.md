@@ -69,5 +69,10 @@ check only that each responded (`status > 0`) rather than asserting status or sh
 by the spine at `lean`; the tiers add realistic concurrent load around it.
 
 ## Think time
-`think(seconds)` (`think-time.helper.ts`, `-e THINK_TIME`) paces the journey between steps so its request
-rate matches a real user session instead of firing back-to-back.
+`think()` (`think-time.helper.ts`) paces a journey between steps: it sleeps a uniform-random 2–3s — matching
+the NeoLoad `P_thinkTime` recording variable (`variable-random-number` 2000–3000 ms, applied uniformly at
+every step) — so the request rate matches a real user session instead of firing back-to-back. Each pause is
+recorded into a custom `think_time` Trend metric (`isTime`), so think time reports as its own figure
+(avg/p95) alongside the endpoint timers, the analog of NeoLoad's separate think-time reporting. Call `think()`
+**between** the `group()` blocks (never inside one) so the pause stays out of `http_req_duration` and
+`group_duration` and lands only in `iteration_duration` — response-time metrics stay clean.

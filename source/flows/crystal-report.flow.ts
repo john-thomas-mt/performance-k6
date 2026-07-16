@@ -1,4 +1,4 @@
-import { check, group, sleep, fail } from 'k6';
+import { check, group, fail } from 'k6';
 import exec from 'k6/execution';
 import { login_to_events } from './login.flow.ts';
 import {
@@ -73,20 +73,20 @@ export function crystal_report_journey(user: User, data: SetupData) {
     'p_Name': runToken,
   };
   chrome_and_static(bearerToken, data.version, level, ['01', '02'], subs);
-  think(2);
+  think();
 
   group('3. Open Report Master List', () => {
     open_report_master_list(bearerToken, data.version);
     read_report_master_grid(bearerToken, data.version);
     chrome_and_static(bearerToken, data.version, level, ['03'], subs);
   });
-  think(2);
+  think();
 
   group('4. Open Add Report Master', () => {
     open_add_report_form(bearerToken, data.version, detailWdwid, editWdwid);
     chrome_and_static(bearerToken, data.version, level, ['04', '05'], subs);
   });
-  think(3);
+  think();
 
   let reportSeqRef: string | null = null;
   group('5. Save Report Master', () => {
@@ -96,14 +96,14 @@ export function crystal_report_journey(user: User, data: SetupData) {
     chrome_and_static(bearerToken, data.version, level, ['06'], subs);
   });
   const reportSeq = reportSeqRef!;
-  think(2);
+  think();
 
   group('6. Open Report Lists Section', () => {
     open_report_lists_search(bearerToken, data.version, editWdwid, reportSeq);
     read_report_lists_grid(bearerToken, data.version, editWdwid, reportSeq);
     chrome_and_static(bearerToken, data.version, level, ['07'], subs);
   });
-  think(2);
+  think();
 
   group('7. Add Report List', () => {
     const contextObjectId = get_report_list_window(bearerToken, data.version, superboxWdwid);
@@ -127,25 +127,25 @@ export function crystal_report_journey(user: User, data: SetupData) {
     subs.C_RPT_ENT_STAMP = chosen.entStamp;
     chrome_and_static(bearerToken, data.version, level, ['08'], subs);
   });
-  think(2);
+  think();
 
   group('8. Open Org Report Source Files', () => {
     open_org_source_search(bearerToken, data.version, editWdwid, reportSeq);
     read_org_source_grid(bearerToken, data.version, editWdwid, reportSeq);
     chrome_and_static(bearerToken, data.version, level, ['09'], subs);
   });
-  think(2);
+  think();
 
   group('9. Save & Close', () => {
     save_and_close_report(bearerToken, data.version);
     chrome_and_static(bearerToken, data.version, level, ['10'], subs);
   });
-  think(1);
+  think();
 
   group('10. Log Out', () => {
     report_application_unloading(bearerToken, data.version);
     chrome_and_static(bearerToken, data.version, level, ['11'], subs);
   });
 
-  sleep(1);
+  think();
 }

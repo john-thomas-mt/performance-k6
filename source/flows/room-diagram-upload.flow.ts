@@ -1,4 +1,4 @@
-import { check, group, sleep, fail } from 'k6';
+import { check, group, fail } from 'k6';
 import exec from 'k6/execution';
 import { login_to_events } from './login.flow.ts';
 import {
@@ -78,7 +78,7 @@ export function room_diagram_upload_journey(user: User, data: SetupData, files: 
     'NL-VirtualUserId': String(__VU),
   };
   chrome_and_static(bearerToken, data.version, level, ['01', '02'], subs);
-  think(2);
+  think();
 
   let eventRef: EventRow | null = null;
   group('3. Search Random Events', () => {
@@ -98,7 +98,7 @@ export function room_diagram_upload_journey(user: User, data: SetupData, files: 
     chrome_and_static(bearerToken, data.version, level, ['03', '04'], subs);
   });
   const event = eventRef!;
-  think(2);
+  think();
 
   let ctxRef: EventDocumentContext | null = null;
   group('4. Open Event Detail', () => {
@@ -121,7 +121,7 @@ export function room_diagram_upload_journey(user: User, data: SetupData, files: 
     chrome_and_static(bearerToken, data.version, level, ['05'], subs);
   });
   const ctx = ctxRef!;
-  think(3);
+  think();
 
   group('5. Import Room Diagram Document', () => {
     chrome_and_static(bearerToken, data.version, level, ['06', '07'], subs);
@@ -138,12 +138,12 @@ export function room_diagram_upload_journey(user: User, data: SetupData, files: 
     console.log(`[VU ${__VU}] Uploaded "${fixture.name}" to event ${event.evtId} (${event.desc})`);
     chrome_and_static(bearerToken, data.version, level, ['08'], subs);
   });
-  think(1);
+  think();
 
   group('6. Log Out', () => {
     report_application_unloading(bearerToken, data.version, 'ApplicationUnloading');
     chrome_and_static(bearerToken, data.version, level, ['09'], subs);
   });
 
-  sleep(1);
+  think();
 }

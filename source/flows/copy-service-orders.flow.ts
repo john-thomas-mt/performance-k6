@@ -1,4 +1,4 @@
-import { group, sleep } from 'k6';
+import { group } from 'k6';
 import exec from 'k6/execution';
 import { login_to_events } from './login.flow.ts';
 import { open_service_order_copy_form, save_service_order_copy, search_events } from '../utils/exports/apis.exp.ts';
@@ -61,7 +61,7 @@ export function copy_service_orders_journey(user: User, data: ServiceOrderSetup)
     P_SelectedOrderIds_Prefixed: orders.map((o) => `${o.orgCode}|${o.orderNbr}`).join(','),
   };
   chrome_and_static(bearerToken, data.version, level, ['01', '02', '03'], subs);
-  think(2);
+  think();
 
   if (include_ui(level)) {
     const event: EventRow | undefined = search_events(bearerToken, data.version, config.seedEventDesc, 'DiscoverCopyEvent').find(
@@ -73,18 +73,18 @@ export function copy_service_orders_journey(user: User, data: ServiceOrderSetup)
     }
   }
   chrome_and_static(bearerToken, data.version, level, ['04', '05'], subs);
-  think(3);
+  think();
 
   group('3. Open Copy Order(s) Form', () => {
     open_service_order_copy_form(bearerToken, data.version, encUserId, orders, refreshKey);
     chrome_and_static(bearerToken, data.version, level, ['06'], subs);
   });
-  think(3);
+  think();
 
   group('4. Save Service Order Copy', () => {
     const added = save_service_order_copy(bearerToken, data.version, encUserId, orders, refreshKey);
     console.log(`[VU ${__VU}] Copied ${orders.length} service order(s) → ${added.length} new order(s)`);
   });
 
-  sleep(1);
+  think();
 }
