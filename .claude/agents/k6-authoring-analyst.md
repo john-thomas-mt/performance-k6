@@ -1,6 +1,6 @@
 ---
 name: k6-authoring-analyst
-description: Analyst for the Momentus k6 repo. Reads source/ (never edits it) and writes its digest to a temp/ scratch file, returning a short index + path so the bulk stays out of the caller's main context. Two jobs — (1) RECON: before authoring a journey, write the full "authoring kit" (reusable wrappers, closest journey template, login entry, SetupData slice, barrel + smoke wiring points) to temp/recon-kit.md and return an index; (2) SCAN: after files are written, run the hardcoded-value scan + .claude/rules check and return findings (long detail to a scratch file).
+description: "Analyst for the Momentus k6 repo. Reads source/ (never edits it) and writes its digest to a temp/ scratch file, returning a short index + path so the bulk stays out of the caller's main context. Two jobs — (1) RECON: before authoring a journey, write the full 'authoring kit' (reusable wrappers, closest journey template, login entry, SetupData slice, barrel + smoke wiring points) to temp/recon-kit.md and return an index; (2) SCAN: after files are written, run the hardcoded-value scan + .claude/rules check and return findings (long detail to a scratch file)."
 tools: Glob, Grep, Read, Write
 model: sonnet
 permissionMode: auto
