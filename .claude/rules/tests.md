@@ -21,7 +21,7 @@ The entry-point layer k6 runs directly. A test spec drives one or more journeys 
 
 ## Execution shape
 - `smoke.spec.ts` fixes its own small `per-vu-iterations` shape, overridable via `-e VUS=`/`-e ITERS=` for the dev ladder
-- For real load, a dedicated load spec will shape executors from `load_profile()` (`source/config/profiles.config.ts`, selected with `-e PROFILE=`) rather than hardcoding `vus`/`stages`. This is **not yet wired**: `smoke.spec.ts` fixes its own shape and no spec currently reads `-e PROFILE=`, so `load_profile()` is scaffolding until that load spec is added
+- For real load, `source/tests/neoload.spec.ts` shapes executors from `load_profile()` (`source/config/profiles.config.ts`, selected with `-e PROFILE=`, default `neoload`) rather than hardcoding `vus`/`stages`: one `ramping-vus` scenario per flow sharing the profile's stages, with each iteration paced to a fixed cycle time via `pace()` (`source/utils/helpers/pacing.helper.ts`, `-e PACING=`, default 300s). `smoke.spec.ts` keeps its own small `per-vu-iterations` shape for the dev ladder
 
 ## Data & init context
 - Request-body builders and the user pool are imported as TS modules (see `rules/data.md`); `open()` is only for `source/data/uploads/**` fixtures and is valid only in the init context, never inside the VU function
