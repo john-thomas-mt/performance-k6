@@ -21,6 +21,13 @@ const profiles: { [profile: string]: Profile } = {
       { duration: '1m', target: 0 },
     ],
   },
+  neoload: {
+    stages: [
+      { duration: '5m', target: 10 },
+      { duration: '30m', target: 10 },
+      { duration: '5m', target: 0 },
+    ],
+  },
 };
 
 export function load_profile(defaultName = 'smoke') {
