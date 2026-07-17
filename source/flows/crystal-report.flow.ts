@@ -15,9 +15,19 @@ import {
   read_org_source_grid,
   save_and_close_report,
   report_application_unloading,
+  signalr_negotiate,
 } from '../utils/exports/apis.exp.ts';
-import { fidelity_level, include_ui, include_static, fire_ui_chrome, fire_static_assets, think } from '../utils/exports/helpers.exp.ts';
-import { crystalReportChrome, crystalReportStatic } from '../utils/exports/data.exp.ts';
+import {
+  fidelity_level,
+  include_ui,
+  include_static,
+  fire_ui_chrome,
+  fire_static_assets,
+  fire_transport,
+  fetch_bundle_versions,
+  think,
+} from '../utils/exports/helpers.exp.ts';
+import { crystalReportChrome, crystalReportStatic, crystalReportTransport } from '../utils/exports/data.exp.ts';
 import { User, SetupData, ReportListContext, FidelityLevel } from '../utils/exports/types.exp.ts';
 
 export const crystalReportThresholds = {
@@ -40,7 +50,10 @@ type Subs = { [token: string]: string };
 function chrome_and_static(token: string, version: string, level: FidelityLevel, steps: string[], subs: Subs) {
   for (const step of steps) {
     if (include_ui(level)) fire_ui_chrome(token, version, crystalReportChrome[step] ?? [], subs);
-    if (include_static(level)) fire_static_assets(crystalReportStatic[step] ?? []);
+    if (include_static(level)) {
+      fire_static_assets(crystalReportStatic[step] ?? []);
+      fire_transport(token, version, crystalReportTransport[step] ?? [], subs);
+    }
   }
 }
 
@@ -56,13 +69,9 @@ export function crystal_report_journey(user: User, data: SetupData) {
   const editWdwid = `SA${wdwBase + 1}`;
   const superboxWdwid = `SA${wdwBase + 50}`;
 
-  const { bearerToken, encUserId } = login_to_events(user, data.version);
-
   const subs: Subs = {
     'C_USI_Version': data.version,
     'C_EnterpriseVersion': data.version,
-    'C_EncID': encUserId,
-    'C_UserId': bearerToken.split('|')[0],
     'P_RPT_Id': reportId,
     'P_RPT_NAME': reportName,
     'P_CrystalReport_Scope.Value': 'X',
@@ -72,24 +81,48 @@ export function crystal_report_journey(user: User, data: SetupData) {
     'NL-VirtualUserId': String(__VU),
     'p_Name': runToken,
   };
-  chrome_and_static(bearerToken, data.version, level, ['01', '02'], subs);
+
+  group('T30_CrystalReport_01_Launch', () => {
+    if (include_static(level)) {
+      const bundles = fetch_bundle_versions();
+      subs.C_backOffice_version = bundles.backOffice;
+      subs.C_css_version = bundles.css;
+      subs.C_modernizr_version = bundles.modernizr;
+      subs.C_english_version = bundles.english;
+    }
+    chrome_and_static('', data.version, level, ['01'], subs);
+  });
   think();
 
-  group('3. Open Report Master List', () => {
+  const { bearerToken, encUserId } = login_to_events(user, data.version, 'T30_CrystalReport_02_Login', (token, enc, sso) => {
+    subs.C_UserId = token.split('|')[0];
+    subs.C_EncID = enc;
+    subs.C_TokenID = sso;
+    if (include_static(level)) subs.C_ConnectionToken = signalr_negotiate(token, data.version);
+    chrome_and_static(token, data.version, level, ['02'], subs);
+  });
+  think();
+
+  group('T30_CrystalReport_03_Search_ReportMaster', () => {
     open_report_master_list(bearerToken, data.version);
     read_report_master_grid(bearerToken, data.version);
     chrome_and_static(bearerToken, data.version, level, ['03'], subs);
   });
   think();
 
-  group('4. Open Add Report Master', () => {
+  group('T30_CrystalReport_04_ClickOn_AddReportMaster', () => {
     open_add_report_form(bearerToken, data.version, detailWdwid, editWdwid);
-    chrome_and_static(bearerToken, data.version, level, ['04', '05'], subs);
+    chrome_and_static(bearerToken, data.version, level, ['04'], subs);
+  });
+  think();
+
+  group('T30_CrystalReport_05_Fill_General_Details', () => {
+    chrome_and_static(bearerToken, data.version, level, ['05'], subs);
   });
   think();
 
   let reportSeqRef: string | null = null;
-  group('5. Save Report Master', () => {
+  group('T30_CrystalReport_06_ApplyChanges_General_Details', () => {
     reportSeqRef = save_crystal_report(bearerToken, data.version, reportName, reportId, detailWdwid, editWdwid);
     console.log(`[VU ${__VU}] Created crystal report ${reportId} (seq ${reportSeqRef}) — ${reportName}`);
     subs.C_AddedRowKeys = reportSeqRef;
@@ -98,14 +131,14 @@ export function crystal_report_journey(user: User, data: SetupData) {
   const reportSeq = reportSeqRef!;
   think();
 
-  group('6. Open Report Lists Section', () => {
+  group('T30_CrystalReport_07_ClickOn_ReportLists', () => {
     open_report_lists_search(bearerToken, data.version, editWdwid, reportSeq);
     read_report_lists_grid(bearerToken, data.version, editWdwid, reportSeq);
     chrome_and_static(bearerToken, data.version, level, ['07'], subs);
   });
   think();
 
-  group('7. Add Report List', () => {
+  group('T30_CrystalReport_08_SelectAndSave_ReportLists', () => {
     const contextObjectId = get_report_list_window(bearerToken, data.version, superboxWdwid);
     const ctx: ReportListContext = {
       superboxWdwid,
@@ -129,23 +162,22 @@ export function crystal_report_journey(user: User, data: SetupData) {
   });
   think();
 
-  group('8. Open Org Report Source Files', () => {
+  group('T30_CrystalReport_09_ClickOn_OrganizationReportSourceFiles', () => {
     open_org_source_search(bearerToken, data.version, editWdwid, reportSeq);
     read_org_source_grid(bearerToken, data.version, editWdwid, reportSeq);
     chrome_and_static(bearerToken, data.version, level, ['09'], subs);
   });
   think();
 
-  group('9. Save & Close', () => {
+  group('T30_CrystalReport_10_ClickOn_Save&Close', () => {
     save_and_close_report(bearerToken, data.version);
     chrome_and_static(bearerToken, data.version, level, ['10'], subs);
   });
   think();
 
-  group('10. Log Out', () => {
+  group('T30_CrystalReport_11_LogOut', () => {
     report_application_unloading(bearerToken, data.version);
     chrome_and_static(bearerToken, data.version, level, ['11'], subs);
   });
-
   think();
 }

@@ -8,9 +8,19 @@ import {
   open_event_document_form,
   save_event_document,
   report_application_unloading,
+  signalr_negotiate,
 } from '../utils/exports/apis.exp.ts';
-import { fidelity_level, include_ui, include_static, fire_ui_chrome, fire_static_assets, think } from '../utils/exports/helpers.exp.ts';
-import { roomDiagramUploadChrome, roomDiagramUploadStatic } from '../utils/exports/data.exp.ts';
+import {
+  fidelity_level,
+  include_ui,
+  include_static,
+  fire_ui_chrome,
+  fire_static_assets,
+  fire_transport,
+  fetch_bundle_versions,
+  think,
+} from '../utils/exports/helpers.exp.ts';
+import { roomDiagramUploadChrome, roomDiagramUploadStatic, roomDiagramUploadTransport } from '../utils/exports/data.exp.ts';
 import { User, SetupData, EventRow, EventDocumentContext, EventDocumentFixture, FidelityLevel } from '../utils/exports/types.exp.ts';
 
 const SEARCH_KEYWORDS = [
@@ -55,7 +65,10 @@ type Subs = { [token: string]: string };
 function chrome_and_static(token: string, version: string, level: FidelityLevel, steps: string[], subs: Subs) {
   for (const step of steps) {
     if (include_ui(level)) fire_ui_chrome(token, version, roomDiagramUploadChrome[step] ?? [], subs);
-    if (include_static(level)) fire_static_assets(roomDiagramUploadStatic[step] ?? []);
+    if (include_static(level)) {
+      fire_static_assets(roomDiagramUploadStatic[step] ?? []);
+      fire_transport(token, version, roomDiagramUploadTransport[step] ?? [], subs);
+    }
   }
 }
 
@@ -66,22 +79,43 @@ export function room_diagram_upload_journey(user: User, data: SetupData, files: 
   const keyword = SEARCH_KEYWORDS[iter % SEARCH_KEYWORDS.length];
   const fixture = files[iter % files.length];
 
-  const { bearerToken, encUserId } = login_to_events(user, data.version);
-
   const subs: Subs = {
     'C_USI_Version': data.version,
     'C_EnterpriseVersion': data.version,
-    'C_EncID': encUserId,
-    'C_UserId': bearerToken.split('|')[0],
     'P_SearchRandomEvent.keyword': keyword,
     'P_IterationNumber': String(iter),
     'NL-VirtualUserId': String(__VU),
+    'P_EpochTimestamp': String(Date.now()),
   };
-  chrome_and_static(bearerToken, data.version, level, ['01', '02'], subs);
+
+  group('T31_RoomDiagramFileStorage_01_Launch', () => {
+    if (include_static(level)) {
+      const bundles = fetch_bundle_versions();
+      subs.C_backOffice_version = bundles.backOffice;
+      subs.C_css_version = bundles.css;
+      subs.C_modernizr_version = bundles.modernizr;
+      subs.C_english_version = bundles.english;
+    }
+    chrome_and_static('', data.version, level, ['01'], subs);
+  });
+  think();
+
+  const { bearerToken } = login_to_events(user, data.version, 'T31_RoomDiagramFileStorage_02_Login', (token, enc, sso) => {
+    subs.C_UserId = token.split('|')[0];
+    subs.C_EncID = enc;
+    subs.C_TokenID = sso;
+    if (include_static(level)) subs.C_ConnectionToken = signalr_negotiate(token, data.version);
+    chrome_and_static(token, data.version, level, ['02'], subs);
+  });
+  think();
+
+  group('T31_RoomDiagramFileStorage_03_ClickOn_Events', () => {
+    chrome_and_static(bearerToken, data.version, level, ['03'], subs);
+  });
   think();
 
   let eventRef: EventRow | null = null;
-  group('3. Search Random Events', () => {
+  group('T31_RoomDiagramFileStorage_04_Search_RandomEvents', () => {
     let rows = search_events(bearerToken, data.version, keyword);
     if (rows.length === 0) rows = search_events(bearerToken, data.version, 'event', 'SearchEventsFallback');
     if (!check(null, { 'Event found to attach document': () => rows.some((r) => !!r.evtId) })) {
@@ -95,13 +129,13 @@ export function room_diagram_upload_journey(user: User, data: SetupData, files: 
     subs.C_EVT_STATUS_1 = chosen.status;
     subs.C_ORG_CODE_1 = chosen.orgCode;
     subs.C_ROW_KEY_1 = chosen.rowKey;
-    chrome_and_static(bearerToken, data.version, level, ['03', '04'], subs);
+    chrome_and_static(bearerToken, data.version, level, ['04'], subs);
   });
   const event = eventRef!;
   think();
 
   let ctxRef: EventDocumentContext | null = null;
-  group('4. Open Event Detail', () => {
+  group('T31_RoomDiagramFileStorage_05_Select_OneRandomEvent', () => {
     const detail = open_event_detail(bearerToken, data.version, event.evtId);
     ctxRef = {
       evtAcct: event.acct,
@@ -123,27 +157,33 @@ export function room_diagram_upload_journey(user: User, data: SetupData, files: 
   const ctx = ctxRef!;
   think();
 
-  group('5. Import Room Diagram Document', () => {
-    chrome_and_static(bearerToken, data.version, level, ['06', '07'], subs);
+  group('T31_RoomDiagramFileStorage_06_Open_EventDocumentsTab', () => {
+    chrome_and_static(bearerToken, data.version, level, ['06'], subs);
+  });
+  think();
+
+  group('T31_RoomDiagramFileStorage_07_ClickOn_ImportDocument(s)', () => {
     const fileKey = cache_document_file(bearerToken, data.version, fixture.name, fixture.content);
     subs.C_FileKey = fileKey;
     subs['random_file_name'] = fixture.name;
+    chrome_and_static(bearerToken, data.version, level, ['07'], subs);
+  });
+  think();
 
-    const doc = open_event_document_form(bearerToken, data.version, ctx, fileKey, fixture.name, wdwid);
+  group('T31_RoomDiagramFileStorage_08_SelectAndClickOn_Import', () => {
+    const doc = open_event_document_form(bearerToken, data.version, ctx, subs.C_FileKey, fixture.name, wdwid);
     subs.C_MM446_DOC_DESC = doc.docDesc;
     subs.C_docEvents_EV200_EVT_DESC = doc.evtDesc;
     subs.C_DocAccount_EV870_NAME = doc.acctName;
-
     save_event_document(bearerToken, data.version, ctx, doc, wdwid);
     console.log(`[VU ${__VU}] Uploaded "${fixture.name}" to event ${event.evtId} (${event.desc})`);
     chrome_and_static(bearerToken, data.version, level, ['08'], subs);
   });
   think();
 
-  group('6. Log Out', () => {
+  group('T31_RoomDiagramFileStorage_09_LogOut', () => {
     report_application_unloading(bearerToken, data.version, 'ApplicationUnloading');
     chrome_and_static(bearerToken, data.version, level, ['09'], subs);
   });
-
   think();
 }

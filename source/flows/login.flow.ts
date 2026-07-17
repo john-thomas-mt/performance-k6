@@ -22,12 +22,20 @@ export function login_to_momentus_assistant(user: User, version: string) {
   return { bearerToken: bearerToken!, salesAiJwt: salesAiJwt! };
 }
 
-export function login_to_events(user: User, version: string) {
+export function login_to_events(
+  user: User,
+  version: string,
+  loginGroup = '1. Login',
+  onAuthed?: (bearerToken: string, encUserId: string, ssoToken: string) => void,
+) {
   let bearerToken: string | null = null;
   let encUserId: string | null = null;
 
-  group('1. Login', () => {
-    ({ bearerToken, encUserId } = sign_in_session(user.username, user.password, version));
+  group(loginGroup, () => {
+    const session = sign_in_session(user.username, user.password, version);
+    bearerToken = session.bearerToken;
+    encUserId = session.encUserId;
+    if (onAuthed) onAuthed(session.bearerToken, session.encUserId, session.ssoToken);
   });
 
   return { bearerToken: bearerToken!, encUserId: encUserId! };
