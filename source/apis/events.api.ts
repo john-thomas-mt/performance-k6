@@ -18,6 +18,7 @@ import {
   eventSavePayload,
   eventDocumentFormPayload,
   eventDocumentSavePayload,
+  eventControlInfoPayload,
 } from '../utils/exports/data.exp.ts';
 import {
   EventRow,
@@ -27,6 +28,17 @@ import {
   EventDocumentFields,
   TransportTable,
 } from '../utils/exports/types.exp.ts';
+
+export function get_event_control_info(token: string, version: string, row: EventRow, name = 'GetControlInfo') {
+  const res = http.post(`${config.baseUrl}/api/USIDataGridServer/GetControlInfo`, JSON.stringify(eventControlInfoPayload(row)), {
+    headers: build_headers(token, version),
+    tags: { name },
+  });
+
+  check(res, {
+    [`${name}: status is 201`]: (r) => r.status === 201,
+  });
+}
 
 export function search_events(token: string, version: string, searchValue: string, name = 'SearchEvents'): EventRow[] {
   const res = http.post(`${config.baseUrl}/api/USIDataGridServer/GetGridData2`, JSON.stringify(searchPayload(searchValue)), {
@@ -54,6 +66,20 @@ export function search_events(token: string, version: string, searchValue: strin
       status: 'EV200_EVT_STATUS',
       linkedFuncs: 'EV200_LINKED_FUNCS',
       orgCode: 'EV200_ORG_CODE',
+      acctName: 'EventAccount_EV870_NAME',
+      acctClass: 'EventAccount_EV870_CLASS',
+      evtType: 'EV200_EVT_TYPE',
+      cEvtType: 'cEVT_TYPE',
+      cEvtTypeSort: 'cEVT_TYPE__SORT',
+      purgeInd: 'EV200_PURGE_IND',
+      plnAttend: 'EV200_PLN_ATTEND',
+      parentEvtId: 'cPARENT_EVT_ID',
+      evtStartDate: 'EV200_EVT_START_DATE',
+      evtStartTime: 'EV200_EVT_START_TIME',
+      evtEndDate: 'EV200_EVT_END_DATE',
+      evtEndTime: 'EV200_EVT_END_TIME',
+      evtInDate: 'EV200_EVT_IN_DATE',
+      evtInTime: 'EV200_EVT_IN_TIME',
     },
     name,
   );

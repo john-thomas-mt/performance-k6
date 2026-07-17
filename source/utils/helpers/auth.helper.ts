@@ -49,13 +49,15 @@ export function sign_in_session(username: string, password: string, version: str
   const body = res.json();
   const bearerToken = extract_bearer_token(body);
   const encUserId = extract_encrypted_sn(body);
+  const ssoMatch = /true,\s*"([^"]*)"/.exec(body_text(res));
+  const ssoToken = ssoMatch ? ssoMatch[1] : '';
 
   check(bearerToken, { 'SignIn: bearer token present': (t) => t !== null });
   check(encUserId, { 'SignIn: encoded user id present': (e) => e !== null });
   if (!bearerToken) fail('sign_in_session: could not extract bearer token');
   if (!encUserId) fail('sign_in_session: could not extract EncryptedSN');
 
-  return { bearerToken, encUserId };
+  return { bearerToken, encUserId, ssoToken };
 }
 
 export function ma_authenticate(bearerToken: string, version: string) {
