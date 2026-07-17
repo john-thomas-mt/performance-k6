@@ -1,7 +1,13 @@
 import { group } from 'k6';
 import exec from 'k6/execution';
 import { login_to_events } from './login.flow.ts';
-import { open_service_order_copy_form, save_service_order_copy, search_events, signalr_negotiate } from '../utils/exports/apis.exp.ts';
+import {
+  open_service_order_copy_form,
+  save_service_order_copy,
+  search_events,
+  signalr_negotiate,
+  get_service_order_control_info,
+} from '../utils/exports/apis.exp.ts';
 import {
   fidelity_level,
   include_ui,
@@ -91,12 +97,14 @@ export function copy_service_orders_journey(user: User, data: ServiceOrderSetup)
   });
   think();
 
+  let eventRowKey = '';
   group('T34_CopyServiceOrders_04_SearchEvent', () => {
     if (include_ui(level)) {
       const event: EventRow | undefined = search_events(bearerToken, data.version, config.seedEventDesc, 'DiscoverCopyEvent').find(
         (e) => String(e.evtId) === String(anchor.evtId),
       );
       if (event) {
+        eventRowKey = event.rowKey;
         subs.C_Event_cROW_KEY = event.rowKey;
         subs['P_26_2_CopyServiceOrders.eventName'] = event.desc;
       }
@@ -106,11 +114,13 @@ export function copy_service_orders_journey(user: User, data: ServiceOrderSetup)
   think();
 
   group('T34_CopyServiceOrders_05_ClickServiceOrdersSection', () => {
+    if (include_ui(level)) get_service_order_control_info(bearerToken, data.version, orders[0], eventRowKey);
     chrome_and_static(bearerToken, data.version, level, ['05'], subs);
   });
   think();
 
   group('T34_CopyServiceOrders_06_SelectAndCopyServiceOrders', () => {
+    if (include_ui(level) && orders[1]) get_service_order_control_info(bearerToken, data.version, orders[1], eventRowKey);
     open_service_order_copy_form(bearerToken, data.version, encUserId, orders, refreshKey);
     chrome_and_static(bearerToken, data.version, level, ['06'], subs);
   });

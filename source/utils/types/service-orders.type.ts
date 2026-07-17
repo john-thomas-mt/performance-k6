@@ -28,6 +28,9 @@ export type ServiceOrderRow = {
   occurrence: string;
   eventSuiteId: string;
   ordCatSeq: string;
+  acctName: string;
+  funcDesc: string;
+  updDateIso: string;
 };
 
 export type DocumentFields = {

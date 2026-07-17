@@ -9,6 +9,7 @@ import {
   save_event_document,
   report_application_unloading,
   signalr_negotiate,
+  get_event_control_info,
 } from '../utils/exports/apis.exp.ts';
 import {
   fidelity_level,
@@ -136,6 +137,7 @@ export function room_diagram_upload_journey(user: User, data: SetupData, files: 
 
   let ctxRef: EventDocumentContext | null = null;
   group('T31_RoomDiagramFileStorage_05_Select_OneRandomEvent', () => {
+    if (include_ui(level)) get_event_control_info(bearerToken, data.version, event);
     const detail = open_event_detail(bearerToken, data.version, event.evtId);
     ctxRef = {
       evtAcct: event.acct,

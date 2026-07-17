@@ -15,6 +15,7 @@ import {
   documentSavePayload,
   copyServiceOrdersFormPayload,
   copyServiceOrdersSavePayload,
+  serviceOrderControlInfoPayload,
 } from '../utils/exports/data.exp.ts';
 import {
   EventRow,
@@ -72,6 +73,9 @@ export function load_service_orders(token: string, version: string, event: Event
       occurrence: 'ER100_OCCURRENCE',
       eventSuiteId: 'ER100_EVENT_SUITE_ID',
       ordCatSeq: 'ER100_ORD_CAT_SEQ',
+      acctName: 'OrderAccount_EV870_NAME',
+      funcDesc: 'OrderFunc_EV700_FUNC_DESC',
+      updDateIso: 'ER100_UPD_DATE_ISO',
     },
     name,
     (tables) => tables.find((t) => t.TransportDataColumns.some((c) => c.ColumnName === 'ER100_ORD_NBR')),
@@ -366,6 +370,24 @@ export function save_service_order_items(
     console.error(`[VU ${__VU}] save_service_order_items failed — HTTP ${res.status}: ${body_text(res).slice(0, 300)}`);
     fail('save_service_order_items did not succeed');
   }
+}
+
+export function get_service_order_control_info(
+  token: string,
+  version: string,
+  rep: ServiceOrderRow,
+  eventRowKey: string,
+  name = 'GetControlInfo',
+) {
+  const res = http.post(
+    `${config.baseUrl}/api/USIDataGridServer/GetControlInfo`,
+    JSON.stringify(serviceOrderControlInfoPayload(rep, eventRowKey)),
+    { headers: build_headers(token, version), tags: { name } },
+  );
+
+  check(res, {
+    [`${name}: status is 201`]: (r) => r.status === 201,
+  });
 }
 
 export function open_service_order_copy_form(

@@ -7,6 +7,20 @@ export type EventRow = {
   status: string;
   linkedFuncs: string;
   orgCode: string;
+  acctName: string;
+  acctClass: string;
+  evtType: string;
+  cEvtType: string;
+  cEvtTypeSort: string;
+  purgeInd: string;
+  plnAttend: string;
+  parentEvtId: string;
+  evtStartDate: string;
+  evtStartTime: string;
+  evtEndDate: string;
+  evtEndTime: string;
+  evtInDate: string;
+  evtInTime: string;
 };
 
 export type EventSaveResult = {

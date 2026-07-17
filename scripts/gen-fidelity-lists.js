@@ -34,6 +34,10 @@ const SPINE = [
   '/api/USISearchComboServer/GetDynamicSearchResults',
   // scripted as signalr_negotiate (produces the connectionToken the transport signalr/start consumes)
   '/signalr/negotiate',
+  // UI-chrome grid control-info reads (body echoes a full selected grid row) scripted as dedicated,
+  // fidelity-gated wrappers (get_service_order_control_info / get_event_control_info) in the T34/T31
+  // flows that need 1:1 parity — excluded here so the chrome tier does not also fire them
+  '/api/USIDataGridServer/GetControlInfo',
 ];
 // removed/renamed on 26.3 but present on 26.2 and earlier — emit with a removedIn guard so fire time skips
 // them only on releases that no longer serve them (version_at_least), instead of dropping them outright
@@ -41,10 +45,6 @@ const VERSION_GATED = {
   '/api/NotificationServer/RetrieveNotificationCount': '26.3',
   '/api/NotificationServer/RetrieveUnseenChangelogNotificationsCount': '26.3',
 };
-// UI-chrome reads whose body echoes a full selected grid row (ROW*_ columns); reproducing them needs
-// per-row correlation the lean spine never extracts, so they can only ever be skipped at fire time —
-// drop them from the chrome tier instead so a FIDELITY=full run stays green with no skipped requests
-const UNREPRODUCIBLE = ['/api/USIDataGridServer/GetControlInfo'];
 const STATIC_EXT = /\.(js|css|html|svg|png|ico|woff2?|map|jpg|jpeg|gif)(\?|$)/i;
 
 const stepDirs = fs
@@ -66,7 +66,7 @@ for (const step of stepDirs) {
     const rawPath = (xml.match(/path="([^"]+)"/) || [])[1] || '';
     if (!rawPath) continue;
     const bare = rawPath.replace(/^\/\$\{[^}]+\}/, '').replace(/^\/[^/]*(?=\/(api|app)\/)/, ''); // strip version segment
-    if (SPINE.some((s) => bare.startsWith(s)) || UNREPRODUCIBLE.some((s) => bare.startsWith(s))) continue;
+    if (SPINE.some((s) => bare.startsWith(s))) continue;
 
     // recover the query string from NeoLoad <parameter> elements, keeping ${...} tokens for runtime substitution
     const params = [...xml.matchAll(/<parameter\b([^>]*)>/g)]
