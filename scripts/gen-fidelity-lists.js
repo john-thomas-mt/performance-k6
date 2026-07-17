@@ -39,6 +39,21 @@ const SPINE = [
   // flows that need 1:1 parity — excluded here so the chrome tier does not also fire them
   '/api/USIDataGridServer/GetControlInfo',
 ];
+// per-journey spine: endpoints a specific journey scripts as correlated wrappers but which share a path
+// with wrapper-less UI-chrome grids in other journeys, so they can't be excluded globally via SPINE.
+// Scoped per journey and per step (the step numbers the wrapper reproduces) so only those occurrences are
+// dropped from that journey's chrome, leaving a genuine UI grid on the same path in another step in place
+// (e.g. crystal-report re-opens the report-master list at step 10 via a wrapper, but its grid read there is
+// pure chrome — so GenericListServer is excluded at 10, USIDataGridServer is not).
+const JOURNEY_SPINE = {
+  'crystal-report': {
+    '/api/GenericListServer/GetInitialData2': ['03', '10'],
+    '/api/USIDataGridServer/GetInitialData2': ['03', '07', '09'],
+    '/api/GenericSearchServer/GetInitialData2': ['07', '09'],
+    '/api/USIMultiSelectSuperBoxPageServer/GetInitialData': ['08'],
+    '/api/USIMultiSelectSuperBoxPageServer/save': ['08'],
+  },
+};
 // removed/renamed on 26.3 but present on 26.2 and earlier — emit with a removedIn guard so fire time skips
 // them only on releases that no longer serve them (version_at_least), instead of dropping them outright
 const VERSION_GATED = {
@@ -67,6 +82,9 @@ for (const step of stepDirs) {
     if (!rawPath) continue;
     const bare = rawPath.replace(/^\/\$\{[^}]+\}/, '').replace(/^\/[^/]*(?=\/(api|app)\/)/, ''); // strip version segment
     if (SPINE.some((s) => bare.startsWith(s))) continue;
+    const journeySpine = JOURNEY_SPINE[journey] || {};
+    const journeyKey = Object.keys(journeySpine).find((p) => bare.startsWith(p));
+    if (journeyKey && journeySpine[journeyKey].includes(stepNo)) continue;
 
     // recover the query string from NeoLoad <parameter> elements, keeping ${...} tokens for runtime substitution
     const params = [...xml.matchAll(/<parameter\b([^>]*)>/g)]
