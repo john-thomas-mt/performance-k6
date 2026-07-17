@@ -1,14 +1,14 @@
-/* Walk a NeoLoad VU tree and emit the tier-2 (UI chrome) and tier-3 (static) request lists a fidelity
-   port fires behind -e FIDELITY=ui|full. Spine endpoints (scripted as correlated wrappers) are excluded
-   so they are not double-fired. Requests are grouped by NeoLoad step so the flow can fire each slice in
-   the matching group, keeping the extra load in-flight around the spine writes.
-   Usage: node scripts/gen-fidelity-lists.js "<path to VU tree>" <chrome-out.ts> <static-out.ts> */
+/* Walk a NeoLoad VU tree and emit the tier-2 (UI chrome), tier-3 (static), and transport request lists a
+   fidelity port fires behind -e FIDELITY=ui|full. Spine endpoints (scripted as correlated wrappers) are
+   excluded so they are not double-fired. Requests are grouped by NeoLoad step so the flow can fire each
+   slice in the matching group, keeping the extra load in-flight around the spine writes.
+   Usage: node scripts/gen-fidelity-lists.js "<path to VU tree>" <chrome-out.ts> <static-out.ts> <transport-out.ts> */
 const fs = require('fs');
 const path = require('path');
 
-const [vuRoot, chromeOut, staticOut] = process.argv.slice(2);
-if (!vuRoot || !chromeOut || !staticOut) {
-  console.error('usage: node scripts/gen-fidelity-lists.js <vu-tree> <chrome-out.ts> <static-out.ts>');
+const [vuRoot, chromeOut, staticOut, transportOut] = process.argv.slice(2);
+if (!vuRoot || !chromeOut || !staticOut || !transportOut) {
+  console.error('usage: node scripts/gen-fidelity-lists.js <vu-tree> <chrome-out.ts> <static-out.ts> <transport-out.ts>');
   process.exit(1);
 }
 const ROOT = path.join(vuRoot, 'actions-container');
@@ -17,6 +17,7 @@ const camel = (file, suffix) => path.basename(file, suffix).replace(/-([a-z])/g,
 const journey = path.basename(chromeOut, '.chrome.ts');
 const chromeVar = `${camel(chromeOut, '.chrome.ts')}Chrome`;
 const staticVar = `${camel(staticOut, '.static.ts')}Static`;
+const transportVar = `${camel(transportOut, '.transport.ts')}Transport`;
 
 // spine endpoints scripted as correlated wrappers — never emit as chrome (would double-fire)
 const SPINE = [
@@ -31,9 +32,15 @@ const SPINE = [
   '/api/GenericServer/SignIn',
   // promoted to a gated correlated wrapper (produces the search-result key the chrome batch consumes)
   '/api/USISearchComboServer/GetDynamicSearchResults',
+  // scripted as signalr_negotiate (produces the connectionToken the transport signalr/start consumes)
+  '/signalr/negotiate',
 ];
-// removed/renamed on 26.3 — the 26.2 recording still has them; drop so replay stays green
-const STALE = ['/api/NotificationServer/RetrieveNotificationCount', '/api/NotificationServer/RetrieveUnseenChangelogNotificationsCount'];
+// removed/renamed on 26.3 but present on 26.2 and earlier — emit with a removedIn guard so fire time skips
+// them only on releases that no longer serve them (version_at_least), instead of dropping them outright
+const VERSION_GATED = {
+  '/api/NotificationServer/RetrieveNotificationCount': '26.3',
+  '/api/NotificationServer/RetrieveUnseenChangelogNotificationsCount': '26.3',
+};
 // UI-chrome reads whose body echoes a full selected grid row (ROW*_ columns); reproducing them needs
 // per-row correlation the lean spine never extracts, so they can only ever be skipped at fire time —
 // drop them from the chrome tier instead so a FIDELITY=full run stays green with no skipped requests
@@ -47,6 +54,7 @@ const stepDirs = fs
 
 const chrome = {};
 const stat = {};
+const transport = {};
 
 for (const step of stepDirs) {
   const stepNo = (step.match(/_(\d+)_/) || [])[1];
@@ -58,8 +66,7 @@ for (const step of stepDirs) {
     const rawPath = (xml.match(/path="([^"]+)"/) || [])[1] || '';
     if (!rawPath) continue;
     const bare = rawPath.replace(/^\/\$\{[^}]+\}/, '').replace(/^\/[^/]*(?=\/(api|app)\/)/, ''); // strip version segment
-    if (SPINE.some((s) => bare.startsWith(s)) || STALE.some((s) => bare.startsWith(s)) || UNREPRODUCIBLE.some((s) => bare.startsWith(s)))
-      continue;
+    if (SPINE.some((s) => bare.startsWith(s)) || UNREPRODUCIBLE.some((s) => bare.startsWith(s))) continue;
 
     // recover the query string from NeoLoad <parameter> elements, keeping ${...} tokens for runtime substitution
     const params = [...xml.matchAll(/<parameter\b([^>]*)>/g)]
@@ -71,30 +78,50 @@ for (const step of stepDirs) {
       .filter(Boolean);
     const url = params.length ? `${bare}?${params.join('&')}` : bare;
 
+    // NeoLoad stores large bodies Base64-encoded; decode so the real JSON (with ${...} tokens) is emitted
+    const m = xml.match(/<textPostContent>\s*<!\[CDATA\[([\s\S]*?)\]\]>/);
+    let body = m ? m[1] : undefined;
+    if (body && body.startsWith('Encoded(Base64):')) body = Buffer.from(body.slice(16), 'base64').toString('utf8');
+
     if (bare.includes('/app/') || STATIC_EXT.test(bare)) {
       (stat[stepNo] = stat[stepNo] || []).push({ path: bare });
     } else if (bare.includes('/api/')) {
-      const m = xml.match(/<textPostContent>\s*<!\[CDATA\[([\s\S]*?)\]\]>/);
-      let body = m ? m[1] : undefined;
-      // NeoLoad stores large bodies Base64-encoded; decode so the real JSON (with ${...} tokens) is emitted
-      if (body && body.startsWith('Encoded(Base64):')) body = Buffer.from(body.slice(16), 'base64').toString('utf8');
       const req = { method, path: url };
       if (method !== 'GET' && body !== undefined) req.body = body;
+      const gated = Object.keys(VERSION_GATED).find((p) => bare.startsWith(p));
+      if (gated) req.removedIn = VERSION_GATED[gated];
       (chrome[stepNo] = chrome[stepNo] || []).push(req);
+    } else {
+      // the paramless app85.cshtml bootstrap is scripted as the fetch_bundle_versions wrapper (it correlates
+      // the bundle-version tokens the other transport requests consume) — exclude here to avoid double-firing
+      if (bare.endsWith('app85.cshtml') && !params.length) continue;
+      // neither /api/ nor a static asset (SignalR start, SSO cshtml, …) — the transport tier, fired at
+      // FIDELITY=full so a full run reproduces every request the recording made
+      const req = { method, path: url };
+      if (method !== 'GET' && body !== undefined) req.body = body;
+      (transport[stepNo] = transport[stepNo] || []).push(req);
     }
   }
 }
 
-const banner = `/* eslint-disable no-template-curly-in-string */\n/* Generated by scripts/gen-fidelity-lists.js from the ${journey} NeoLoad tree — do not hand-edit.\n   Regenerate after re-recording. Tier-2 (UI chrome) requests fired behind -e FIDELITY=ui|full.\n   The \${...} tokens are correlation placeholders substituted at fire time by fire_ui_chrome. */`;
+const tokenBanner = (kind) =>
+  `/* eslint-disable no-template-curly-in-string */\n/* Generated by scripts/gen-fidelity-lists.js from the ${journey} NeoLoad tree — do not hand-edit.\n   Regenerate after re-recording. ${kind} requests fired behind -e FIDELITY.\n   The \${...} tokens are correlation placeholders substituted at fire time. */`;
+
+for (const out of [chromeOut, staticOut, transportOut]) fs.mkdirSync(path.dirname(out), { recursive: true });
 fs.writeFileSync(
   chromeOut,
-  `${banner}\nimport { ChromeRequest } from '../../utils/exports/types.exp.ts';\n\nexport const ${chromeVar}: { [step: string]: ChromeRequest[] } = ${JSON.stringify(chrome, null, 2)};\n`,
+  `${tokenBanner('Tier-2 (UI chrome)')}\nimport { ChromeRequest } from '../../utils/exports/types.exp.ts';\n\nexport const ${chromeVar}: { [step: string]: ChromeRequest[] } = ${JSON.stringify(chrome, null, 2)};\n`,
 );
 fs.writeFileSync(
   staticOut,
   `/* Generated by scripts/gen-fidelity-lists.js — tier-3 static content fired behind -e FIDELITY=full. */\nimport { StaticRequest } from '../../utils/exports/types.exp.ts';\n\nexport const ${staticVar}: { [step: string]: StaticRequest[] } = ${JSON.stringify(stat, null, 2)};\n`,
 );
+fs.writeFileSync(
+  transportOut,
+  `${tokenBanner('Transport (non-api/non-static)')}\nimport { ChromeRequest } from '../../utils/exports/types.exp.ts';\n\nexport const ${transportVar}: { [step: string]: ChromeRequest[] } = ${JSON.stringify(transport, null, 2)};\n`,
+);
 
 const n = (o) => Object.values(o).reduce((a, v) => a + v.length, 0);
 console.log(`chrome: ${n(chrome)} requests across ${Object.keys(chrome).length} steps -> ${chromeOut}`);
 console.log(`static: ${n(stat)} requests across ${Object.keys(stat).length} steps -> ${staticOut}`);
+console.log(`transport: ${n(transport)} requests across ${Object.keys(transport).length} steps -> ${transportOut}`);
