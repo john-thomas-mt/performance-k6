@@ -40,8 +40,11 @@ faithful on the current app, and each of these is load-bearing (skipping one pro
   not double-fired. The generator's own exclusion lists are the authoritative set.
 - **version-gate an endpoint a later release drops** rather than deleting it — emit it with a `removedIn`
   marker and let fire time skip it once the runtime server version reaches that release (`version_at_least`),
-  so it still replays on the older releases that serve it. Reserve an outright drop for a read the lean spine
-  can't reproduce (a body echoing a full selected grid row).
+  so it still replays on the older releases that serve it. A read whose body **echoes a full selected grid
+  row** (`GetControlInfo`, carrying `ROW*_`/row-column tokens) isn't token-substitutable from the lean spine
+  (the row isn't a spine output); where a journey needs 1:1 parity it's reproduced as a dedicated
+  `include_ui`-gated correlated wrapper (below) — kept in the generator's wrapper exclusion so the chrome tier
+  doesn't double-fire it — rather than emitted to the chrome tier.
 
 These normalizations are what let a single recording's replay hold across the whole live version matrix, not
 just the version it was recorded on: query-string recovery and Base64 decode make each request well-formed
