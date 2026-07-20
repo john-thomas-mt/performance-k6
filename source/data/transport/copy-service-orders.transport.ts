@@ -29,10 +29,6 @@ export const copyServiceOrdersTransport: { [step: string]: ChromeRequest[] } = {
   ],
   '02': [
     {
-      method: 'GET',
-      path: '/fonts/usifont-messageIcons.ttf?v=3.2.1',
-    },
-    {
       method: 'POST',
       path: '/app85.cshtml?OrgCode=10&ApplicationDisplay=1&SingleSignOnToken=${C_TokenID}&VisualEffects=0&SignInTimings=',
     },
