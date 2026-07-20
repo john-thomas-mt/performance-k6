@@ -30,7 +30,7 @@ export const crystalReportStatic: { [step: string]: StaticRequest[] } = {
   ],
   '01': [
     {
-      path: '/app/enterprise-dist/framework/themes//snug.css',
+      path: '/app/enterprise-dist/framework/themes/snug.css',
     },
     {
       path: '/app/enterprise-dist/framework/styles/font-face.css',

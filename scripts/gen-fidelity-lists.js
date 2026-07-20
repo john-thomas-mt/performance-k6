@@ -87,7 +87,10 @@ for (const step of stepDirs) {
       const method = (action.match(/method="([^"]+)"/) || [])[1] || 'GET';
       const rawPath = (action.match(/path="([^"]+)"/) || [])[1] || '';
       if (!rawPath) continue;
-      const bare = rawPath.replace(/^\/\$\{[^}]+\}/, '').replace(/^\/[^/]*(?=\/(api|app)\/)/, ''); // strip version segment
+      const bare = rawPath
+        .replace(/^\/\$\{[^}]+\}/, '')
+        .replace(/^\/[^/]*(?=\/(api|app)\/)/, '') // strip version segment
+        .replace(/\/{2,}/g, '/'); // collapse empty path segments (e.g. a blank theme token → themes//snug.css)
       if (SPINE.some((s) => bare.startsWith(s))) continue;
       if (DEAD.some((s) => bare.startsWith(s))) continue;
       const journeySpine = JOURNEY_SPINE[journey] || {};

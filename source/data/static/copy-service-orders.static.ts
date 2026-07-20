@@ -4,7 +4,7 @@ import { StaticRequest } from '../../utils/exports/types.exp.ts';
 export const copyServiceOrdersStatic: { [step: string]: StaticRequest[] } = {
   '01': [
     {
-      path: '/app/enterprise-dist/framework/themes//snug.css',
+      path: '/app/enterprise-dist/framework/themes/snug.css',
     },
     {
       path: '/app/enterprise-dist/framework/styles/font-face.css',
