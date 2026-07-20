@@ -27,6 +27,9 @@ export const copyServiceOrdersStatic: { [step: string]: StaticRequest[] } = {
   ],
   '02': [
     {
+      path: '/fonts/usifont-messageIcons.ttf',
+    },
+    {
       path: '/app/enterprise-dist/components/accordion/accordion.component.html',
     },
     {

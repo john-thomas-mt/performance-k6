@@ -54,13 +54,16 @@ const JOURNEY_SPINE = {
     '/api/USIMultiSelectSuperBoxPageServer/save': ['08'],
   },
 };
-// removed/renamed on 26.3 but present on 26.2 and earlier — emit with a removedIn guard so fire time skips
-// them only on releases that no longer serve them (version_at_least), instead of dropping them outright
-const VERSION_GATED = {
-  '/api/NotificationServer/RetrieveNotificationCount': '26.3',
-  '/api/NotificationServer/RetrieveUnseenChangelogNotificationsCount': '26.3',
-};
-const STATIC_EXT = /\.(js|css|html|svg|png|ico|woff2?|map|jpg|jpeg|gif)(\?|$)/i;
+// endpoints a later release drops but that still exist on an older *live* release — emit with a removedIn guard
+// so fire time skips them only where they're gone (version_at_least), keeping them on the releases that serve
+// them. Empty today: the endpoints removed so far (the NotificationServer count reads) are gone on every live
+// version, so they're dropped outright via DEAD below rather than gated.
+const VERSION_GATED = {};
+// endpoints absent on every live version in the matrix — verified 404 across 25.4/26.1/26.2/26.3 by a
+// verify-envs full-fidelity sweep. They were fired by the recording but no live release serves them, so
+// emitting them only inflates http_req_failed; never emit them to any tier.
+const DEAD = ['/api/NotificationServer/RetrieveNotificationCount', '/api/NotificationServer/RetrieveUnseenChangelogNotificationsCount'];
+const STATIC_EXT = /\.(js|css|html|svg|png|ico|woff2?|ttf|otf|eot|map|jpg|jpeg|gif)(\?|$)/i;
 
 const stepDirs = fs
   .readdirSync(ROOT)
@@ -82,6 +85,7 @@ for (const step of stepDirs) {
     if (!rawPath) continue;
     const bare = rawPath.replace(/^\/\$\{[^}]+\}/, '').replace(/^\/[^/]*(?=\/(api|app)\/)/, ''); // strip version segment
     if (SPINE.some((s) => bare.startsWith(s))) continue;
+    if (DEAD.some((s) => bare.startsWith(s))) continue;
     const journeySpine = JOURNEY_SPINE[journey] || {};
     const journeyKey = Object.keys(journeySpine).find((p) => bare.startsWith(p));
     if (journeyKey && journeySpine[journeyKey].includes(stepNo)) continue;
