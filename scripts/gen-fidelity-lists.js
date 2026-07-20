@@ -80,48 +80,53 @@ for (const step of stepDirs) {
   const dir = path.join(ROOT, step);
   for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.xml'))) {
     const xml = fs.readFileSync(path.join(dir, f), 'utf8');
-    const method = (xml.match(/method="([^"]+)"/) || [])[1] || 'GET';
-    const rawPath = (xml.match(/path="([^"]+)"/) || [])[1] || '';
-    if (!rawPath) continue;
-    const bare = rawPath.replace(/^\/\$\{[^}]+\}/, '').replace(/^\/[^/]*(?=\/(api|app)\/)/, ''); // strip version segment
-    if (SPINE.some((s) => bare.startsWith(s))) continue;
-    if (DEAD.some((s) => bare.startsWith(s))) continue;
-    const journeySpine = JOURNEY_SPINE[journey] || {};
-    const journeyKey = Object.keys(journeySpine).find((p) => bare.startsWith(p));
-    if (journeyKey && journeySpine[journeyKey].includes(stepNo)) continue;
+    // NeoLoad bundles a page's whole resource burst as multiple <http-action> elements in one file — walk
+    // every action, not just the first, or the bundled embedded resources are silently dropped from the tiers.
+    const actions = xml.match(/<http-action\b[\s\S]*?<\/http-action>/g) || [];
+    for (const action of actions) {
+      const method = (action.match(/method="([^"]+)"/) || [])[1] || 'GET';
+      const rawPath = (action.match(/path="([^"]+)"/) || [])[1] || '';
+      if (!rawPath) continue;
+      const bare = rawPath.replace(/^\/\$\{[^}]+\}/, '').replace(/^\/[^/]*(?=\/(api|app)\/)/, ''); // strip version segment
+      if (SPINE.some((s) => bare.startsWith(s))) continue;
+      if (DEAD.some((s) => bare.startsWith(s))) continue;
+      const journeySpine = JOURNEY_SPINE[journey] || {};
+      const journeyKey = Object.keys(journeySpine).find((p) => bare.startsWith(p));
+      if (journeyKey && journeySpine[journeyKey].includes(stepNo)) continue;
 
-    // recover the query string from NeoLoad <parameter> elements, keeping ${...} tokens for runtime substitution
-    const params = [...xml.matchAll(/<parameter\b([^>]*)>/g)]
-      .map((p) => {
-        const k = (p[1].match(/\bname="([^"]*)"/) || [])[1];
-        const v = (p[1].match(/\bvalue="([^"]*)"/) || [])[1];
-        return k != null ? `${k}=${v ?? ''}` : null;
-      })
-      .filter(Boolean);
-    const url = params.length ? `${bare}?${params.join('&')}` : bare;
+      // recover the query string from NeoLoad <parameter> elements, keeping ${...} tokens for runtime substitution
+      const params = [...action.matchAll(/<parameter\b([^>]*)>/g)]
+        .map((p) => {
+          const k = (p[1].match(/\bname="([^"]*)"/) || [])[1];
+          const v = (p[1].match(/\bvalue="([^"]*)"/) || [])[1];
+          return k != null ? `${k}=${v ?? ''}` : null;
+        })
+        .filter(Boolean);
+      const url = params.length ? `${bare}?${params.join('&')}` : bare;
 
-    // NeoLoad stores large bodies Base64-encoded; decode so the real JSON (with ${...} tokens) is emitted
-    const m = xml.match(/<textPostContent>\s*<!\[CDATA\[([\s\S]*?)\]\]>/);
-    let body = m ? m[1] : undefined;
-    if (body && body.startsWith('Encoded(Base64):')) body = Buffer.from(body.slice(16), 'base64').toString('utf8');
+      // NeoLoad stores large bodies Base64-encoded; decode so the real JSON (with ${...} tokens) is emitted
+      const m = action.match(/<textPostContent>\s*<!\[CDATA\[([\s\S]*?)\]\]>/);
+      let body = m ? m[1] : undefined;
+      if (body && body.startsWith('Encoded(Base64):')) body = Buffer.from(body.slice(16), 'base64').toString('utf8');
 
-    if (bare.includes('/app/') || STATIC_EXT.test(bare)) {
-      (stat[stepNo] = stat[stepNo] || []).push({ path: bare });
-    } else if (bare.includes('/api/')) {
-      const req = { method, path: url };
-      if (method !== 'GET' && body !== undefined) req.body = body;
-      const gated = Object.keys(VERSION_GATED).find((p) => bare.startsWith(p));
-      if (gated) req.removedIn = VERSION_GATED[gated];
-      (chrome[stepNo] = chrome[stepNo] || []).push(req);
-    } else {
-      // the paramless app85.cshtml bootstrap is scripted as the fetch_bundle_versions wrapper (it correlates
-      // the bundle-version tokens the other transport requests consume) — exclude here to avoid double-firing
-      if (bare.endsWith('app85.cshtml') && !params.length) continue;
-      // neither /api/ nor a static asset (SignalR start, SSO cshtml, …) — the transport tier, fired at
-      // FIDELITY=full so a full run reproduces every request the recording made
-      const req = { method, path: url };
-      if (method !== 'GET' && body !== undefined) req.body = body;
-      (transport[stepNo] = transport[stepNo] || []).push(req);
+      if (bare.includes('/app/') || STATIC_EXT.test(bare)) {
+        (stat[stepNo] = stat[stepNo] || []).push({ path: bare });
+      } else if (bare.includes('/api/')) {
+        const req = { method, path: url };
+        if (method !== 'GET' && body !== undefined) req.body = body;
+        const gated = Object.keys(VERSION_GATED).find((p) => bare.startsWith(p));
+        if (gated) req.removedIn = VERSION_GATED[gated];
+        (chrome[stepNo] = chrome[stepNo] || []).push(req);
+      } else {
+        // the paramless app85.cshtml bootstrap is scripted as the fetch_bundle_versions wrapper (it correlates
+        // the bundle-version tokens the other transport requests consume) — exclude here to avoid double-firing
+        if (bare.endsWith('app85.cshtml') && !params.length) continue;
+        // neither /api/ nor a static asset (SignalR start, SSO cshtml, …) — the transport tier, fired at
+        // FIDELITY=full so a full run reproduces every request the recording made
+        const req = { method, path: url };
+        if (method !== 'GET' && body !== undefined) req.body = body;
+        (transport[stepNo] = transport[stepNo] || []).push(req);
+      }
     }
   }
 }

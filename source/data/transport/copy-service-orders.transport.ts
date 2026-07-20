@@ -8,11 +8,11 @@ export const copyServiceOrdersTransport: { [step: string]: ChromeRequest[] } = {
   '01': [
     {
       method: 'GET',
-      path: '/Content/css/backOffice?v=${C_backOffice_version}&v=${C_USI_Version}&v=${C_USI_Version}',
+      path: '/Content/css/backOffice?v=${C_backOffice_version}',
     },
     {
       method: 'GET',
-      path: '/Content/css/splash_bundle?v=&v=${C_USI_Version}&v=${C_USI_Version}',
+      path: '/Content/css/splash_bundle?v=',
     },
     {
       method: 'GET',
@@ -24,7 +24,7 @@ export const copyServiceOrdersTransport: { [step: string]: ChromeRequest[] } = {
     },
     {
       method: 'GET',
-      path: '/scripts/wijmo/controls/cultures/english?v=${C_english_version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}',
+      path: '/scripts/wijmo/controls/cultures/english?v=${C_english_version}',
     },
   ],
   '02': [

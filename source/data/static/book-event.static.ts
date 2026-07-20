@@ -7,7 +7,19 @@ export const bookEventStatic: { [step: string]: StaticRequest[] } = {
       path: '/app/enterprise-dist/components/floating/popover/popover.component.html',
     },
     {
+      path: '/app/enterprise-dist/components/floating/popover/popover.component.css',
+    },
+    {
       path: '/app/enterprise-dist/components/menu/menu.component.html',
+    },
+    {
+      path: '/app/enterprise-dist/components/menu/menu.component.css',
+    },
+    {
+      path: '/app/enterprise-dist/components/menu/menu-option.js',
+    },
+    {
+      path: '/app/enterprise-dist/components/menu/menu-container.js',
     },
     {
       path: '/app/enterprise-dist/components/menu/menu-option.html',
@@ -18,7 +30,22 @@ export const bookEventStatic: { [step: string]: StaticRequest[] } = {
   ],
   '01': [
     {
+      path: '/app/enterprise-dist/framework/themes//snug.css',
+    },
+    {
+      path: '/app/enterprise-dist/framework/styles/font-face.css',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/splash/splash.css',
+    },
+    {
+      path: '/Content/animate.min.css',
+    },
+    {
       path: '/Scripts/aurelia/resources/elements/draggable/draggable.html',
+    },
+    {
+      path: '/app/enterprise-dist/viewmodels/signIn.js',
     },
     {
       path: '/Scripts/aurelia/resources/index.js',
@@ -30,19 +57,319 @@ export const bookEventStatic: { [step: string]: StaticRequest[] } = {
       path: '/app/enterprise-dist/views/signIn.html',
     },
     {
+      path: '/app/enterprise-dist/framework/styles/fonts/Roboto-Regular.ttf',
+    },
+    {
       path: '/app/node_components/localforage/dist/localforage.min.js',
+    },
+    {
+      path: '/app/node_components/toastr/build/toastr.min.js',
+    },
+    {
+      path: '/Scripts/moment-with-locales.min.js',
+    },
+    {
+      path: '/app/node_components/jsrsasign/lib/jsrsasign-all-min.js',
+    },
+    {
+      path: '/Scripts/@fortawesome/fontawesome-pro/fontawesome-pro.js',
+    },
+    {
+      path: '/app/node_components/@syncfusion/ej2-base/dist/ej2-base.umd.min.js',
+    },
+    {
+      path: '/app/node_components/tether/dist/js/tether.min.js',
+    },
+    {
+      path: '/app/enterprise-dist/icons/local/index.js',
     },
     {
       path: '/content/images/favicon.ico',
     },
     {
+      path: '/App/enterprise-dist/usi-core.js',
+    },
+    {
       path: '/scripts/jsonh.js',
+    },
+    {
+      path: '/App/node_components/clamp-js/clamp.js',
+    },
+    {
+      path: '/scripts/usiFabric.js',
+    },
+    {
+      path: '/App/node_components/core-js-bundle/minified.js',
+    },
+    {
+      path: '/App/node_components/@ask-momentus/web-component/ask-momentus-web.js',
+    },
+    {
+      path: '/App/node_components/@ungerboeck/import-component-web/import-component-web.js',
+    },
+    {
+      path: '/content/images/splashscreen/momentus-logo-mark-reverse-rgb.svg',
+    },
+    {
+      path: '/content/images/splashscreen/Login-Momentus-BG-2-web.jpg',
+    },
+    {
+      path: '/app/enterprise-dist/config.js',
+    },
+    {
+      path: '/App/node_components/requirejs/require.js',
+    },
+    {
+      path: '/scripts/aurelia/aurelia-core.min.js',
+    },
+    {
+      path: '/app/enterprise-dist/framework/styles/fonts/Inter-Regular.ttf',
+    },
+    {
+      path: '/util00/scripts/jquery.js',
+    },
+    {
+      path: '/app/node_components/jquery-ui/dist/jquery-ui.min.js',
+    },
+    {
+      path: '/Scripts/jquery-ui-touch-punch-0.2.3.min.js',
+    },
+    {
+      path: '/Scripts/gridstack/dist/gridstack.min.js',
     },
     {
       path: '/app/node_components/lodash/lodash.min.js',
     },
     {
+      path: '/app/node_components/jquery-ui/ui/data.js',
+    },
+    {
+      path: '/app/node_components/jquery-ui/ui/disable-selection.js',
+    },
+    {
+      path: '/app/node_components/jquery-ui/ui/focusable.js',
+    },
+    {
+      path: '/app/node_components/jquery-ui/ui/form.js',
+    },
+    {
+      path: '/app/node_components/jquery-ui/ui/ie.js',
+    },
+    {
+      path: '/app/node_components/jquery-ui/ui/keycode.js',
+    },
+    {
+      path: '/app/node_components/jquery-ui/ui/labels.js',
+    },
+    {
+      path: '/app/node_components/jquery-ui/ui/plugin.js',
+    },
+    {
+      path: '/app/node_components/jquery-ui/ui/safe-active-element.js',
+    },
+    {
+      path: '/app/node_components/jquery-ui/ui/safe-blur.js',
+    },
+    {
+      path: '/app/node_components/jquery-ui/ui/scroll-parent.js',
+    },
+    {
+      path: '/app/node_components/jquery-ui/ui/tabbable.js',
+    },
+    {
+      path: '/app/node_components/jquery-ui/ui/unique-id.js',
+    },
+    {
+      path: '/app/node_components/jquery-ui/ui/version.js',
+    },
+    {
+      path: '/app/node_components/jquery-ui/ui/widget.js',
+    },
+    {
+      path: '/app/node_components/jquery-ui/ui/widgets/mouse.js',
+    },
+    {
+      path: '/app/node_components/jquery-ui/ui/widgets/draggable.js',
+    },
+    {
+      path: '/app/node_components/jquery-ui/ui/widgets/droppable.js',
+    },
+    {
+      path: '/app/node_components/jquery-ui/ui/widgets/resizable.js',
+    },
+    {
+      path: '/app/node_components/bootstrap-sass/assets/javascripts/bootstrap.min.js',
+    },
+    {
       path: '/app/enterprise-dist/public/SPA/controls/syncfusion-rte.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/font-awesome-icon/fa-icon.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/icon/icon.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/containerless-element/containerless-element.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/draggable/draggable.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/attributes/highlight/highlight.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/attributes/selectInput/selectInput.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/attributes/hasFocus/hasFocus.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/attributes/jquery-ui/jquery-ui.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/behaviors/stop-propagation/stop-propagation.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/behaviors/defer/defer.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/behaviors/async-binding/async-binding.js',
+    },
+    {
+      path: '/app/node_components/@syncfusion/ej2-richtexteditor/dist/ej2-richtexteditor.umd.min.js',
+    },
+    {
+      path: '/app/enterprise-dist/public/SPA/SPAConstants.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/font-awesome-icon/utils/normalize-icon-spec.util.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/font-awesome-icon/utils/object-with-keys.util.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/font-awesome-icon/utils/classlist.util.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/font-awesome-icon/errors/warn-if-icon-html-missing.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/font-awesome-icon/errors/warn-if-icon-spec-missing.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/font-awesome-icon/errors/not-found-icon-html.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/draggable/utils/helper.js',
+    },
+    {
+      path: '/app/node_components/sortablejs/Sortable.min.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/icon/icons/index.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/icon/layers/index.js',
+    },
+    {
+      path: '/Scripts/svgpath/svgpath.js',
+    },
+    {
+      path: '/app/node_components/@syncfusion/ej2-navigations/dist/ej2-navigations.umd.min.js',
+    },
+    {
+      path: '/app/node_components/@syncfusion/ej2-splitbuttons/dist/ej2-splitbuttons.umd.min.js',
+    },
+    {
+      path: '/app/node_components/@syncfusion/ej2-popups/dist/ej2-popups.umd.min.js',
+    },
+    {
+      path: '/app/node_components/@syncfusion/ej2-inputs/dist/ej2-inputs.umd.min.js',
+    },
+    {
+      path: '/app/node_components/@syncfusion/ej2-buttons/dist/ej2-buttons.umd.min.js',
+    },
+    {
+      path: '/app/node_components/@syncfusion/ej2-dropdowns/dist/ej2-dropdowns.umd.min.js',
+    },
+    {
+      path: '/app/node_components/@syncfusion/ej2-filemanager/dist/ej2-filemanager.umd.min.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/font-awesome-icon/utils/is-icon-lookup.util.js',
+    },
+    {
+      path: '/Scripts/text.js',
+    },
+    {
+      path: '/app/node_components/@syncfusion/ej2-lists/dist/ej2-lists.umd.min.js',
+    },
+    {
+      path: '/app/node_components/@syncfusion/ej2-data/dist/ej2-data.umd.min.js',
+    },
+    {
+      path: '/app/node_components/@syncfusion/ej2-notifications/dist/ej2-notifications.umd.min.js',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/icon/icons/gadget-actions.svg',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/icon/icons/gadget-chart.svg',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/icon/icons/gadget-ezwriter.svg',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/icon/icons/gadget-gauge.svg',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/icon/icons/gadget-grid.svg',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/icon/icons/gadget-layoutcolumns-one.svg',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/icon/icons/gadget-layoutcolumns-three.svg',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/icon/icons/gadget-layoutcolumns-two.svg',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/icon/icons/gadget-text.svg',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/icon/layers/add-text.svg',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/icon/layers/add-wildcard.svg',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/icon/layers/angle-triple-left.svg',
+    },
+    {
+      path: '/Scripts/aurelia/resources/elements/icon/layers/angle-triple-right.svg',
+    },
+    {
+      path: '/app/node_components/@syncfusion/ej2-layouts/dist/ej2-layouts.umd.min.js',
+    },
+    {
+      path: '/app/node_components/@syncfusion/ej2-grids/dist/ej2-grids.umd.min.js',
+    },
+    {
+      path: '/app/node_components/@syncfusion/ej2-calendars/dist/ej2-calendars.umd.min.js',
+    },
+    {
+      path: '/app/node_components/@syncfusion/ej2-excel-export/dist/ej2-excel-export.umd.min.js',
+    },
+    {
+      path: '/app/node_components/@syncfusion/ej2-pdf-export/dist/ej2-pdf-export.umd.min.js',
+    },
+    {
+      path: '/app/node_components/@syncfusion/ej2-compression/dist/ej2-compression.umd.min.js',
+    },
+    {
+      path: '/app/node_components/@syncfusion/ej2-file-utils/dist/ej2-file-utils.umd.min.js',
     },
   ],
   '02': [
@@ -50,7 +377,70 @@ export const bookEventStatic: { [step: string]: StaticRequest[] } = {
       path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Button/button.css',
     },
     {
+      path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.TextEditor/TextEditor.css',
+    },
+    {
+      path: '/app/enterprise-dist/viewmodels/shell.js',
+    },
+    {
+      path: '/Scripts/jquery.signalR-2.4.1.min.js',
+    },
+    {
+      path: '/app/node_components/sat/SAT.js',
+    },
+    {
+      path: '/app/node_components/spectrum/spectrum.js',
+    },
+    {
+      path: '/app/node_components/tinycolor2/dist/tinycolor-min.js',
+    },
+    {
+      path: '/Scripts/wijmo/controls/wijmo.min.js',
+    },
+    {
+      path: '/app/node_components/jquery-mousewheel/jquery.mousewheel.js',
+    },
+    {
+      path: '/app/node_components/malihu-custom-scrollbar-plugin/jquery.mCustomScrollbar.js',
+    },
+    {
+      path: '/Scripts/wijmo/controls/wijmo.grid.min.js',
+    },
+    {
+      path: '/Scripts/wijmo/controls/wijmo.grid.filter.min.js',
+    },
+    {
+      path: '/Scripts/wijmo/controls/wijmo.chart.min.js',
+    },
+    {
+      path: '/Scripts/wijmo/controls/wijmo.chart.interaction.min.js',
+    },
+    {
+      path: '/Scripts/wijmo/controls/wijmo.chart.animation.min.js',
+    },
+    {
+      path: '/Scripts/wijmo/controls/AxisScrollbar.js',
+    },
+    {
+      path: '/Scripts/wijmo/controls/wijmo.input.min.js',
+    },
+    {
+      path: '/Scripts/wijmo/controls/wijmo.gauge.min.js',
+    },
+    {
+      path: '/Scripts/wijmo.usi/controls/wijmo.gauge.usi.js',
+    },
+    {
       path: '/app/enterprise-dist/components/accordion/accordion.component.html',
+    },
+    {
+      path: '/app/enterprise-dist/components/accordion/accordion.component.css',
+    },
+    {
+      path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Checkbox/Checkbox.css',
+    },
+    {
+      path: '/app/enterprise-dist/pages/home-page/home-page.js',
     },
     {
       path: '/app/enterprise-dist/components/overlay/overlay.component.html',
@@ -62,13 +452,43 @@ export const bookEventStatic: { [step: string]: StaticRequest[] } = {
       path: '/app/enterprise-dist/components/toast/toast.component.js',
     },
     {
+      path: '/app/enterprise-dist/framework/common.blocks/leftGlobalMobileNav/leftGlobalMobileNav.js',
+    },
+    {
+      path: '/app/enterprise-dist/components/overlay/overlay.component.js',
+    },
+    {
+      path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.NumericBox/NumericBox.css',
+    },
+    {
+      path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.TimeMask/TimeMask.css',
+    },
+    {
+      path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.TextBox/TextBox.css',
+    },
+    {
+      path: '/app/enterprise-dist/framework/common.blocks/leftGlobalMobileNav/leftGlobalMobileNav.css',
+    },
+    {
       path: '/app/enterprise-dist/framework/common.blocks/ButtonContentTemplate/ButtonContentTemplate.html',
+    },
+    {
+      path: '/app/enterprise-dist/framework/common.blocks/MenuButton/MenuButton.css',
+    },
+    {
+      path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Button/Button.css',
     },
     {
       path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/ButtonGadget/ButtonGadget.html',
     },
     {
       path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/Gadget.html',
+    },
+    {
+      path: '/app/enterprise-dist/framework/common.blocks/Tabs/tabs.css',
+    },
+    {
+      path: '/app/enterprise-dist/framework/common.blocks/leftGlobalNav/leftGlobalNav.css',
     },
     {
       path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/TextGadget/TextGadget.html',
@@ -80,6 +500,15 @@ export const bookEventStatic: { [step: string]: StaticRequest[] } = {
       path: '/app/enterprise-dist/framework/common.blocks/leftGlobalMobileNav/leftGlobalMobileNav.html',
     },
     {
+      path: '/app/enterprise-dist/components/overlay/overlay.component.css',
+    },
+    {
+      path: '/app/enterprise-dist/components/toast/toast.component.css',
+    },
+    {
+      path: '/app/enterprise-dist/components/accordion/accordion.component.js',
+    },
+    {
       path: '/app/enterprise-dist/framework/common.blocks/leftGlobalNav/leftGlobalNav.html',
     },
     {
@@ -89,7 +518,13 @@ export const bookEventStatic: { [step: string]: StaticRequest[] } = {
       path: '/app/enterprise-dist/framework/windows/home/home.html',
     },
     {
+      path: '/app/enterprise-dist/framework/styles/fonts/InterVariable.woff2',
+    },
+    {
       path: '/app/enterprise-dist/pages/home-page/home-page.html',
+    },
+    {
+      path: '/app/enterprise-dist/pages/home-page/home-page.css',
     },
     {
       path: '/app/enterprise-dist/views/shell.html',
@@ -100,7 +535,82 @@ export const bookEventStatic: { [step: string]: StaticRequest[] } = {
   ],
   '03': [
     {
+      path: '/app/enterprise-dist/framework/windows/bookingCalendar/pendingGrid/bookingsGrid.css',
+    },
+    {
+      path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.ComboBox/ComboBox.css',
+    },
+    {
+      path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DatePicker/DatePicker.css',
+    },
+    {
+      path: '/app/enterprise-dist/pages/list-page/list-page.js',
+    },
+    {
+      path: '/app/enterprise-dist/pages/base-page/base-page.js',
+    },
+    {
       path: '/app/enterprise-dist/components/window-message/window-message.component.html',
+    },
+    {
+      path: '/app/enterprise-dist/components/window-message/window-message.component.css',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/bookingCalendar/bookingCalendar.js',
+    },
+    {
+      path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/calendarGrid.js',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/bookingCalendar/pendingGrid/bookingsGrid.js',
+    },
+    {
+      path: '/app/enterprise-dist/controls00/baseControls/calendar/calendarUtil.js',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/baseCalendar/baseCalendar.js',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/bookingCalendar/ribbon/calendarRibbon.js',
+    },
+    {
+      path: '/app/enterprise-dist/controls00/baseControls/calendar/interfaces.js',
+    },
+    {
+      path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/chadmo.js',
+    },
+    {
+      path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/chadmoTypes.js',
+    },
+    {
+      path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoUtils.js',
+    },
+    {
+      path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoColumnHeaders.js',
+    },
+    {
+      path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoRows.js',
+    },
+    {
+      path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoStyleConstants.js',
+    },
+    {
+      path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoShared.js',
+    },
+    {
+      path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoBoxSelection.js',
+    },
+    {
+      path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoHtmlExporter.js',
+    },
+    {
+      path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoContinuousSelection.js',
+    },
+    {
+      path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Chadmo.js',
+    },
+    {
+      path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoVirtual.js',
     },
     {
       path: '/app/enterprise-dist/framework/windows/bookingCalendar/bookingCalendar.html',
@@ -127,10 +637,187 @@ export const bookEventStatic: { [step: string]: StaticRequest[] } = {
       path: '/app/enterprise-dist/pages/list-page/list-page.html',
     },
     {
+      path: '/app/enterprise-dist/components/window-message/window-message.component.js',
+    },
+    {
+      path: '/app/enterprise-dist/pages/base-page/base-page.css',
+    },
+    {
+      path: '/app/enterprise-dist/pages/list-page/list-page.css',
+    },
+    {
       path: '/app/enterprise-dist/viewmodels/genericList.js',
     },
     {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/contentBuilder.js',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/documentDesigner/documentDesigner.js',
+    },
+    {
+      path: '/app/enterprise-dist/services/genericListServerAccess.js',
+    },
+    {
+      path: '/app/enterprise-dist/util00/USISpecializedPage.js',
+    },
+    {
+      path: '/app/enterprise-dist/services/DocumentDesignerServerAccess.js',
+    },
+    {
+      path: '/app/enterprise-dist/services/ContentBuilderServerAccess.js',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/index.js',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/libindex.js',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/PageConfig/PageConfig.js',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/PageComponents/PageComponents.js',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_AccountDetails_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_AccountInfo_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_BoothProposals_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_Checklist_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_Confirmation_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_ContactDetails_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_Contacts_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_ContactInfo_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_Download_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_EventDetails_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_EventInfo_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_ExhibitorDetails_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_FloorPlan_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_GenericDetails_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_GenericInfo_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_HTML_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_ImageCarousel_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_ImageGallery_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_InputComboBox_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_InputEditor_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_InputFields_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_InputOptions_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_InputUDFs_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_ItemDetails_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_ItemsListing_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_Note_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_OrderItems_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_Preferences_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_PreferredBooth_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_ProductTile_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_ReadOnly_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_Remove_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_SearchCalendar_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_SearchField_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_SearchResults_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_Security_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_SignIn_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_SQL_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_Summary_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_Text_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_Upload_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_UserInfo_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_UserSettings_Icon.svg',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_Video_Icon.svg',
+    },
+    {
       path: '/app/enterprise-dist/views/pageFooter.html',
+    },
+    {
+      path: '/app/enterprise-dist/viewstyles/pageFooter.css',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/emc00/BookingsClientUI.js',
     },
   ],
   '04': [
@@ -153,6 +840,9 @@ export const bookEventStatic: { [step: string]: StaticRequest[] } = {
       path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/Month/Month.html',
     },
     {
+      path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/CalendarHeader/fit-or.js',
+    },
+    {
       path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/Year/Year.html',
     },
     {
@@ -167,7 +857,109 @@ export const bookEventStatic: { [step: string]: StaticRequest[] } = {
   ],
   '06': [
     {
+      path: '/app/node_components/hammerjs/hammer.js',
+    },
+    {
+      path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Label/Label.css',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/emc00/EventSuitesClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/emc00/EventMeetingAttendeeClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/ord00/FloorPlanClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/sam00/DocumentsClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/emc00/EventTasksConfigurationClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/viewstyles/USISectionMenu.css',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/rec00/InvoicesClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/emc00/BlocksClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/ord00/AssignmentsClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/emc00/FunctionsClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/ord00/WorkOrderItemsClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/ord00/OrderRegistrantsClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/ord00/ExhibitorsClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/ord00/registrationOrdersClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/ord00/serviceOrdersClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/services/genericSearchServerAccess.js',
+    },
+    {
+      path: '/app/enterprise-dist/util00/ArraysUtil.js',
+    },
+    {
+      path: '/app/enterprise-dist/models/FloorPlanCardInfo.js',
+    },
+    {
+      path: '/app/enterprise-dist/models/DocumentCardInfo.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/sam00/BaseDiagramClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/sam00/FormsClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/util00/workforceSchedulingUtil.js',
+    },
+    {
+      path: '/app/enterprise-dist/models/OrderItemsCardInfo.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/sam00/EventSpaceDiagramClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/emc00/CustomLinksConfigurationClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/emc00/EventServicesClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/ord00/WorkOrdersClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/ord00/PaymentPlansClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/ord00/OrderItemsClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/cta00/ContractsClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/emc00/ESCTasksClientUI.js',
+    },
+    {
       path: '/app/enterprise-dist/components/drawer/drawer.component.html',
+    },
+    {
+      path: '/app/enterprise-dist/components/drawer/drawer.component.css',
     },
     {
       path: '/app/enterprise-dist/controls00/layoutControls/editLayoutContainer/editLayoutContainer.html',
@@ -177,6 +969,18 @@ export const bookEventStatic: { [step: string]: StaticRequest[] } = {
     },
     {
       path: '/app/enterprise-dist/framework/common.blocks/Tabs/tabs.html',
+    },
+    {
+      path: '/app/enterprise-dist/viewmodels/genericSearch.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/emc00/ExhibitorTasksClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/emc00/EPConversationClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/ord00/StatisticsClientUI.js',
     },
     {
       path: '/app/enterprise-dist/views/USISectionMenu.html',
@@ -191,7 +995,46 @@ export const bookEventStatic: { [step: string]: StaticRequest[] } = {
       path: '/app/enterprise-dist/views/genericPageNav.html',
     },
     {
+      path: '/app/enterprise-dist/BackOffice/ord00/RegistrantClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/models/RegistrantsCardInfo.js',
+    },
+    {
+      path: '/app/enterprise-dist/framework/common.blocks/mobile/orderRegistrantMobileDetail.js',
+    },
+    {
+      path: '/app/enterprise-dist/models/ExhibitorCardInfo.js',
+    },
+    {
+      path: '/app/enterprise-dist/framework/common.blocks/CardLayout.Tile/ActivityTemplate/ActivityTemplate.js',
+    },
+    {
+      path: '/app/enterprise-dist/framework/common.blocks/mobile/exhibitorMobileDetail.js',
+    },
+    {
+      path: '/app/enterprise-dist/viewstyles/genericPageSearch.css',
+    },
+    {
       path: '/app/enterprise-dist/views/genericPageNavToolbar.html',
+    },
+    {
+      path: '/app/enterprise-dist/models/DrawingElementMap.js',
+    },
+    {
+      path: '/app/enterprise-dist/models/OrdersCardInfo.js',
+    },
+    {
+      path: '/app/enterprise-dist/framework/common.blocks/mobile/serviceOrderMobileDetail.js',
+    },
+    {
+      path: '/app/enterprise-dist/framework/common.blocks/mobile/registrationOrderMobileDetail.js',
+    },
+    {
+      path: '/app/enterprise-dist/framework/common.blocks/CardLayout/CardLayout.js',
+    },
+    {
+      path: '/app/enterprise-dist/viewstyles/navbarSpillover.css',
     },
     {
       path: '/app/enterprise-dist/views/genericPageSearch.html',
@@ -199,16 +1042,64 @@ export const bookEventStatic: { [step: string]: StaticRequest[] } = {
     {
       path: '/app/enterprise-dist/views/genericSearch.html',
     },
+    {
+      path: '/app/enterprise-dist/models/RegSeatingAssignmentRetrieveData.js',
+    },
+    {
+      path: '/app/enterprise-dist/models/RegistrantForSeatCreation.js',
+    },
+    {
+      path: '/app/enterprise-dist/models/BoothHoldsCardInfo.js',
+    },
+    {
+      path: '/app/enterprise-dist/backOffice/emc00/functionsUtil.js',
+    },
+    {
+      path: '/app/enterprise-dist/framework/common.blocks/mobile/eventFunctionMobileDetail.js',
+    },
+    {
+      path: '/app/enterprise-dist/models/EventFunctionCardInfo.js',
+    },
+    {
+      path: '/app/enterprise-dist/BackOffice/ord00/ordersClientUI.js',
+    },
+    {
+      path: '/app/enterprise-dist/BackOffice/ord00/OrdersClientUI.js',
+    },
   ],
   '08': [
     {
+      path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DateRange/DateRange.css',
+    },
+    {
+      path: '/app/enterprise-dist/framework/windows/genericMultipleDetail/genericMultipleDetail.js',
+    },
+    {
+      path: '/app/enterprise-dist/services/genericMultipleDetailServerAccess.js',
+    },
+    {
       path: '/app/enterprise-dist/components/floating/peek/peek.component.html',
+    },
+    {
+      path: '/app/enterprise-dist/components/floating/popover/popover.component.css',
+    },
+    {
+      path: '/app/enterprise-dist/components/floating/peek/peek.component.css',
     },
     {
       path: '/app/enterprise-dist/components/floating/popover/popover.component.html',
     },
     {
       path: '/app/enterprise-dist/components/menu/menu.component.html',
+    },
+    {
+      path: '/app/enterprise-dist/components/menu/menu.component.css',
+    },
+    {
+      path: '/app/enterprise-dist/components/menu/menu-option.js',
+    },
+    {
+      path: '/app/enterprise-dist/components/menu/menu-container.js',
     },
     {
       path: '/app/enterprise-dist/components/menu/menu-container.html',
@@ -223,7 +1114,19 @@ export const bookEventStatic: { [step: string]: StaticRequest[] } = {
       path: '/app/enterprise-dist/components/modal/modal.component.html',
     },
     {
+      path: '/app/enterprise-dist/framework/Common.Blocks/MenuButton/MenuButton.js',
+    },
+    {
+      path: '/app/enterprise-dist/components/modal/modal.component.css',
+    },
+    {
       path: '/app/enterprise-dist/framework/Common.Blocks/ButtonContentTemplate/ButtonContentTemplate.html',
+    },
+    {
+      path: '/app/enterprise-dist/framework/Common.Blocks/MenuButton/MenuButton.css',
+    },
+    {
+      path: '/app/enterprise-dist/framework/Common.Blocks/FlexLayout.Button/Button.css',
     },
     {
       path: '/app/enterprise-dist/framework/Common.Blocks/MenuButton/MenuButton.html',
@@ -233,6 +1136,9 @@ export const bookEventStatic: { [step: string]: StaticRequest[] } = {
     },
     {
       path: '/app/enterprise-dist/views/genericList.html',
+    },
+    {
+      path: '/app/enterprise-dist/framework/common.blocks/genericPageGridHeader/genericPageGridHeader.css',
     },
   ],
 };

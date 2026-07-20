@@ -60,7 +60,7 @@ export const crystalReportChrome: { [step: string]: ChromeRequest[] } = {
     },
     {
       method: 'POST',
-      path: '/api/GenericServer/GetUSIGlobalsAndUserInfo?v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}',
+      path: '/api/GenericServer/GetUSIGlobalsAndUserInfo',
       body: '["","n","1","",[1,2,4,5,11,15007,26,37,49,11398,19812,9666,11932,12738,11918,67,68,77,19635,78,124,128,138,139,181,198,199,200,274,499,500,513,546,593,662,697,698,12466,18914,725,757,758,760,759,761,762,763,810,811,812,813,814,815,816,817,818,819,820,821,779,784,793,801,838,842,848,849,919,987,1004,1009,1010,1057,1068,1069,1135,1148,1320,1619,1653,1654,1821,1851,1878,1887,1908,2011,2028,2029,2236,2458,2510,2535,2701,2871,2995,3426,3443,3444,3465,4038,4292,5318,5428,6255,6482,6929,6930,7074,7075,7076,7097,7098,7099,7100,7101,7214,7215,7216,7218,7290,7423,7447,7448,7983,9442,7984,8890,9357,12307,15693,100001,15972,19401,19411,12836,20008,20009,20010,181,19495,19565,19590,85,19762,19861,20003,8211,8474,19416,8603,8825,9126,9128,9180,11039,11040,11041,11042,11307,11308,12196,13983,13984,13985,16229,16376,16770,18773,18774,13216,16641,2935,14656,4101,878,7211,262,1682,264,263,1684,1685,265,266,267,2605,2606,2806,2602,2603,2805,7167,7168,7169,7170,7172,7174,7175,7176,1437,723,5227,18272,18273,18274,18275,16135,832,5532,17951,1356,1363,425,5231,4982,1167,2587,2588,15663,15664,16780,19532,19579,6775,16652,2787,2788,2789,2790,2791,2792,6,1927,1928,262,1855,2032,8503,8504,1489,5561,7849,1964,9167,9168,9173,9174,9332,9334,14312,9102,9103,2471,2477,8696,9435,56,2704,2721,2481,15920,19754,19755,19819,19763,19764,19765,19766,19767,19768,19769,19770,19771,19772,19773,19774,19775,19776,19777,19778,19779,19780,19781,19782,19783,19784,19785,19786,19787,19788,19789,19790,19791,19792,19793,19794,19795,19796,19797,19798,19799,19800,19801,19802,19803,19804,19805,19806,19807,417,790,12764,15111,3845,3843,3844,1141,15969,262,15965,15966,5227,15961,15962,15963,15964,15968,1437,262,15965,15966,15967,16010,16008,7176,5227,16284,15765,15766,15767,15768,18874,3668,18984,18985,18986,19362,19404,19405,19406,19407,19408,13625,19409,19444,19689,1012,19425,19426,19427,19428,19430,19431,19432,19433,249,19412,19413,19424,19542,19543,19436,13316,19437,19438,19439,19440,19450,19451,19452,19453,19454,14343,19477,19456,6172,19457,19479,19458,19480,19459,19478,19464,12013,11606,19475,97,943,8902,19442,19443,19471,19473,19482,19483,10222,19484,7507,19493,19531,19370,19636,19973,1721,19639,19640,19641,19677,19687,19688,19749,19752,400,19849,19850,19851,19852,19949,19950,19954,19955,19956,19957,19985,19986,19987,19988,19989,19991,19992,20007,20013,20014,20011,20012,19974,19975],""]',
     },
     {
@@ -108,7 +108,7 @@ export const crystalReportChrome: { [step: string]: ChromeRequest[] } = {
   '03': [
     {
       method: 'GET',
-      path: '/api/GenericServer/AddWindowUsageRecord?windowId=SA9339&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}',
+      path: '/api/GenericServer/AddWindowUsageRecord?windowId=SA9339',
     },
     {
       method: 'GET',
@@ -131,7 +131,7 @@ export const crystalReportChrome: { [step: string]: ChromeRequest[] } = {
     },
     {
       method: 'POST',
-      path: '/api/USIDataGridViewMenuServer/GetInitialData?v=3.2.1',
+      path: '/api/USIDataGridViewMenuServer/GetInitialData',
       body: '[\n                "10",\n                516,\n                0,\n                0,\n                0,\n                [\n                                {\n                                                "Key": "OrgCode",\n                                                "Value": "10"\n                                },\n                                {\n                                                "Key": "WindowObjectID",\n                                                "Value": 516\n                                },\n                                {\n                                                "Key": "wdwid",\n                                                "Value": "SA9339"\n                                },\n                                {\n                                                "Key": "WdwType",\n                                                "Value": 1\n                                },\n                                {\n                                                "Key": "wdwMode",\n                                                "Value": 0\n                                },\n                                {\n                                                "Key": "RemoveEditLayoutLink",\n                                                "Value": false\n                                },\n                                {\n                                                "Key": "ContextObjectID",\n                                                "Value": 0\n                                },\n                                {\n                                                "Key": "MenuType",\n                                                "Value": 1\n                                },\n                                {\n                                                "Key": "ParentWindowType",\n                                                "Value": 10\n                                },\n                                {\n                                                "Key": "PWindowObjectID",\n                                                "Value": 94\n                                },\n                                {\n                                                "Key": "ParentWindowID",\n                                                "Value": "WB8108"\n                                },\n                                {\n                                                "Key": "ParentWindowTitle",\n                                                "Value": "Home \\u00e2\\u0097\\u008f Alex W - manager dash"\n                                },\n                                {\n                                                "Key": "AssemblyName",\n                                                "Value": ""\n                                },\n                                {\n                                                "Key": "ClassName",\n                                                "Value": "home"\n                                }\n                ],\n                1,\n                1,\n                {\n                                "AutoRefresh": "Y",\n                                "EnterUserID": "USISETTING",\n                                "FilterCriteria": "",\n                                "ID": 5972,\n                                "ObjectID": 516,\n                                "OrgCode": null,\n                                "ResultsCount": 440,\n                                "ResultsLimit": 0,\n                                "ResultsTime": 0,\n                                "SearchDesc": "",\n                                "SearchFilters": [],\n                                "ThemeID": 0,\n                                "USIID": 10264,\n                                "UpdateUserID": "USISETTING",\n                                "UserID": "",\n                                "SourceUSIID": 0,\n                                "ConvertToUserDisplayTimeZone": false\n                }\n]',
     },
     {
@@ -153,7 +153,7 @@ export const crystalReportChrome: { [step: string]: ChromeRequest[] } = {
   '04': [
     {
       method: 'GET',
-      path: '/api/GenericServer/AddWindowUsageRecord?windowId=SA9340&v=${C_USI_Version}',
+      path: '/api/GenericServer/AddWindowUsageRecord?windowId=SA9340',
     },
     {
       method: 'GET',
@@ -195,7 +195,7 @@ export const crystalReportChrome: { [step: string]: ChromeRequest[] } = {
   '06': [
     {
       method: 'GET',
-      path: '/api/GenericServer/AddWindowUsageRecord?windowId=SA9341&v=${C_USI_Version}',
+      path: '/api/GenericServer/AddWindowUsageRecord?windowId=SA9341',
     },
     {
       method: 'GET',
@@ -237,7 +237,7 @@ export const crystalReportChrome: { [step: string]: ChromeRequest[] } = {
   '08': [
     {
       method: 'GET',
-      path: '/api/GenericServer/AddWindowUsageRecord?windowId=SA9391&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}&v=${C_USI_Version}',
+      path: '/api/GenericServer/AddWindowUsageRecord?windowId=SA9391',
     },
   ],
   '09': [
