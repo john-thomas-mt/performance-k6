@@ -217,9 +217,6 @@ export const copyServiceOrdersStatic: { [step: string]: StaticRequest[] } = {
       path: '/app/node_components/jsrsasign/lib/jsrsasign-all-min.js',
     },
     {
-      path: '/Scripts/@fortawesome/fontawesome-pro/fontawesome-pro.js',
-    },
-    {
       path: '/app/node_components/@syncfusion/ej2-base/dist/ej2-base.umd.min.js',
     },
     {
@@ -263,9 +260,6 @@ export const copyServiceOrdersStatic: { [step: string]: StaticRequest[] } = {
     },
     {
       path: '/app/enterprise-dist/framework/styles/fonts/Inter-Regular.ttf',
-    },
-    {
-      path: '/util00/scripts/jquery.js',
     },
     {
       path: '/app/node_components/jquery-ui/dist/jquery-ui.min.js',

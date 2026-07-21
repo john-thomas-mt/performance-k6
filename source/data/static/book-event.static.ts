@@ -72,9 +72,6 @@ export const bookEventStatic: { [step: string]: StaticRequest[] } = {
       path: '/app/node_components/jsrsasign/lib/jsrsasign-all-min.js',
     },
     {
-      path: '/Scripts/@fortawesome/fontawesome-pro/fontawesome-pro.js',
-    },
-    {
       path: '/app/node_components/@syncfusion/ej2-base/dist/ej2-base.umd.min.js',
     },
     {
@@ -102,12 +99,6 @@ export const bookEventStatic: { [step: string]: StaticRequest[] } = {
       path: '/App/node_components/core-js-bundle/minified.js',
     },
     {
-      path: '/App/node_components/@ask-momentus/web-component/ask-momentus-web.js',
-    },
-    {
-      path: '/App/node_components/@ungerboeck/import-component-web/import-component-web.js',
-    },
-    {
       path: '/content/images/splashscreen/momentus-logo-mark-reverse-rgb.svg',
     },
     {
@@ -124,9 +115,6 @@ export const bookEventStatic: { [step: string]: StaticRequest[] } = {
     },
     {
       path: '/app/enterprise-dist/framework/styles/fonts/Inter-Regular.ttf',
-    },
-    {
-      path: '/util00/scripts/jquery.js',
     },
     {
       path: '/app/node_components/jquery-ui/dist/jquery-ui.min.js',
@@ -1136,9 +1124,6 @@ export const bookEventStatic: { [step: string]: StaticRequest[] } = {
     },
     {
       path: '/app/enterprise-dist/views/genericList.html',
-    },
-    {
-      path: '/app/enterprise-dist/framework/common.blocks/genericPageGridHeader/genericPageGridHeader.css',
     },
   ],
 };

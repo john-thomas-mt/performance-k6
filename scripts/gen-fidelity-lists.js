@@ -84,6 +84,10 @@ for (const step of stepDirs) {
     // every action, not just the first, or the bundled embedded resources are silently dropped from the tiers.
     const actions = xml.match(/<http-action\b[\s\S]*?<\/http-action>/g) || [];
     for (const action of actions) {
+      // honor NeoLoad's own enable flag — enabled="false" is a dynamic resource the recording explicitly
+      // suppressed (the "disable dynamic resources" action), so the load test never fired it; emitting it
+      // would re-introduce a request NeoLoad dropped (and these bundled assets 404 on the current build)
+      if ((action.match(/\benabled="([^"]+)"/) || [])[1] === 'false') continue;
       const method = (action.match(/method="([^"]+)"/) || [])[1] || 'GET';
       const rawPath = (action.match(/path="([^"]+)"/) || [])[1] || '';
       if (!rawPath) continue;
