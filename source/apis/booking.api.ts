@@ -201,11 +201,12 @@ export function save_event_function(
   addedRowKey: string,
   encUserId: string,
   windowVersion: string,
+  stamp: string,
   name = 'SaveEventFunction',
 ) {
   const res = http.post(
     `${config.baseUrl}/api/USIDataGridServer/Save2`,
-    JSON.stringify(functionSavePayload(table, funcDesc, space, account, evtId, addedRowKey, encUserId, windowVersion)),
+    JSON.stringify(functionSavePayload(table, funcDesc, space, account, evtId, addedRowKey, encUserId, windowVersion, stamp)),
     { headers: build_headers(token, version), tags: { name } },
   );
 

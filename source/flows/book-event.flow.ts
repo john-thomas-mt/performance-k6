@@ -185,7 +185,7 @@ export function book_event_journey(user: User, data: SetupData) {
   think();
 
   group('T002_BookingEvent_10_ClickFunctionSave', () => {
-    read_event_functions(
+    const saveStamp = read_event_functions(
       bearerToken,
       data.version,
       spaceCode,
@@ -206,6 +206,7 @@ export function book_event_journey(user: User, data: SetupData) {
       booking.addedRowKey,
       encUserId,
       windowVersion,
+      format_retrieve_stamp(saveStamp),
     );
     chrome_and_static(bearerToken, data.version, level, ['10'], subs);
   });
