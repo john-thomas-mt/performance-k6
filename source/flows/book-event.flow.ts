@@ -1,4 +1,5 @@
 import { group } from 'k6';
+import exec from 'k6/execution';
 import { login_to_events } from './login.flow.ts';
 import {
   get_window_version,
@@ -59,7 +60,7 @@ export function book_event_journey(user: User, data: SetupData) {
   const level = fidelity_level();
   const runToken = crypto.randomUUID().split('-')[0];
   const date = random_future_date();
-  const spaceCode = bookingSpaces[__VU % bookingSpaces.length];
+  const spaceCode = bookingSpaces[exec.scenario.iterationInTest % bookingSpaces.length];
   const eventDesc = `Perf Booking ${runToken}`;
 
   const subs: Subs = {
