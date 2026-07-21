@@ -25,7 +25,6 @@ const profiles: { [profile: string]: Profile } = {
     stages: [
       { duration: '5m', target: 10 },
       { duration: '30m', target: 10 },
-      { duration: '5m', target: 0 },
     ],
   },
 };
