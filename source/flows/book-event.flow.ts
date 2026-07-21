@@ -151,9 +151,9 @@ export function book_event_journey(user: User, data: SetupData) {
   const booking = bookingRef!;
   think();
 
-  let funcTableRef: TransportTable | null = null;
+  let stamp = '';
   group('T002_BookingEvent_08_SelectEventFunctionOnActionButton', () => {
-    const stamp = read_event_functions(
+    stamp = read_event_functions(
       bearerToken,
       data.version,
       spaceCode,
@@ -163,6 +163,12 @@ export function book_event_journey(user: User, data: SetupData) {
       encUserId,
       windowVersion,
     );
+    chrome_and_static(bearerToken, data.version, level, ['08'], subs);
+  });
+  think();
+
+  let funcTableRef: TransportTable | null = null;
+  group('T002_BookingEvent_09_AddFunction', () => {
     funcTableRef = stage_event_function(
       bearerToken,
       data.version,
@@ -175,11 +181,6 @@ export function book_event_journey(user: User, data: SetupData) {
       windowVersion,
       format_retrieve_stamp(stamp),
     );
-    chrome_and_static(bearerToken, data.version, level, ['08'], subs);
-  });
-  think();
-
-  group('T002_BookingEvent_09_AddFunction', () => {
     chrome_and_static(bearerToken, data.version, level, ['09'], subs);
   });
   think();
