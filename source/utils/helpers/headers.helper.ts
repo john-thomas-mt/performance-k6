@@ -28,5 +28,6 @@ export function build_headers(token: string | null, version: string) {
     version,
     'content-type': 'application/json',
     'accept': 'application/json',
+    'accept-encoding': 'gzip, deflate, br',
   };
 }

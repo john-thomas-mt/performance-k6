@@ -45,7 +45,7 @@ export function fire_transport(token: string, version: string, requests: ChromeR
 
 export function fire_static_assets(requests: StaticRequest[]) {
   if (requests.length === 0) return;
-  const headers = { accept: '*/*' };
+  const headers = { 'accept': '*/*', 'accept-encoding': 'gzip, deflate, br' };
   const batch = requests.map((r): BatchReq => ['GET', `${config.baseUrl}${r.path}`, null, { headers, tags: { name: 'StaticAsset' } }]);
 
   const responses = Object.values(http.batch(batch));
