@@ -7,6 +7,7 @@ import {
   search_events,
   signalr_negotiate,
   get_service_order_control_info,
+  read_event_service_orders_grid,
 } from '../utils/exports/apis.exp.ts';
 import {
   fidelity_level,
@@ -129,6 +130,7 @@ export function copy_service_orders_journey(user: User, data: ServiceOrderSetup)
   group('T34_CopyServiceOrders_07_SelectFunctionAndSave', () => {
     const added = save_service_order_copy(bearerToken, data.version, encUserId, orders, refreshKey);
     console.log(`[VU ${__VU}] Copied ${orders.length} service order(s) → ${added.length} new order(s)`);
+    if (include_ui(level)) read_event_service_orders_grid(bearerToken, data.version, anchor, eventRowKey);
   });
   think();
 

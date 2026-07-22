@@ -1,4 +1,4 @@
-import { EventRow } from '../../../utils/exports/types.exp.ts';
+import { EventRow, ServiceOrderRow } from '../../../utils/exports/types.exp.ts';
 
 export const serviceOrdersGridPayload = (event: EventRow) => [
   '10',
@@ -86,4 +86,91 @@ export const serviceOrdersGridPayload = (event: EventRow) => [
   false,
   [0],
   true,
+];
+
+/* Post-copy reload of the Event Service Orders grid (system view 836, owned by USISETTING so it resolves
+   for every user), keyed by the copied event — the follow-on read NeoLoad's T34_07 fires right after Save2
+   to repaint the grid with the new orders. k6's group 07 otherwise times only the Save2 spine, so this is
+   what makes that transaction 1:1 with NeoLoad. Lean like the sibling grid payloads: dm17 emptied so the
+   server returns the default columns for the same rows. Fired only at include_ui fidelity. EvtID is numeric
+   (the grid keys on it as a number); EvtAcct/EvtID/RowKeyList are correlated from the anchor + search. */
+export const eventServiceOrdersRefreshPayload = (anchor: ServiceOrderRow, eventRowKey: string) => [
+  anchor.orgCode,
+  4,
+  1,
+  0,
+  3,
+  2,
+  [
+    { Key: 'EvtAcct', Value: anchor.ordAcct },
+    { Key: 'EvtID', Value: Number(anchor.evtId) },
+    { Key: 'EvtDesig', Value: anchor.evtDesig },
+    { Key: 'EvtStatus', Value: anchor.evtStatus },
+    { Key: 'LinkedFuncs', Value: 'Y' },
+    { Key: 'OrgCode', Value: anchor.orgCode },
+    { Key: 'RowKeyList', Value: eventRowKey },
+    { Key: 'WindowObjectID', Value: 1 },
+    { Key: 'WdwType', Value: 2 },
+    { Key: 'SplitterOrientation1', Value: 0 },
+    { Key: 'wdwid', Value: 'EM8059' },
+    { Key: 'ForceOneColumnLayout', Value: false },
+    { Key: 'ShowHelpTextInfo', Value: true },
+    { Key: 'MoveGeneralSectionToNewTab', Value: true },
+    { Key: 'ShowQuickInfoHeader', Value: true },
+    { Key: 'SectionUDFSets', Value: '' },
+    { Key: 'ContextObjectID', Value: 1 },
+  ],
+  2,
+  {
+    dm1: 836,
+    dm2: 0,
+    dm3: '',
+    dm4: 4,
+    dm5: 'Event Service Orders',
+    dm6: 766,
+    dm7: 'N',
+    dm9: 'USISETTING',
+    dm11: 'USISETTING',
+    dm12: 1412,
+    dm13: '',
+    dm14: '',
+    dm15: false,
+    dm16: 0,
+    dm17: [],
+    dm18: '10',
+    dm19: false,
+    dm20: '',
+    dm21: 2,
+    dm22: '',
+    dm23: '',
+    dm24: [],
+    dm32: false,
+    dm33: 0,
+  },
+  {
+    AutoRefresh: 'Y',
+    EnterUserID: 'USISETTING',
+    FilterCriteria: '',
+    ID: 766,
+    ObjectID: 4,
+    OrgCode: null,
+    ResultsCount: 10,
+    ResultsLimit: 0,
+    ResultsTime: 103,
+    SearchDesc: 'All Service Orders',
+    SearchFilters: [],
+    ThemeID: 0,
+    USIID: 1232,
+    UpdateUserID: 'USISETTING',
+    UserID: '',
+    SourceUSIID: 0,
+    ConvertToUserDisplayTimeZone: false,
+  },
+  2,
+  false,
+  false,
+  -1,
+  false,
+  false,
+  '',
 ];

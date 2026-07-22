@@ -5,6 +5,7 @@ import { config } from '../utils/exports/config.exp.ts';
 import { build_headers, body_text, parse_grid_rows, find_transport_table } from '../utils/exports/helpers.exp.ts';
 import {
   serviceOrdersGridPayload,
+  eventServiceOrdersRefreshPayload,
   serviceOrderDetailPayload,
   serviceOrderItemsSavePayload,
   orderItemCatalogPayload,
@@ -320,6 +321,24 @@ export function load_order_item_catalog(
   }
 
   return find_transport_table(res, 'CC716_SEQ', name);
+}
+
+export function read_event_service_orders_grid(
+  token: string,
+  version: string,
+  anchor: ServiceOrderRow,
+  eventRowKey: string,
+  name = 'ReadServiceOrderGrid',
+) {
+  const res = http.post(
+    `${config.baseUrl}/api/USIDataGridServer/GetGridData2`,
+    JSON.stringify(eventServiceOrdersRefreshPayload(anchor, eventRowKey)),
+    { headers: build_headers(token, version), tags: { name } },
+  );
+
+  check(res, {
+    [`${name}: status is 201`]: (r) => r.status === 201,
+  });
 }
 
 export function save_service_order_items(
