@@ -25,18 +25,43 @@ import { copyServiceOrdersChrome, copyServiceOrdersStatic, copyServiceOrdersTran
 import { config } from '../utils/exports/config.exp.ts';
 import { User, ServiceOrderSetup, ServiceOrderRow, EventRow, FidelityLevel } from '../utils/exports/types.exp.ts';
 
-const COPY_COUNT = Number(__ENV.COPY_COUNT || 2);
+const COPY_COUNT_OVERRIDE = __ENV.COPY_COUNT ? Number(__ENV.COPY_COUNT) : undefined;
+/* NeoLoad's recorded T34 event carried ~10 service orders (SO grid ResultsCount 10) and the copy selects a
+   random 1..N of them. The shared seed pool is sized for the other journeys and may exceed that, so cap the
+   random upper bound here to a realistic per-event size rather than the whole pool. */
+const NEOLOAD_EVENT_SO_COUNT = 10;
 
+/* Save2 copies a random 1..N of the event's service orders per iteration (see pick_orders), so its p95
+   tracks the larger selections — sized against NeoLoad's T34_07 transaction p95 (~7.6s). */
 export const copyServiceOrdersThresholds = {
   'http_req_duration{name:OpenCopyServiceOrdersForm}': ['p(95)<5000'],
-  'http_req_duration{name:SaveServiceOrderCopy}': ['p(95)<5000'],
+  'http_req_duration{name:SaveServiceOrderCopy}': ['p(95)<8000'],
 };
 
 type Subs = { [token: string]: string };
 
-function pick_orders(pool: ServiceOrderRow[], anchor: ServiceOrderRow, count: number): ServiceOrderRow[] {
+function shuffle(rows: ServiceOrderRow[]): ServiceOrderRow[] {
+  const a = rows.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = a[i];
+    a[i] = a[j];
+    a[j] = tmp;
+  }
+  return a;
+}
+
+/* Port of NeoLoad JS_Select_ServiceOrders: copy a random 1..N of the event's service orders, where N is the
+   orders under the anchor's event+function capped at NEOLOAD_EVENT_SO_COUNT (the single FuncID/EvtID context
+   must stay valid for the whole selection). The anchor stays orders[0] as the copy template; the rest are a
+   random sample. Setting -e COPY_COUNT pins the count for deterministic debug runs. */
+function pick_orders(pool: ServiceOrderRow[], anchor: ServiceOrderRow, override?: number): ServiceOrderRow[] {
   const sameFunc = pool.filter((o) => o.evtId === anchor.evtId && o.funcId === anchor.funcId);
-  return sameFunc.slice(0, count).length ? sameFunc.slice(0, count) : [anchor];
+  if (sameFunc.length === 0) return [anchor];
+  const upper = Math.min(sameFunc.length, NEOLOAD_EVENT_SO_COUNT);
+  const count = Math.min(override ?? 1 + Math.floor(Math.random() * upper), sameFunc.length);
+  const others = shuffle(sameFunc.filter((o) => o.orderNbr !== anchor.orderNbr));
+  return [anchor, ...others].slice(0, count);
 }
 
 function chrome_and_static(token: string, version: string, level: FidelityLevel, steps: string[], subs: Subs) {
@@ -56,7 +81,7 @@ export function copy_service_orders_journey(user: User, data: ServiceOrderSetup)
      per iteration and copy the orders that share its event+function so the single-context FuncID/EvtID
      is valid for the whole selection. */
   const anchor = data.soPool[exec.scenario.iterationInTest % data.soPool.length];
-  const orders = pick_orders(data.soPool, anchor, COPY_COUNT);
+  const orders = pick_orders(data.soPool, anchor, COPY_COUNT_OVERRIDE);
   const refreshKey = Date.now();
 
   const subs: Subs = {
