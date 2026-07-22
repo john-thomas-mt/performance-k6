@@ -93,6 +93,7 @@ const activeThresholds: { [metric: string]: string[] } = selected
   : Object.values(allThresholds).reduce<{ [metric: string]: string[] }>((merged, t) => ({ ...merged, ...t }), {});
 
 export const options: Options = {
+  batchPerHost: Number(__ENV.BATCH_PER_HOST) || 6,
   scenarios: selected ? { [selected]: allScenarios[selected] } : allScenarios,
   thresholds: {
     ...commonThresholds,
