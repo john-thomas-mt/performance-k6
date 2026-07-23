@@ -21,10 +21,11 @@ everything else in reading order.
 
 ## Project reference
 
-| Doc                                                                | What it covers                                                                                                                                            |
-| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [codebase-structure.md](./codebase-structure.md)                   | How the `source/` test suite is organized — layers, dependency order, and how a run flows through them                                                    |
-| [runtime-correlated-payloads.md](./runtime-correlated-payloads.md) | Design & risk analysis for fetching save payloads at runtime instead of hardcoding column tables — metric-skew and bug-coverage risks, with live evidence |
+| Doc                                                                | What it covers                                                                                                                                                                                                        |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [codebase-structure.md](./codebase-structure.md)                   | How the `source/` test suite is organized — layers, dependency order, and how a run flows through them                                                                                                                |
+| [runtime-correlated-payloads.md](./runtime-correlated-payloads.md) | Design & risk analysis for fetching save payloads at runtime instead of hardcoding column tables — metric-skew and bug-coverage risks, with live evidence                                                             |
+| [neoload-timing-parity.md](./neoload-timing-parity.md)             | Verified NeoLoad firing model (sequential pages of 2–3 parallel non-persistent requests) and the measured runs behind matching k6 `group_duration` to NeoLoad transaction time — with the per-page-batching next step |
 
 ## Conventions for these docs
 
