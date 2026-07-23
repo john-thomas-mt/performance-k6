@@ -4,43 +4,59 @@
    The ${...} tokens are correlation placeholders substituted at fire time. */
 import { ChromeRequest } from '../../utils/exports/types.exp.ts';
 
-export const roomDiagramUploadTransport: { [step: string]: ChromeRequest[] } = {
+export const roomDiagramUploadTransport: { [step: string]: ChromeRequest[][] } = {
   '01': [
-    {
-      method: 'GET',
-      path: '/Content/css/backOffice?v=${C_backOffice_version}',
-    },
-    {
-      method: 'GET',
-      path: '/Content/css/splash_bundle?v=',
-    },
-    {
-      method: 'GET',
-      path: '/Content/css?v=${C_css_version}',
-    },
-    {
-      method: 'GET',
-      path: '/scripts/modernizr?v=${C_modernizr_version}',
-    },
-    {
-      method: 'GET',
-      path: '/scripts/wijmo/controls/cultures/english?v=${C_english_version}',
-    },
+    [
+      {
+        method: 'GET',
+        path: '/Content/css/backOffice?v=${C_backOffice_version}',
+      },
+    ],
+    [
+      {
+        method: 'GET',
+        path: '/Content/css/splash_bundle?v=',
+      },
+    ],
+    [
+      {
+        method: 'GET',
+        path: '/Content/css?v=${C_css_version}',
+      },
+    ],
+    [
+      {
+        method: 'GET',
+        path: '/scripts/modernizr?v=${C_modernizr_version}',
+      },
+    ],
+    [
+      {
+        method: 'GET',
+        path: '/scripts/wijmo/controls/cultures/english?v=${C_english_version}',
+      },
+    ],
   ],
   '02': [
-    {
-      method: 'POST',
-      path: '/app85.cshtml?OrgCode=10&ApplicationDisplay=1&SingleSignOnToken=${C_TokenID}&VisualEffects=0',
-    },
-    {
-      method: 'GET',
-      path: '/signalr/start?transport=webSockets&clientProtocol=2.1&connectionToken=${C_ConnectionToken}&connectionData=[{&quot;name&quot;:&quot;globalnavnotificationhub&quot;}]&_=${P_EpochTimestamp}',
-    },
+    [
+      {
+        method: 'POST',
+        path: '/app85.cshtml?OrgCode=10&ApplicationDisplay=1&SingleSignOnToken=${C_TokenID}&VisualEffects=0',
+      },
+    ],
+    [
+      {
+        method: 'GET',
+        path: '/signalr/start?transport=webSockets&clientProtocol=2.1&connectionToken=${C_ConnectionToken}&connectionData=[{&quot;name&quot;:&quot;globalnavnotificationhub&quot;}]&_=${P_EpochTimestamp}',
+      },
+    ],
   ],
   '09': [
-    {
-      method: 'POST',
-      path: '/app85.cshtml?Logout=Y&ClientAppCategory=10',
-    },
+    [
+      {
+        method: 'POST',
+        path: '/app85.cshtml?Logout=Y&ClientAppCategory=10',
+      },
+    ],
   ],
 };
