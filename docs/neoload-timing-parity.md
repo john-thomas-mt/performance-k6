@@ -3,7 +3,7 @@
 **Status: working investigation notes.** These are the verified findings and measured runs behind the
 question "which k6 firing configuration reproduces NeoLoad's per-step timings, and can a single knob do
 it?" They are **not** folded into the published comparison report (the k6-vs-NeoLoad artifact) — that
-report stands as-is. The next step recorded here (per-page batching) is not yet built.
+report stands as-is. Per-page batching — the fix these notes led to — is now built and measured (run 16 below).
 
 ## The question
 
@@ -74,23 +74,24 @@ Test `k6_comparison`, scenario `SCN_k6`, project `RegressionSanity`, 17 Jul 2026
 All `FIDELITY=full`, `neoload` profile, 50 VUs, build 26.2.969x. Aggregate figures from each run's
 `k6-console.log`:
 
-| Run      | batchPerHost | keep-alive              | requests | iters | data recv | `http_req_duration` avg / p95 / max | checks  |
-| -------- | ------------ | ----------------------- | -------- | ----- | --------- | ----------------------------------- | ------- |
-| parallel | 6            | on                      | 154,147  | 303   | 3.0 GB    | 20.02 ms / 61.76 ms / 32.39 s       | 99.94%  |
-| serial   | 1            | on                      | 152,977  | 300   | 3.0 GB    | 13.95 ms / 40.58 ms / 11.10 s       | 100.00% |
-| run 14   | 1            | **off** (`noConnReuse`) | 153,796  | 302   | 3.7 GB    | 18.32 ms / 47.81 ms / 36.40 s       | 99.96%  |
-| run 15   | 3            | **off** (`noConnReuse`) | 153,386  | 301   | 3.7 GB    | 17.11 ms / 48.18 ms / 2.24 s        | 99.98%  |
+| Run        | batchPerHost     | keep-alive              | requests | iters | data recv | `http_req_duration` avg / p95 / max | checks  |
+| ---------- | ---------------- | ----------------------- | -------- | ----- | --------- | ----------------------------------- | ------- |
+| parallel   | 6                | on                      | 154,147  | 303   | 3.0 GB    | 20.02 ms / 61.76 ms / 32.39 s       | 99.94%  |
+| serial     | 1                | on                      | 152,977  | 300   | 3.0 GB    | 13.95 ms / 40.58 ms / 11.10 s       | 100.00% |
+| run 14     | 1                | **off** (`noConnReuse`) | 153,796  | 302   | 3.7 GB    | 18.32 ms / 47.81 ms / 36.40 s       | 99.96%  |
+| run 15     | 3                | **off** (`noConnReuse`) | 153,386  | 301   | 3.7 GB    | 17.11 ms / 48.18 ms / 2.24 s        | 99.98%  |
+| **run 16** | **6 (per-page)** | **off** (`noConnReuse`) | 154,210  | 303   | 3.7 GB    | 17.26 ms / 47.28 ms / 2.28 s        | 99.95%  |
 
 ### Per-step medians (ms), target = NeoLoad
 
-| Step                          | NeoLoad | parallel (6, ka) | serial (1, ka) | run 14 (1, no-reuse) | run 15 (3, no-reuse) |
-| ----------------------------- | ------- | ---------------- | -------------- | -------------------- | -------------------- |
-| Booking Launch                | 542     | 360              | 849            | 2702                 | 979                  |
-| Booking Login                 | 887     | 502              | 1052           | 1836                 | 877                  |
-| Booking ClickCalendarTab      | 842     | 508              | 1154           | 2357                 | 1028                 |
-| Booking ClickBookButton       | 1811    | 581              | 1607           | 2827                 | 1149                 |
-| Booking EnterdetailsClickSave | 1604    | 1512             | 1464           | 1584                 | 1285                 |
-| CopyEvent ClickSave           | 4287    | 1957             | 3074           | 4741                 | 2617                 |
+| Step                          | NeoLoad | parallel (6, ka) | serial (1, ka) | run 14 (1, no-reuse) | run 15 (3, no-reuse) | run 16 (per-page, 6, no-reuse) |
+| ----------------------------- | ------- | ---------------- | -------------- | -------------------- | -------------------- | ------------------------------ |
+| Booking Launch                | 542     | 360              | 849            | 2702                 | 979                  | 1028                           |
+| Booking Login                 | 887     | 502              | 1052           | 1836                 | 877                  | 1337                           |
+| Booking ClickCalendarTab      | 842     | 508              | 1154           | 2357                 | 1028                 | 1170                           |
+| Booking ClickBookButton       | 1811    | 581              | 1607           | 2827                 | 1149                 | 2130                           |
+| Booking EnterdetailsClickSave | 1604    | 1512             | 1464           | 1584                 | 1285                 | 1453                           |
+| CopyEvent ClickSave           | 4287    | 1957             | 3074           | 4741                 | 2617                 | 3702                           |
 
 (Full per-step data for every run is in each run's `group-metrics.csv`. `T34 SelectFunctionAndSave` is
 omitted from cross-run timing comparison — it is confounded by the random 1–10 service-order copy count.)
@@ -150,8 +151,22 @@ interleaves them in recorded page order. With `noConnReuse=true` the pages are i
 is order-invariant and the separate-tier firing yields the same per-step sum — but the HTTP/2-vs-pool
 difference remains. Per-page batching closes the structural gap, not the protocol-model one.
 
-**Not yet measured:** a `neoload`-profile CI run with per-page batching + `batchPerHost=6`. The per-step
-numbers in the tables above predate this change and will shift (chrome-heavy steps up toward NeoLoad).
+**Measured — run 16 (per-page batching + `batchPerHost=6` + `noConnReuse=true`, `neoload` CI profile):**
+clean at load — 0% `http_req_failed` (0 / 154,210), no unresolved-token skips, checks 99.95%, think-time 2.5 s.
+Per-page batching pulled the **write-heavy steps onto NeoLoad** (run 15 → run 16 ratio vs NeoLoad):
+ClickBookButton 0.63× → **1.18×**, EnterdetailsClickSave 0.80× → **0.91×**, CopyEvent ClickSave 0.61× →
+**0.86×**. The cost is that the **static/read-heavy early steps overshoot** — Launch **1.90×**, Login
+**1.51×** — because firing dozens of sequential pages each over a fresh TCP+TLS connection costs more in k6
+than NeoLoad's handling of the same `useKeepAlive="false"` pages. Net: the profile moved from "scattered (some
+way under, some over)" to "**writes aligned, reads uniformly ~1.4–1.9× over**"; the structure now matches
+NeoLoad by construction, and the transactional saves are within ~15%.
+
+The step-level **maxes reach ~16 s** on a few steps across flows, but the aggregate single-request
+`http_req_duration` max is only **2.28 s** — so those are the sequential-page **sum** on tail iterations, not a
+single stalled request (`http_req_failed` stays 0%). The lever for the read/launch overshoot, if exact
+per-step read parity is wanted, is relaxing `noConnReuse` on the static tier only — this diverges from the
+recording's `useKeepAlive="false"` but would cut the handshake overshoot without touching the aligned writes.
+Not yet tried.
 
 ## Current CI state
 
