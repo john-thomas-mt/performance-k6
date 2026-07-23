@@ -18,7 +18,11 @@ A journey runs at one of three fidelity levels chosen by `-e FIDELITY` (`fidelit
 `include_ui(level)` gates the UI-chrome tier; `include_static(level)` gates the static **and** transport
 tiers. A flow fires each step's slice of all three (via `fire_ui_chrome` / `fire_static_assets` /
 `fire_transport`) alongside the spine call for that step, keeping the extra load in flight around the spine
-writes.
+writes. Each slice is grouped by **NeoLoad page** (one `<http-page>` per recorded request file): the fire
+helpers replay **one `http.batch` per page** — pages sequential, requests parallel within a page — so the
+extra load reproduces NeoLoad's execution model (sequential pages, each a parallel burst) instead of one
+oversized batch per tier. The load spec's `batchPerHost` caps each page's burst to the recording's browser
+connection pool, so a single-request page stays sequential and a multi-request page drains pool-width at a time.
 
 ## Generated request lists — regenerate, never hand-edit
 The chrome/static/transport lists (`source/data/{chrome,static,transport}/*.ts`) are emitted from the
@@ -35,6 +39,9 @@ faithful on the current app, and each of these is load-bearing (skipping one pro
   token leaves malformed JSON or a blank value, so the server rejects it.
 - **sort each request into a tier** — an `/api/` call is chrome, a static asset is static, and everything
   else (the SignalR handshake, the bootstrap page) is transport.
+- **group each tier's requests by NeoLoad page** — one `<http-page>` per recorded request file, emitted as an
+  array-of-pages per step (`{ [step]: Request[][] }`) — so the replay fires one `http.batch` per page rather
+  than one batch per tier, preserving NeoLoad's sequential-pages-of-parallel-bursts execution model.
 - **exclude endpoints scripted as correlated wrappers** — the spine, plus reads promoted to gated wrappers
   (the app-shell bootstrap → `fetch_bundle_versions`, SignalR `negotiate` → `signalr_negotiate`) so they are
   not double-fired. The generator's own exclusion lists are the authoritative set.

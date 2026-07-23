@@ -36,11 +36,15 @@ page. The whole-run NeoLoad CSV confirms the shape by arithmetic:
 - Avg transaction time **0.815 s** ≈ 16.8 × 49 ms — i.e. a step is essentially the sum of its ~16
   sequential pages.
 
-**The 6-connection pool.** NeoLoad's default browser profile allows up to 6 parallel connections per host
-per VU (official docs). That is a _ceiling_, not a request count — it only binds when a page holds more
-than 6 requests, and here pages hold ≤3. So the pool is almost never saturated; effective per-page
-concurrency is 2–3, and the step's dominant cost is the sequential page count plus a fresh handshake on
-every request.
+**The 6-connection pool — project-confirmed.** The NeoLoad project configures `connections="6"` per VU
+(verified in `team/populations` + `team/scenarios`, 233×), matching NeoLoad's default 6-connection browser
+pool. That is a _ceiling_, not a request count. Split by tier the pages are small: every `/api/` chrome
+request and every transport request is its **own single-request page** (fired sequentially), while the static
+pages bundle several embedded assets (≈4–6, some launch pages more) that drain 6-at-a-time. So the pool only
+binds on the multi-request static pages; the step's dominant cost is the sequential page count plus a fresh
+handshake on every request. (Earlier notes here said "pages hold ≤3 / concurrency 2–3" — that was the raw
+tier-mixed average; the corrected per-tier picture is 1-request api/transport pages and multi-request static
+pages.)
 
 ## k6 firing model
 
@@ -114,30 +118,48 @@ omitted from cross-run timing comparison — it is confounded by the random 1–
    already match; per-step timings are not portable across tools and should be rebaselined against k6, not
    ported from NeoLoad). Not per-step exact.
 
-## Next step — per-page batching (not yet built)
+## Per-page batching — implemented (branch `ref-BO-15976-per-page-fidelity-batching`)
 
-To eliminate the scatter and match NeoLoad by construction rather than coincidence:
+Built to match NeoLoad by construction rather than coincidence:
 
-1. **Generator** (`scripts/gen-fidelity-lists.js`): preserve each request's `<http-page>` grouping — emit a
-   page id/index per request so the replay knows which requests share a page.
-2. **Replay** (`source/utils/helpers/chrome.helper.ts`): fire **one `http.batch()` per page** (its 2–3
-   requests, parallel) with the pages fired **sequentially**, instead of one big batch per tier.
-3. Keep `noConnReuse=true`; `batchPerHost` ≥ max per-page request count (won't bind).
-4. Regenerate all five flows (`source/data/{chrome,static,transport}/*.ts`), re-verify (smoke + a `neoload`
-   run), and update `rules/fidelity.md` (tier-firing description).
+1. **Generator** (`scripts/gen-fidelity-lists.js`): groups each tier's requests by `<http-page>` (one page
+   per recorded file), emitting `{ [step]: Request[][] }` — an array of pages per step. Verified purely
+   structural: flattening the new output is byte-identical to the previous flat output for all five flows ×
+   three tiers.
+2. **Replay** (`source/utils/helpers/chrome.helper.ts`): fires **one `http.batch()` per page** (parallel
+   within a page) with pages fired **sequentially**, instead of one big batch per tier.
+3. `noConnReuse=true`; **`batchPerHost=6`** — corrected from the earlier "won't bind" note. The project
+   configures `connections="6"` per VU, so 6 makes the cap bind _per page_ exactly like NeoLoad's pool:
+   single-request api/transport pages stay sequential, multi-request static pages drain 6-at-a-time.
+4. Regenerated all five flows; `tsc --noEmit` and `k6 inspect` pass. Flow call sites unchanged (only the
+   passed type went `Request[]` → `Request[][]`). `rules/fidelity.md` updated.
 
-**Known residual even after per-page batching:** the server speaks HTTP/2 (multiplexing) while NeoLoad
-models an HTTP/1-style per-request-connection pool, and k6 fires chrome/static/transport as separate tiers
-whereas NeoLoad interleaves them in recorded page order. So exact parity is not fully attainable; per-page
-batching closes the structural gap, not the protocol-model one.
+**Page shape after tier-split (why the old single-batch scattered):** chrome and transport are 1 request per
+page in every flow (e.g. book-event 74 chrome requests in 74 pages), so they now fire strictly sequentially;
+static is ≈4–6 requests per page (book-event 370 in 87 pages), firing as pool-capped parallel bursts. The old
+"one batch per tier" fired all ~40 of a step's requests as a single pipelined batch — that is the
+over-parallelization per-page batching removes.
+
+**Model re-verified this session across all five flows** (independent of prior work): file=page holds for
+every action-bearing file; `playRequestsSequentially="false"`, `executeResourcesDynamically="false"`,
+`useKeepAlive="false"`, `execution-type="0"` are uniform with zero exceptions; `connections="6"` project-wide.
+
+**Known residual:** the server speaks HTTP/2 (multiplexing) while NeoLoad models an HTTP/1-style
+per-request-connection pool, and k6 fires chrome/static/transport as separate tiers whereas NeoLoad
+interleaves them in recorded page order. With `noConnReuse=true` the pages are independent, so a step's total
+is order-invariant and the separate-tier firing yields the same per-step sum — but the HTTP/2-vs-pool
+difference remains. Per-page batching closes the structural gap, not the protocol-model one.
+
+**Not yet measured:** a `neoload`-profile CI run with per-page batching + `batchPerHost=6`. The per-step
+numbers in the tables above predate this change and will shift (chrome-heavy steps up toward NeoLoad).
 
 ## Current CI state
 
-`main` HEAD `e01f5a7` — `.azure/workflows/k6-tests-ci.yml` runs the comparison at `batchPerHost: '3'`,
-`noConnReuse: 'true'`. Relevant commits (all `BO-15486`): `d6118f8` (spec flag), `f17641a` (CI wiring +
-model comment fix), `b8c3f7b` (enable `noConnReuse`), `e01f5a7` (set `batchPerHost` 3). Note: `786219b`
-briefly set `batchPerHost` 6 and was reverted by `b8c3f7b` — a noisy pair left in history (final state is
-correct).
+`.azure/workflows/k6-tests-ci.yml` now runs the comparison at `batchPerHost: '6'`, `noConnReuse: 'true'`,
+`FIDELITY: 'full'`, with the per-page-batching replay. The single-global-knob settings measured above
+(`batchPerHost` 1 and 3) are superseded — kept only as the evidence that no single cap matched NeoLoad. The
+earlier global-knob parity commits are under `BO-15486`; the per-page-batching change is `BO-15976` (branch
+`ref-BO-15976-per-page-fidelity-batching`).
 
 ## Provenance
 
