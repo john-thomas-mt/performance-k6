@@ -21,11 +21,12 @@ everything else in reading order.
 
 ## Project reference
 
-| Doc                                                                | What it covers                                                                                                                                                                                                        |
-| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [codebase-structure.md](./codebase-structure.md)                   | How the `source/` test suite is organized — layers, dependency order, and how a run flows through them                                                                                                                |
-| [runtime-correlated-payloads.md](./runtime-correlated-payloads.md) | Design & risk analysis for fetching save payloads at runtime instead of hardcoding column tables — metric-skew and bug-coverage risks, with live evidence                                                             |
-| [neoload-timing-parity.md](./neoload-timing-parity.md)             | Verified NeoLoad firing model (sequential pages of 2–3 parallel non-persistent requests) and the measured runs behind matching k6 `group_duration` to NeoLoad transaction time — with the per-page-batching next step |
+| Doc                                                                      | What it covers                                                                                                                                                                                |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [codebase-structure.md](./codebase-structure.md)                         | How the `source/` test suite is organized — layers, dependency order, and how a run flows through them                                                                                        |
+| [runtime-correlated-payloads.md](./runtime-correlated-payloads.md)       | Design & risk analysis for fetching save payloads at runtime instead of hardcoding column tables — metric-skew and bug-coverage risks, with live evidence                                     |
+| [neoload-timing-parity.md](./neoload-timing-parity.md)                   | The measured runs behind matching k6 `group_duration` to NeoLoad transaction time, and the per-page-batching model they led to (superseded on the connection-reuse question by the doc below) |
+| [neoload-connection-reuse-model.md](./neoload-connection-reuse-model.md) | Why NeoLoad reused connections (it ran over HTTP/2), so keep-alive-off was never a faithful match; the finding that retired the `noConnReuse` / `batchPerHost` / `forceHttp1` knobs           |
 
 ## Conventions for these docs
 

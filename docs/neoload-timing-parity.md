@@ -38,6 +38,10 @@ of the Booking flow). Attribute tallies across that VU:
 So the real model is **sequential pages, each a small parallel burst of requests over non-persistent
 connections** — not purely sequential and not broadly parallel.
 
+_Correction (see top banner): the `useKeepAlive="false"` attribute is a legacy HTTP/1 label, not what
+executed. NeoLoad replayed over HTTP/2 with a reused connection, so the connections were persistent, not
+non-persistent._
+
 Hierarchy and sizing (this VU): 11 steps, 174 pages, 476 requests → ~16 pages per step, ~2.7 requests per
 page. The whole-run NeoLoad CSV confirms the shape by arithmetic:
 
@@ -45,6 +49,9 @@ page. The whole-run NeoLoad CSV confirms the shape by arithmetic:
 - All Transactions: **3,287** → 55,181 ÷ 3,287 ≈ **16.8 pages per transaction**
 - Avg transaction time **0.815 s** ≈ 16.8 × 49 ms — i.e. a step is essentially the sum of its ~16
   sequential pages.
+
+_Superseded (see top banner): the `k6_comparison` population ran HTTP/2, so this HTTP/1-style pool is not
+what executed at replay. The reading below is kept as the static project-config fact, not the runtime model._
 
 **The 6-connection pool — project-confirmed.** The NeoLoad project configures `connections="6"` per VU
 (verified in `team/populations` + `team/scenarios`, 233×), matching NeoLoad's default 6-connection browser
@@ -108,7 +115,9 @@ omitted from cross-run timing comparison — it is confounded by the random 1–
 
 ## Findings
 
-1. **The write-step transport gap is keep-alive — confirmed.** With `noConnReuse` on (run 14), the
+1. **The write-step transport gap is keep-alive — confirmed.** _(Superseded, see top banner: keep-alive-off
+   is not the NeoLoad-faithful config; NeoLoad reused connections over HTTP/2. This finding reflects the
+   artificial keep-alive-off runs, not a match to NeoLoad.)_ With `noConnReuse` on (run 14), the
    single-request save steps jumped onto NeoLoad: EnterdetailsClickSave 1464 → 1584 (NeoLoad 1604),
    CopyEvent ClickSave 3074 → 4741 (NeoLoad 4287). NeoLoad's `useKeepAlive="false"` handshake-per-request
    is why it reads slower per request; reproducing it in k6 closes that gap.

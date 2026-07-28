@@ -133,51 +133,51 @@ _k6 status_: ✅ ported · 🟡 likely ported, mapping unconfirmed · ⬜ not st
 
 ### Journeys (`@t*`)
 
-| T#   | Flow                                 | Type    | Seed (`@u*`)            | k6 status                                         |
-| ---- | ------------------------------------ | ------- | ----------------------- | ------------------------------------------------- |
-| T01  | AccountCreation                      | base    | —                       | ⬜                                                |
-| T02  | BookingEvent                         | base    | — (feeds U05/U07)       | ⬜                                                |
-| T03  | ViewContact_ServiceOrder             | base    | —                       | ⬜                                                |
-| T04  | CopyEvent                            | base    | —                       | ✅ `copy-event`                                   |
-| T05  | PaymentReceiptReport                 | report  | —                       | ⬜                                                |
-| T06  | BadgeReport                          | report  | —                       | ⬜                                                |
-| T07  | DailyFunctionReport                  | report  | —                       | ⬜                                                |
-| T08  | InvoiceEvents                        | base    | U01                     | ⬜                                                |
-| T09  | PurchaseOrders                       | base    | —                       | ⬜                                                |
-| T10  | VoucherProcessing                    | base    | U02                     | ⬜                                                |
-| T11  | PaymentPlan                          | base    | U05                     | ⬜                                                |
-| T12  | LaunchAndLogin                       | base    | —                       | 🟡 `login` (shared auth — confirm if this is T12) |
-| T13  | DailyWorkOrderReport                 | report  | —                       | ⬜                                                |
-| T14  | DetailGeneralLedgerReport            | report  | —                       | ⬜                                                |
-| T16  | CopyPasteEventFunction               | base    | U07                     | ⬜                                                |
-| T17  | EventRevenueMetricReport             | report  | —                       | ⬜                                                |
-| T18  | SpaceUtilizationReport               | report  | —                       | ⬜                                                |
-| T19  | OpportunityConversionReport          | report  | —                       | ⬜                                                |
-| T20  | EditServiceOrders                    | base    | U05                     | ✅ `edit-service-orders`                          |
-| T21  | AddPriceLists(ServiceOrders)         | base    | —                       | 🟡 `service-order-items` (confirm)                |
-| T22  | Cut-PasteEventFunction               | base    | U07                     | ⬜                                                |
-| T23  | DashboardOptimization                | base    | U09 (likely)            | ⬜                                                |
-| T24  | DashboardWidgetOptimization          | base    | U09 (likely)            | ⬜                                                |
-| T25  | EventsPageLoad_GeneralTab            | base    | U10                     | 🟡 `navigation` (confirm)                         |
-| T26  | EventsPageLoad_ActivitiesTab         | base    | U10                     | ⬜                                                |
-| T27  | EventsPageLoad_SearchInActivitiesTab | base    | —                       | ⬜                                                |
-| T28  | Gadgets_Load                         | base    | —                       | ⬜                                                |
-| T29  | MixedGadgets_Load                    | base    | —                       | ⬜                                                |
-| T30  | CrystalReport                        | report? | —                       | ⬜ (strategy doc lists as 10-VU base — confirm)   |
-| T31  | RoomDiagramFileStorage               | base    | U12 (azure-blob upload) | ⬜ (fixtures in `custom-resources/`)              |
-| T32  | LaunchNewBrowserTab                  | base    | —                       | ⬜                                                |
-| T33  | AddEventFromProfile                  | base    | —                       | ⬜                                                |
-| T34  | CopyServiceOrders                    | base    | U13                     | ⬜                                                |
-| T35  | ModifySOByBoothNumber                | base    | U16                     | ⬜                                                |
-| T36  | CopyExhibitors                       | base    | —                       | ⬜                                                |
-| T37  | EventOrderReport                     | report  | —                       | ⬜                                                |
-| T38  | WorkOrderItemsListData               | base    | —                       | ⬜                                                |
-| T39a | Jaarbeurs_Dashboard                  | base    | U09 (likely)            | ⬜ (customer-specific — confirm scope)            |
-| T39b | Jaarbeurs_Dashboard_Widgets          | base    | U09 (likely)            | ⬜ (customer-specific — confirm scope)            |
-| T40  | AppLaunchBenchmark                   | base    | —                       | ⬜ (micro-benchmark — confirm scope)              |
-| T41  | StartupRPCBenchmark                  | base    | —                       | ⬜ (micro-benchmark — confirm scope)              |
-| T42  | NotesListData                        | base    | —                       | ⬜                                                |
-| T43  | DocumentsListData                    | base    | U18 (add documents)     | ⬜                                                |
+| T#   | Flow                                 | Type    | Seed (`@u*`)            | k6 status                                          |
+| ---- | ------------------------------------ | ------- | ----------------------- | -------------------------------------------------- |
+| T01  | AccountCreation                      | base    | —                       | ✅ `create-account`                                |
+| T02  | BookingEvent                         | base    | — (feeds U05/U07)       | ✅ `book-event`                                    |
+| T03  | ViewContact_ServiceOrder             | base    | —                       | ⬜                                                 |
+| T04  | CopyEvent                            | base    | —                       | ✅ `copy-event`                                    |
+| T05  | PaymentReceiptReport                 | report  | —                       | ⬜                                                 |
+| T06  | BadgeReport                          | report  | —                       | ⬜                                                 |
+| T07  | DailyFunctionReport                  | report  | —                       | ⬜                                                 |
+| T08  | InvoiceEvents                        | base    | U01                     | ⬜                                                 |
+| T09  | PurchaseOrders                       | base    | —                       | ⬜                                                 |
+| T10  | VoucherProcessing                    | base    | U02                     | ⬜                                                 |
+| T11  | PaymentPlan                          | base    | U05                     | ⬜                                                 |
+| T12  | LaunchAndLogin                       | base    | —                       | 🟡 `login` (shared auth — confirm if this is T12)  |
+| T13  | DailyWorkOrderReport                 | report  | —                       | ⬜                                                 |
+| T14  | DetailGeneralLedgerReport            | report  | —                       | ⬜                                                 |
+| T16  | CopyPasteEventFunction               | base    | U07                     | ⬜                                                 |
+| T17  | EventRevenueMetricReport             | report  | —                       | ⬜                                                 |
+| T18  | SpaceUtilizationReport               | report  | —                       | ⬜                                                 |
+| T19  | OpportunityConversionReport          | report  | —                       | ⬜                                                 |
+| T20  | EditServiceOrders                    | base    | U05                     | ✅ `edit-service-orders`                           |
+| T21  | AddPriceLists(ServiceOrders)         | base    | —                       | 🟡 `service-order-items` (confirm)                 |
+| T22  | Cut-PasteEventFunction               | base    | U07                     | ⬜                                                 |
+| T23  | DashboardOptimization                | base    | U09 (likely)            | ⬜                                                 |
+| T24  | DashboardWidgetOptimization          | base    | U09 (likely)            | ⬜                                                 |
+| T25  | EventsPageLoad_GeneralTab            | base    | U10                     | 🟡 `navigation` (confirm)                          |
+| T26  | EventsPageLoad_ActivitiesTab         | base    | U10                     | ⬜                                                 |
+| T27  | EventsPageLoad_SearchInActivitiesTab | base    | —                       | ⬜                                                 |
+| T28  | Gadgets_Load                         | base    | —                       | ⬜                                                 |
+| T29  | MixedGadgets_Load                    | base    | —                       | ⬜                                                 |
+| T30  | CrystalReport                        | report? | —                       | ✅ `crystal-report` (Type report vs base: confirm) |
+| T31  | RoomDiagramFileStorage               | base    | U12 (azure-blob upload) | ✅ `room-diagram-upload`                           |
+| T32  | LaunchNewBrowserTab                  | base    | —                       | ⬜                                                 |
+| T33  | AddEventFromProfile                  | base    | —                       | ⬜                                                 |
+| T34  | CopyServiceOrders                    | base    | U13                     | ✅ `copy-service-orders`                           |
+| T35  | ModifySOByBoothNumber                | base    | U16                     | ⬜                                                 |
+| T36  | CopyExhibitors                       | base    | —                       | ⬜                                                 |
+| T37  | EventOrderReport                     | report  | —                       | ⬜                                                 |
+| T38  | WorkOrderItemsListData               | base    | —                       | ⬜                                                 |
+| T39a | Jaarbeurs_Dashboard                  | base    | U09 (likely)            | ⬜ (customer-specific — confirm scope)             |
+| T39b | Jaarbeurs_Dashboard_Widgets          | base    | U09 (likely)            | ⬜ (customer-specific — confirm scope)             |
+| T40  | AppLaunchBenchmark                   | base    | —                       | ⬜ (micro-benchmark — confirm scope)               |
+| T41  | StartupRPCBenchmark                  | base    | —                       | ⬜ (micro-benchmark — confirm scope)               |
+| T42  | NotesListData                        | base    | —                       | ⬜                                                 |
+| T43  | DocumentsListData                    | base    | U18 (add documents)     | ⬜                                                 |
 
 _No T15 exists in the tree. T39 has two variants (dashboard + widgets)._
 
