@@ -1,5 +1,15 @@
 # k6 ↔ NeoLoad per-step timing parity
 
+> **Superseded (2026-07-28), read this first.** The core premise below, that NeoLoad's per-action
+> `useKeepAlive="false"` meant a fresh connection per request and that k6 `noConnectionReuse: true`
+> reproduced it, was wrong. NeoLoad replayed the `k6_comparison` population over **HTTP/2** (`http2="true"`
+> in `team/populations/k6_comparison_50@v@u.xml`; the recorded request is `GET ... HTTP/2.0` with no
+> `Connection` header), so it reused a single multiplexed connection rather than a fresh-handshake-per-request
+> pool. The faithful k6 configuration is its default: HTTP/2 with keep-alive on. The `noConnReuse`,
+> `batchPerHost`, and `forceHttp1` knobs this doc introduced have been removed from the specs and CI, so the
+> keep-alive-off runs below (14, 15, 16) are an artificial worst case, kept only as measured evidence. Full
+> corrected analysis: `docs/neoload-connection-reuse-model.md`.
+
 **Status: working investigation notes.** These are the verified findings and measured runs behind the
 question "which k6 firing configuration reproduces NeoLoad's per-step timings, and can a single knob do
 it?" They are **not** folded into the published comparison report (the k6-vs-NeoLoad artifact) — that
@@ -53,11 +63,11 @@ pages.)
 - `source/utils/helpers/chrome.helper.ts` `fire_batch` currently collects **all** of a step's requests for
   a tier into **one** `http.batch(...)` call — one big batch per tier (`UIChrome` / `StaticAsset` /
   `Transport`).
-- `batchPerHost` (k6 default 6) caps simultaneous per-host connections inside a batch; `batch` (default 20)
-  caps the total. `noConnReuse` disables keep-alive so every request opens a fresh connection — the direct
-  analog of NeoLoad's `useKeepAlive="false"`.
-- Both knobs are env-gated on `source/tests/neoload.spec.ts`: `batchPerHost: Number(__ENV.BATCH_PER_HOST) || 6`
-  and `noConnReuse: __ENV.NO_CONN_REUSE === 'true'`.
+- `batchPerHost` (k6 default 6) caps simultaneous per-host requests inside a batch; `batch` (default 20)
+  caps the total. `noConnectionReuse` disables keep-alive so every request opens a fresh connection.
+- These were env-gated on `source/tests/neoload.spec.ts` (`BATCH_PER_HOST` / `NO_CONN_REUSE`) during this
+  investigation but have since been removed (see the top banner): the faithful config is k6's default,
+  keep-alive on over HTTP/2, so both knobs are gone and the `noConnReuse=true` runs below are historical.
 
 ## Reference target — NeoLoad run #5
 
@@ -170,11 +180,11 @@ Not yet tried.
 
 ## Current CI state
 
-`.azure/workflows/k6-tests-ci.yml` now runs the comparison at `batchPerHost: '6'`, `noConnReuse: 'true'`,
-`FIDELITY: 'full'`, with the per-page-batching replay. The single-global-knob settings measured above
-(`batchPerHost` 1 and 3) are superseded — kept only as the evidence that no single cap matched NeoLoad. The
-earlier global-knob parity commits are under `BO-15486`; the per-page-batching change is `BO-15976` (branch
-`ref-BO-15976-per-page-fidelity-batching`).
+`.azure/workflows/k6-tests-ci.yml` runs `FIDELITY: 'full'` with the per-page-batching replay on k6's default
+transport (HTTP/2, keep-alive on). The `batchPerHost`, `noConnReuse`, and `forceHttp1` knobs were removed once
+the HTTP/2 finding (top banner) showed keep-alive-off and forced HTTP/1.1 were not NeoLoad-faithful; the
+single-global-knob runs above (`batchPerHost` 1 and 3) are kept only as evidence that no single cap matched
+NeoLoad. The per-page-batching change is `BO-15976`; the earlier global-knob parity commits are under `BO-15486`.
 
 ## Provenance
 

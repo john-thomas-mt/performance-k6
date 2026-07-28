@@ -21,8 +21,8 @@ tiers. A flow fires each step's slice of all three (via `fire_ui_chrome` / `fire
 writes. Each slice is grouped by **NeoLoad page** (one `<http-page>` per recorded request file): the fire
 helpers replay **one `http.batch` per page** — pages sequential, requests parallel within a page — so the
 extra load reproduces NeoLoad's execution model (sequential pages, each a parallel burst) instead of one
-oversized batch per tier. The load spec's `batchPerHost` caps each page's burst to the recording's browser
-connection pool, so a single-request page stays sequential and a multi-request page drains pool-width at a time.
+oversized batch per tier. Each page's burst runs under k6's default per-host in-flight cap, so a single-request
+page stays sequential and a multi-request page drains a few at a time.
 
 ## Generated request lists — regenerate, never hand-edit
 The chrome/static/transport lists (`source/data/{chrome,static,transport}/*.ts`) are emitted from the

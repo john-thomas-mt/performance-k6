@@ -35,8 +35,6 @@ const scenario = (exec: string): Scenario => ({
 });
 
 export const options: Options = {
-  batchPerHost: Number(__ENV.BATCH_PER_HOST) || 6,
-  noConnectionReuse: __ENV.NO_CONN_REUSE === 'true',
   scenarios: {
     book_event: scenario('book_event'),
     copy_event: scenario('copy_event'),
