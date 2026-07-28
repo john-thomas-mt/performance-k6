@@ -50,3 +50,4 @@ export * from '../../data/chrome/room-diagram-upload.chrome.ts';
 export * from '../../data/static/room-diagram-upload.static.ts';
 export * from '../../data/transport/room-diagram-upload.transport.ts';
 export * from '../../data/creds/users.data.ts';
+export * from '../../data/pools/copy-events.data.ts';

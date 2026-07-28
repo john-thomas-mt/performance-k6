@@ -5,6 +5,7 @@ export * from '../helpers/fidelity.helper.ts';
 export * from '../helpers/headers.helper.ts';
 export * from '../helpers/pacing.helper.ts';
 export * from '../helpers/payload.helper.ts';
+export * from '../helpers/pool.helper.ts';
 export * from '../helpers/response.helper.ts';
 export * from '../helpers/think-time.helper.ts';
 export * from '../helpers/transport.helper.ts';

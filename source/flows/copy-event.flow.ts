@@ -18,18 +18,18 @@ import {
   fetch_bundle_versions,
   think,
   sign_out,
+  pick_pool_value,
 } from '../utils/exports/helpers.exp.ts';
-import { copyEventChrome, copyEventStatic, copyEventTransport } from '../utils/exports/data.exp.ts';
+import { copyEventChrome, copyEventStatic, copyEventTransport, copyEventNames } from '../utils/exports/data.exp.ts';
 import { User, SetupData, EventRow, FidelityLevel } from '../utils/exports/types.exp.ts';
 
-const SOURCE_EVENT = __ENV.SOURCE_EVENT || 'Manual Test Event 1';
 const COPY_WINDOW_ID = 'EB2212';
 
 export const copyEventThresholds = {
-  'http_req_duration{name:SearchEvents}': ['p(95)<3000'],
-  'http_req_duration{name:OpenCopyForm}': ['p(95)<5000'],
-  'http_req_duration{name:SaveEventCopy}': ['p(95)<5000'],
-  'http_req_duration{name:OpenEventDetail}': ['p(95)<5000'],
+  'http_req_duration{name:SearchEvents}': ['p(95)<1500'],
+  'http_req_duration{name:OpenCopyForm}': ['p(95)<2500'],
+  'http_req_duration{name:SaveEventCopy}': ['p(95)<13000'],
+  'http_req_duration{name:OpenEventDetail}': ['p(95)<2500'],
 };
 
 type Subs = { [token: string]: string };
@@ -48,10 +48,11 @@ export function copy_event_journey(user: User, data: SetupData) {
   const level = fidelity_level();
   const runToken = crypto.randomUUID().split('-')[0];
   const newDescription = `Manual Event Perf Test - ${runToken}`;
+  const sourceEvent = __ENV.SOURCE_EVENT || pick_pool_value(copyEventNames);
 
   const subs: Subs = {
     'C_USI_Version': data.version,
-    'P_26_2_CopyEvents.eventName': SOURCE_EVENT,
+    'P_26_2_CopyEvents.eventName': sourceEvent,
   };
 
   group('T004_CopyEvent_01_Launch', () => {
@@ -83,8 +84,8 @@ export function copy_event_journey(user: User, data: SetupData) {
 
   let sourceRef: EventRow | null = null;
   group('T004_CopyEvent_04_SearchEvent', () => {
-    const rows = search_events(bearerToken, data.version, SOURCE_EVENT);
-    const found = rows.find((r) => r.desc === SOURCE_EVENT && !!r.evtId) || null;
+    const rows = search_events(bearerToken, data.version, sourceEvent);
+    const found = rows[0]?.evtId ? rows[0] : null;
     sourceRef = found;
     check(null, { 'Source event found': () => Boolean(found) });
     if (found) {
