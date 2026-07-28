@@ -24,7 +24,7 @@ const profiles: { [profile: string]: Profile } = {
   neoload: {
     stages: [
       { duration: '5m', target: 10 },
-      { duration: '30m', target: 10 },
+      { duration: '35m', target: 10 },
     ],
   },
 };
