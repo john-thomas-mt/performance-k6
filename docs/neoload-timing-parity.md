@@ -142,7 +142,7 @@ omitted from cross-run timing comparison — it is confounded by the random 1–
 
 Built to match NeoLoad by construction rather than coincidence:
 
-1. **Generator** (`scripts/gen-fidelity-lists.js`): groups each tier's requests by `<http-page>` (one page
+1. **Generator** (`scripts/gen-fidelity-lists.cjs`): groups each tier's requests by `<http-page>` (one page
    per recorded file), emitting `{ [step]: Request[][] }` — an array of pages per step. Verified purely
    structural: flattening the new output is byte-identical to the previous flat output for all five flows ×
    three tiers.

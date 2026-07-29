@@ -11,7 +11,7 @@ const ts = require('typescript');
 
 const [file, exportName] = process.argv.slice(2);
 if (!file || !exportName) {
-  console.error('usage: node materialize-template.cjs <path/to/file.data.ts> <exportedBuilderName>');
+  console.error('usage: node scripts/materialize-template.cjs <path/to/file.data.ts> <exportedBuilderName>');
   process.exit(2);
 }
 
@@ -62,7 +62,7 @@ if (typeof builder !== 'function') {
   console.error(`export "${exportName}" is not a builder function in ${file}`);
   process.exit(2);
 }
-const params = ((builder.toString().match(/^[^(]*\(([^)]*)\)/) || [, ''])[1])
+const params = (builder.toString().match(/^[^(]*\(([^)]*)\)/) || [, ''])[1]
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
