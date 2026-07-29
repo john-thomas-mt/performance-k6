@@ -26,7 +26,7 @@ page stays sequential and a multi-request page drains a few at a time.
 
 ## Generated request lists — regenerate, never hand-edit
 The chrome/static/transport lists (`source/data/{chrome,static,transport}/*.ts`) are emitted from the
-NeoLoad recording by `scripts/gen-fidelity-lists.cjs` and carry a do-not-hand-edit banner: change the
+NeoLoad recording by `.claude/scripts/gen-fidelity-lists.cjs` and carry a do-not-hand-edit banner: change the
 generator and regenerate, don't edit the data. The generator normalises the recording so the replay is
 faithful on the current app, and each of these is load-bearing (skipping one produces spurious
 `http_req_failed`, not real UI behaviour):
@@ -62,7 +62,7 @@ skip.
 
 **Never `Read` these files into an agent's context** — the replay bodies are multi-KB and opaque (tokens are
 substituted at fire time, so nothing here is hand-edited). To wire a flow's subs map, run
-`node scripts/fidelity-tokens.cjs <chrome-file> [static-file]` for the tokens-per-step and the full token-key
+`node .claude/scripts/fidelity-tokens.cjs <chrome-file> [static-file]` for the tokens-per-step and the full token-key
 contract the subs map must satisfy; `grep` a path if you need one specific request.
 
 ## Runtime correlation — substitute, never fire a blanked body

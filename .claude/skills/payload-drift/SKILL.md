@@ -56,10 +56,10 @@ the `generate-test` flow's exploration and save the request body to `temp/captur
 then:
 ```
 # run the committed builder and print its emitted payload as JSON (use the exported builder name)
-node scripts/materialize-template.cjs source/data/payloads/<module>/<file>.data.ts <builderName> > temp/object.json
+node .claude/scripts/materialize-template.cjs source/data/payloads/<module>/<file>.data.ts <builderName> > temp/object.json
 
 # shape-diff it against the fresh recording (exit 0 = clean, 1 = drift)
-node scripts/compare-payload.cjs temp/object.json temp/captures/raw/<name>.json
+node .claude/scripts/compare-payload.cjs temp/object.json temp/captures/raw/<name>.json
 ```
 The diff ignores dynamic leaf values and reports only structure — added/removed fields and type
 changes — naming the drifted column where the array carries a stable id field.

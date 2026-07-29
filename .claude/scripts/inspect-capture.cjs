@@ -4,7 +4,7 @@
 // response, never frozen into a builder). Keeps raw bytes out of the main context.
 //
 // Usage:
-//   node scripts/inspect-capture.cjs <capture-file> [searchValue]
+//   node .claude/scripts/inspect-capture.cjs <capture-file> [searchValue]
 //
 // <capture-file>  a JSON request/response body (e.g. temp/captures/raw/save2.reqbody)
 // [searchValue]   optional: print every JSON path where this value appears (find consumers)
@@ -13,7 +13,7 @@ const fs = require('fs');
 
 const [file, search] = process.argv.slice(2);
 if (!file) {
-  console.error('usage: node scripts/inspect-capture.cjs <capture-file> [searchValue]');
+  console.error('usage: node .claude/scripts/inspect-capture.cjs <capture-file> [searchValue]');
   process.exit(1);
 }
 

@@ -6,8 +6,8 @@
 // bodies out of the caller's main context — the caller reads this digest, not the tree.
 //
 // Usage:
-//   node scripts/neoload-digest.cjs "<VU tree dir>"
-//   node scripts/neoload-digest.cjs "team/vus/@t34_@copy@service@orders #2826#2E2#29"
+//   node .claude/scripts/neoload-digest.cjs "<VU tree dir>"
+//   node .claude/scripts/neoload-digest.cjs "team/vus/@t34_@copy@service@orders #2826#2E2#29"
 //
 // Deterministic and read-only. Body dissection shells out to `unzip` (git-bash / any *nix); if unzip
 // is absent it degrades to listing the zip path so the author can extract it manually.
@@ -19,7 +19,7 @@ const { execSync } = require('child_process');
 
 const treeDir = process.argv[2];
 if (!treeDir) {
-  console.error('usage: node scripts/neoload-digest.cjs "<VU tree dir>"');
+  console.error('usage: node .claude/scripts/neoload-digest.cjs "<VU tree dir>"');
   process.exit(1);
 }
 if (!fs.existsSync(treeDir)) {
@@ -65,7 +65,7 @@ const CHROME = [
 // The reproduced write / detail-form-open payloads worth dissecting inline (the bodies an author
 // writes a builder for). Grid/search reads (GetGridData2, USIDataGridServer/GetInitialData2) are
 // correlated from responses via existing wrappers, so their request bodies aren't dissected here —
-// run scripts/inspect-capture.cjs on a listed zip if one is needed.
+// run .claude/scripts/inspect-capture.cjs on a listed zip if one is needed.
 const DISSECT = /(\/Save2|GenericDetailServer\/GetInitialData2|\/CacheFiles|\/CreateNewRowsWithDefaultValues)(\?|$)/;
 
 const barePath = (p) => p.replace(/^\/\$\{[^}]+\}/, '');
@@ -107,7 +107,7 @@ const parseRequest = (xmlPath) => {
   return { method, path: barePath(p), hasBody, zip, extractors };
 };
 
-// ---- body dissection (mirrors scripts/inspect-capture.cjs, condensed) ----
+// ---- body dissection (mirrors .claude/scripts/inspect-capture.cjs, condensed) ----
 const shape = (v) =>
   Array.isArray(v) ? `Array(${v.length})` : v && typeof v === 'object' ? `{${Object.keys(v).join(',')}}` : JSON.stringify(v);
 

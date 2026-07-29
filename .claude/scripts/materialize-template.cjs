@@ -11,7 +11,7 @@ const ts = require('typescript');
 
 const [file, exportName] = process.argv.slice(2);
 if (!file || !exportName) {
-  console.error('usage: node scripts/materialize-template.cjs <path/to/file.data.ts> <exportedBuilderName>');
+  console.error('usage: node .claude/scripts/materialize-template.cjs <path/to/file.data.ts> <exportedBuilderName>');
   process.exit(2);
 }
 

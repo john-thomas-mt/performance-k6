@@ -5,14 +5,14 @@
 // UNION (the exact subs-map key set the flow must supply). This prints those; never `Read` the file.
 //
 // Usage:
-//   node scripts/fidelity-tokens.cjs <chrome-file> [static-file ...]
-//   node scripts/fidelity-tokens.cjs source/data/chrome/copy-service-orders.chrome.ts source/data/static/copy-service-orders.static.ts
+//   node .claude/scripts/fidelity-tokens.cjs <chrome-file> [static-file ...]
+//   node .claude/scripts/fidelity-tokens.cjs source/data/chrome/copy-service-orders.chrome.ts source/data/static/copy-service-orders.static.ts
 
 const fs = require('fs');
 
 const files = process.argv.slice(2);
 if (!files.length) {
-  console.error('usage: node scripts/fidelity-tokens.cjs <chrome-file> [static-file ...]');
+  console.error('usage: node .claude/scripts/fidelity-tokens.cjs <chrome-file> [static-file ...]');
   process.exit(1);
 }
 

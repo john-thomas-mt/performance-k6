@@ -51,7 +51,7 @@ function diff(object, recorded) {
 if (require.main === module) {
   const [objPath, recPath] = process.argv.slice(2);
   if (!objPath || !recPath) {
-    console.error('usage: node scripts/compare-payload.cjs <object.json> <recorded.json>');
+    console.error('usage: node .claude/scripts/compare-payload.cjs <object.json> <recorded.json>');
     process.exit(2);
   }
   const out = diff(JSON.parse(fs.readFileSync(objPath, 'utf8')), JSON.parse(fs.readFileSync(recPath, 'utf8')));

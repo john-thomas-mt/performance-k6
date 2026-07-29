@@ -49,7 +49,7 @@ k6 defaults.
 - `source/seeds/` — bulk prerequisite-data scripts (`<feature>.seed.ts`) run once after a snapshot reset, reusing `source/apis/` wrappers
 - `temp/captures/raw/` — scratch space for oversized payloads during exploration (gitignored); no capture document is produced
 - `docs/` — standalone reference/decision docs backing architecture, capacity, and tooling choices (the folder is the authoritative list)
-- `scripts/` — every authoring-time Node CLI (`.cjs`), in one place: NeoLoad-tree parsing, captured-body dissection, payload/fidelity-list generation, and builder-vs-recording shape diffing (the folder is the authoritative list). Driven by the skills, rules and agents, never by a k6 run — invoke as `node scripts/<name>.cjs` from the repo root, since their paths are cwd-relative. CI-runtime samplers and graphers are the separate `.azure/scripts/`, invoked by the pipeline yaml
+- `.claude/scripts/` — every authoring-time Node CLI (`.cjs`), in one place: NeoLoad-tree parsing, captured-body dissection, payload/fidelity-list generation, and builder-vs-recording shape diffing (the folder is the authoritative list). Driven by the skills, rules and agents, never by a k6 run — invoke as `node .claude/scripts/<name>.cjs` from the repo root, since their paths are cwd-relative. CI-runtime samplers and graphers are the separate `.azure/scripts/`, invoked by the pipeline yaml
 
 ## Workflow: generating a new test
 `/generate-test <flow description>` — one continuous pass: drive the app with `playwright-cli`, build an in-context correlation picture (no capture file), script straight into `source/` wrappers + a `source/flows/` journey wired into `source/tests/smoke.spec.ts`, then verify with a 3-step progressive run:

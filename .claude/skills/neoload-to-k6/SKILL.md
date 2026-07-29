@@ -46,7 +46,7 @@ Three project-root folders (siblings of `team/`) hold data the steps only refere
 **Parse the whole tree in one pass with the digest script** (zero traffic, deterministic):
 
 ```bash
-node scripts/neoload-digest.cjs "team/vus/<VU>"
+node .claude/scripts/neoload-digest.cjs "team/vus/<VU>"
 ```
 
 It prints one compact digest: step order, the transaction **spine** (each request classified SPINE / CHROME / DROP with its `<variable-extractor>` names), the solved **correlation map**, the **paired data-script VU** (from the test-data population), and a **dissection of each write / detail-form-open body** — resolved values pulled from the recorded-artifacts zips: envelope shape, populated transport-table cells by column name, and the `{Key,Value}` context arrays. **Read the digest, not the raw tree** — it keeps the XML, the extractor blocks, and the multi-KB captured bodies out of the main context. Hand-dumping the tree (`cat` the xml, ad-hoc node walkers, manual `unzip` + per-body dumps) instead of running the digest first is the main avoidable token sink in this workflow.
@@ -57,10 +57,10 @@ For a body the digest doesn't dissect (a grid/search read, or a second capture),
 
 ```bash
 unzip -o "team/vus/<VU>/%resources%/recorded-artifacts/<uid>.zip" -d /tmp/x   # req_*.txt body is after the first blank line
-node scripts/inspect-capture.cjs /tmp/x/recorded-requests/req_*.txt            # shape + populated cells + correlation candidates
+node .claude/scripts/inspect-capture.cjs /tmp/x/recorded-requests/req_*.txt            # shape + populated cells + correlation candidates
 ```
 
-Every helper script this workflow uses lives in **`scripts/`** (that folder is the authoritative list) — invoke each as `node scripts/<name>.cjs` from the repo root, since output paths are cwd-relative. Use `node -e`, not `jq`/`python`.
+Every helper script this workflow uses lives in **`.claude/scripts/`** (that folder is the authoritative list) — invoke each as `node .claude/scripts/<name>.cjs` from the repo root, since output paths are cwd-relative. Use `node -e`, not `jq`/`python`.
 
 **Feed the tools the ZIP body, never the VU xml.** The `<textPostContent>` body in a `<request>.xml` is *templated* — it carries `${…}` correlation tokens, so it is **not valid JSON** and `inspect-capture.cjs` / `gen-payload-builder.cjs` throw on the leading `$`. The recorded-artifacts `req_*.txt` body has the **resolved real values** (valid JSON); `neoload-digest.cjs` already reads from the zips. Read the VU xml directly only for the `<variable-extractor>` list and which cells are `${…}` tokens (the input to a gen spec's `params`/`regenerate`).
 
@@ -96,7 +96,7 @@ NeoLoad already solved correlation; translate it. Classify each dynamic value (s
   - **True `multipart/form-data`** (e.g. the sales-ai file upload) uses a real `http.file(content, name, mime)` payload. Only here do you restore multipart — and do **not** reproduce NeoLoad's raw-body multipart workaround (its as-code YAML can't do binary multipart, so the recording fakes it); the k6 port sends the real upload.
 - Port each step's `sla_profile="…SLA"` into the journey's `<journey>Thresholds` using the real latency targets from `sla_profiles/*.xml` (§1), not guessed values.
 - **Decide the prerequisite-data strategy before scripting the journey** (mirrors `generate-test` §3). If the journey has a paired `@u*` *data-script* VU (found via its test-data population, §1), that VU **creates** the records the journey reads — recognizable by `errorPolicy="STOP_AND_START"`, no SLA profile, `MODE_NO_PACING`/zero think-time, and a tail `DataWrite_*` js-action. Port its create-spine (the numbered create steps plus any `loop.xml` for bulk volume) into `source/seeds/<feature>.seed.ts` reusing existing api wrappers — a **separate seed pass**, not folded into the journey. Replace NeoLoad's `DataWrite`→`.txt`→`<variable-file>` handoff with the repo's seed-marker discovery (the journey finds its own rows at runtime); never replay the captured keys. The seeds rule auto-loads when you edit `source/seeds/`.
-- **Large captured payloads: generate, don't transcribe.** Extract the concrete body from the request zip, then emit the builder with `node scripts/gen-payload-builder.cjs <capture> <spec.json>` (the spec maps runtime-varying cells to `params`, client-side values to `regenerate`, and lifts each transport table via `extractTable`) rather than hand-transcribing or hoisting the body to a shared constant. The generated builder must weave each runtime-varying cell in at its position (in a columnar transport table, the numeric `Values` key matching the column's `ColumnID`). Re-correlate per-record identity fields the same way — weave the runtime `source` value into its cell, not a post-build mutation — and lift each transport table into its own module-level `: TransportTable` builder the payload plugs in. This mirrors the repo's `copy-form`/`save` builders and the "regenerate/diff-verify, don't hand-edit" convention.
+- **Large captured payloads: generate, don't transcribe.** Extract the concrete body from the request zip, then emit the builder with `node .claude/scripts/gen-payload-builder.cjs <capture> <spec.json>` (the spec maps runtime-varying cells to `params`, client-side values to `regenerate`, and lifts each transport table via `extractTable`) rather than hand-transcribing or hoisting the body to a shared constant. The generated builder must weave each runtime-varying cell in at its position (in a columnar transport table, the numeric `Values` key matching the column's `ColumnID`). Re-correlate per-record identity fields the same way — weave the runtime `source` value into its cell, not a post-build mutation — and lift each transport table into its own module-level `: TransportTable` builder the payload plugs in. This mirrors the repo's `copy-form`/`save` builders and the "regenerate/diff-verify, don't hand-edit" convention.
 - **Override every per-record identity field** from the correlated row (order nbr, account, event id, search key). A captured unique key left in place makes the server reject or mis-target the save.
 - **Optimistic-concurrency tokens are load-bearing echo fields.** A header/record save often carries the row's last-update timestamp; the server rejects the save (`PrimaryKeyRecordChanged`) unless it matches the row's **current** value. Correlate it from the open-detail response and thread it into the save — do not replay the captured stamp. If a builder *omits* the timestamp columns it sidesteps the check (some do); if it *includes* them, you must correlate them.
 - **Chain the token across sequential saves.** Each save bumps the row's timestamp, so re-read detail (or read it from the prior save's response, which returns the refreshed row) before the next header save.
@@ -109,7 +109,7 @@ Beyond the spine, the recording's UI-chrome and static requests replay as env-ga
 compare lean vs. browser-realistic load. Do this only after the spine (§4) is green, and only if the user
 asks for it.
 
-- Generate the lists from the tree: `node scripts/gen-fidelity-lists.cjs "<VU tree>" source/data/chrome/<journey>.chrome.ts source/data/static/<journey>.static.ts source/data/transport/<journey>.transport.ts` (do-not-hand-edit; regenerate on re-record).
+- Generate the lists from the tree: `node .claude/scripts/gen-fidelity-lists.cjs "<VU tree>" source/data/chrome/<journey>.chrome.ts source/data/static/<journey>.static.ts source/data/transport/<journey>.transport.ts` (do-not-hand-edit; regenerate on re-record).
 - Before generating, confirm the journey's **write/upload spine endpoints are in the generator's `SPINE` exclusion** (e.g. `GenericServer/CacheFiles`). A spine endpoint missing from that list leaks into the chrome tier and double-fires — and a captured upload body is a huge base64 blob. Add it to `SPINE` (it's a correct general fix) and regenerate.
 - A chrome request whose body **echoes a full selected grid row** (`USIDataGridServer/GetControlInfo`, carrying `ROW*_` tokens) can't be resolved by per-token subs from the lean spine — the row isn't a spine output. When the journey needs 1:1 parity, reproduce it as a **dedicated fidelity-gated wrapper** (see `get_service_order_control_info` / `get_event_control_info`): extend the row type (`ServiceOrderRow` / `EventRow`) and its `parse_grid_rows` mapping with the echoed columns — they come from the same grid read the spine already makes — add a table-builder that weaves those cells and a wrapper fired behind `include_ui`, and keep the endpoint in the generator's `SPINE` exclusion so the chrome tier doesn't double-fire it. If parity isn't required, just leave it in `SPINE` (excluded, not fired) and note the omission in the report (no silent caps).
 - Wire the flow to fire each step's slice behind the `include_ui` / `include_static` gates alongside that
@@ -117,7 +117,7 @@ asks for it.
   correlation the spine already extracts.
 - **Never `Read` the generated `*.chrome.ts` / `*.static.ts` into the main context** — they carry multi-KB
   opaque replay bodies the flow never touches by hand (tokens are substituted at fire time). To build the
-  subs map, run `node scripts/fidelity-tokens.cjs source/data/chrome/<journey>.chrome.ts source/data/static/<journey>.static.ts`:
+  subs map, run `node .claude/scripts/fidelity-tokens.cjs source/data/chrome/<journey>.chrome.ts source/data/static/<journey>.static.ts`:
   it prints the tokens per step and the **subs-map contract** (the full token-key set the flow must supply).
   Cross-check each contract token against what the spine already correlates — a token that is *not* a standard
   spine output (an event row key, an event name) needs its own `include_ui`-gated lookup wrapper that produces
