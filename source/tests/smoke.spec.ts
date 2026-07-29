@@ -1,9 +1,5 @@
 import { Options, Scenario } from 'k6/options';
 import {
-  service_order_items_journey,
-  serviceOrderItemsThresholds,
-  edit_service_orders_journey,
-  editServiceOrdersThresholds,
   discover_service_order_pool,
   copy_event_journey,
   copyEventThresholds,
@@ -13,20 +9,8 @@ import {
   crystalReportThresholds,
   room_diagram_upload_journey,
   roomDiagramUploadThresholds,
-  create_account_journey,
-  createAccountThresholds,
-  create_event_journey,
-  createEventThresholds,
   book_event_journey,
   bookEventThresholds,
-  opportunities_journey,
-  opportunitiesThresholds,
-  file_upload_journey,
-  fileUploadThresholds,
-  introductory_email_journey,
-  introductoryEmailThresholds,
-  navigation_journey,
-  navigationThresholds,
   loginThresholds,
 } from '../utils/exports/flows.exp.ts';
 import { pick_user, fetch_server_version, decrypt_users } from '../utils/exports/helpers.exp.ts';
@@ -34,9 +18,6 @@ import { commonThresholds, config } from '../utils/exports/config.exp.ts';
 import { SmokeSetup } from '../utils/exports/types.exp.ts';
 import { userCredentials } from '../utils/exports/data.exp.ts';
 import { roomDiagramFiles } from '../data/uploads/events/room-diagrams.index.ts';
-
-const opportunityTemplate = open('../data/uploads/opportunities/sample-opportunity.txt');
-const sampleDocument = open('../data/uploads/service-orders/sample-document.txt', 'b');
 
 const VUS = Number(__ENV.VUS) || 1;
 const ITERS = Number(__ENV.ITERS) || 1;
@@ -49,35 +30,19 @@ const once = (exec: string): Scenario => ({
 });
 
 const allScenarios: { [scenario: string]: Scenario } = {
-  opportunities: once('opportunities'),
-  file_upload: once('file_upload'),
-  introductory_email: once('introductory_email'),
   copy_event: once('copy_event'),
   copy_service_orders: once('copy_service_orders'),
   crystal_report: once('crystal_report'),
   room_diagram_upload: once('room_diagram_upload'),
-  create_account: once('create_account'),
-  create_event: once('create_event'),
   book_event: once('book_event'),
-  service_order_items: once('service_order_items'),
-  edit_service_orders: once('edit_service_orders'),
-  navigation: once('navigation'),
 };
 
 const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
-  opportunities: opportunitiesThresholds,
-  file_upload: fileUploadThresholds,
-  introductory_email: introductoryEmailThresholds,
   copy_event: copyEventThresholds,
   copy_service_orders: copyServiceOrdersThresholds,
   crystal_report: crystalReportThresholds,
   room_diagram_upload: roomDiagramUploadThresholds,
-  create_account: createAccountThresholds,
-  create_event: createEventThresholds,
   book_event: bookEventThresholds,
-  service_order_items: serviceOrderItemsThresholds,
-  edit_service_orders: editServiceOrdersThresholds,
-  navigation: navigationThresholds,
 };
 
 const selected = __ENV.SCENARIO;
@@ -85,7 +50,7 @@ if (selected && !allScenarios[selected]) {
   throw new Error(`Unknown SCENARIO "${selected}" — valid: ${Object.keys(allScenarios).join(', ')}`);
 }
 
-const soPoolScenarios = new Set(['service_order_items', 'edit_service_orders', 'copy_service_orders']);
+const soPoolScenarios = new Set(['copy_service_orders']);
 const needsSoPool = !selected || soPoolScenarios.has(selected);
 
 const activeThresholds: { [metric: string]: string[] } = selected
@@ -120,18 +85,6 @@ export async function setup() {
   return { version, users, soPool };
 }
 
-export function opportunities(data: SmokeSetup) {
-  opportunities_journey(pick_user(data.users), data);
-}
-
-export function file_upload(data: SmokeSetup) {
-  file_upload_journey(pick_user(data.users), data, opportunityTemplate);
-}
-
-export function introductory_email(data: SmokeSetup) {
-  introductory_email_journey(pick_user(data.users), data);
-}
-
 export function copy_event(data: SmokeSetup) {
   copy_event_journey(pick_user(data.users), data);
 }
@@ -148,26 +101,6 @@ export function room_diagram_upload(data: SmokeSetup) {
   room_diagram_upload_journey(pick_user(data.users), data, roomDiagramFiles);
 }
 
-export function create_account(data: SmokeSetup) {
-  create_account_journey(pick_user(data.users), data);
-}
-
-export function create_event(data: SmokeSetup) {
-  create_event_journey(pick_user(data.users), data);
-}
-
 export function book_event(data: SmokeSetup) {
   book_event_journey(pick_user(data.users), data);
-}
-
-export function service_order_items(data: SmokeSetup) {
-  service_order_items_journey(pick_user(data.users), data);
-}
-
-export function edit_service_orders(data: SmokeSetup) {
-  edit_service_orders_journey(pick_user(data.users), data, sampleDocument);
-}
-
-export function navigation(data: SmokeSetup) {
-  navigation_journey(pick_user(data.users), data);
 }

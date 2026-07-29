@@ -5,6 +5,7 @@ import {
   open_service_order_copy_form,
   save_service_order_copy,
   search_events,
+  load_service_orders,
   signalr_negotiate,
   get_service_order_control_info,
   read_event_service_orders_grid,
@@ -24,6 +25,23 @@ import {
 import { copyServiceOrdersChrome, copyServiceOrdersStatic, copyServiceOrdersTransport } from '../utils/exports/data.exp.ts';
 import { config } from '../utils/exports/config.exp.ts';
 import { User, ServiceOrderSetup, ServiceOrderRow, EventRow, FidelityLevel } from '../utils/exports/types.exp.ts';
+
+export function discover_service_order_pool(version: string, user: User) {
+  const { bearerToken } = login_to_events(user, version);
+
+  const seedEvent = search_events(bearerToken, version, config.seedEventDesc)
+    .filter((e) => e.desc.startsWith(config.seedEventDesc))
+    .reduce<EventRow | null>((newest, e) => (newest && Number(newest.evtId) >= Number(e.evtId) ? newest : e), null);
+  if (!seedEvent) {
+    throw new Error(`seed event "${config.seedEventDesc}" not found — run source/seeds/service-orders.seed.ts after the snapshot reset`);
+  }
+
+  const pool = load_service_orders(bearerToken, version, seedEvent);
+  if (pool.length === 0) {
+    throw new Error(`seed event "${config.seedEventDesc}" has no service orders — reseed with a larger SEED_COUNT`);
+  }
+  return pool;
+}
 
 const COPY_COUNT_OVERRIDE = __ENV.COPY_COUNT ? Number(__ENV.COPY_COUNT) : undefined;
 /* NeoLoad's recorded T34 event carried ~10 service orders (SO grid ResultsCount 10) and the copy selects a

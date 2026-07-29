@@ -7,20 +7,6 @@ const profiles: { [profile: string]: Profile } = {
     vus: 1,
     iterations: 1,
   },
-  load: {
-    stages: [
-      { duration: '5m', target: 10 },
-      { duration: '10m', target: 10 },
-      { duration: '2m', target: 0 },
-    ],
-  },
-  stress: {
-    stages: [
-      { duration: '1m', target: 10 },
-      { duration: '2m', target: 20 },
-      { duration: '1m', target: 0 },
-    ],
-  },
   neoload: {
     stages: [
       { duration: '5m', target: 10 },
