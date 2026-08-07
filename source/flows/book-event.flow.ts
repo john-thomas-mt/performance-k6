@@ -23,6 +23,7 @@ import {
   think,
   format_retrieve_stamp,
   get_cell,
+  pick_pool_value,
 } from '../utils/exports/helpers.exp.ts';
 import {
   random_future_date,
@@ -59,7 +60,7 @@ export function book_event_journey(user: User, data: SetupData) {
   const level = fidelity_level();
   const runToken = crypto.randomUUID().split('-')[0];
   const date = random_future_date();
-  const spaceCode = bookingSpaces[__VU % bookingSpaces.length];
+  const spaceCode = pick_pool_value(bookingSpaces);
   const eventDesc = `Perf Booking ${runToken}`;
 
   const subs: Subs = {

@@ -43,7 +43,7 @@ k6 defaults.
 ## Directory structure
 - `source/config/` — environment values (`env.config.ts`), load profiles + common thresholds (`profiles.config.ts`)
 - `source/apis/<feature>.api.ts` — endpoint wrappers; `source/flows/<flow>.flow.ts` — composed journeys
-- `source/data/` — split by kind: `payloads/` request-body builders (feature-grouped), `uploads/` file fixtures, `creds/` user pool
+- `source/data/` — split by kind: `payloads/` request-body builders (feature-grouped), `pools/` generated value pools a journey selects its input records from (one per NeoLoad data variable), `uploads/` file fixtures, `creds/` user pool
 - `source/utils/` — supporting layers not central to a journey: `utils/helpers/` (cross-cutting modules that fit none of the other layers), `utils/types/<feature>.type.ts` (per-feature type modules), and `utils/exports/` (one `<layer>.exp.ts` barrel per layer; all cross-folder imports go through these)
 - `source/tests/` — entry-point test specs (`<name>.spec.ts`) that drive one or more journeys in a run via k6 `scenarios`, each `exec` a thin wrapper calling a `source/flows/` journey (e.g. `smoke.spec.ts`)
 - `source/seeds/` — bulk prerequisite-data scripts (`<feature>.seed.ts`) run once after a snapshot reset, reusing `source/apis/` wrappers
