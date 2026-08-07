@@ -26,8 +26,9 @@ import {
   fire_transport,
   fetch_bundle_versions,
   think,
+  pick_pool_value,
 } from '../utils/exports/helpers.exp.ts';
-import { crystalReportChrome, crystalReportStatic, crystalReportTransport } from '../utils/exports/data.exp.ts';
+import { crystalReportChrome, crystalReportStatic, crystalReportTransport, crystalReportScopes } from '../utils/exports/data.exp.ts';
 import { User, SetupData, ReportListContext, FidelityLevel } from '../utils/exports/types.exp.ts';
 
 export const crystalReportThresholds = {
@@ -74,7 +75,7 @@ export function crystal_report_journey(user: User, data: SetupData) {
     'C_EnterpriseVersion': data.version,
     'P_RPT_Id': reportId,
     'P_RPT_NAME': reportName,
-    'P_CrystalReport_Scope.Value': 'X',
+    'P_CrystalReport_Scope.Value': pick_pool_value(crystalReportScopes),
     'P_EpochTimestamp': String(Date.now()),
     'P_FormattedTimestamp': new Date().toISOString().slice(0, 19).replace('T', ' '),
     'P_IterationNumber': String(iter),

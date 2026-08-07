@@ -16,6 +16,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
+const { findProjectRoot, loadDefs, refsInTree, poolReport } = require('./neoload-vars.cjs');
 
 const treeDir = process.argv[2];
 if (!treeDir) {
@@ -229,6 +230,16 @@ if (!correlation.length) console.log('  (none)');
 for (const c of correlation) {
   const src = c.jsonpath ? `jsonpath=${c.jsonpath}` : c.regExp ? `regExp=${c.regExp}` : '(derived)';
   console.log(`  ${c.name}  ←[${c.step}]  ${src}`);
+}
+
+// The VU tree only names its ${P_…} variables; resolve them to the values held outside it
+// (team/variables/*.xml → variables/version_*/*.txt, or an inline Base64 <values> blob).
+console.log('');
+const projectRoot = findProjectRoot(treeDir);
+if (!projectRoot) {
+  console.log('DATA POOLS:\n  (no NeoLoad project root above the VU tree — team/variables not found)');
+} else {
+  console.log(poolReport(refsInTree(treeDir), loadDefs(projectRoot), projectRoot, 3));
 }
 
 const paired = findPairedDataScript();

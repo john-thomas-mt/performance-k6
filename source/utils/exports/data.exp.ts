@@ -43,3 +43,7 @@ export * from '../../data/static/room-diagram-upload.static.ts';
 export * from '../../data/transport/room-diagram-upload.transport.ts';
 export * from '../../data/creds/users.data.ts';
 export * from '../../data/pools/copy-events.data.ts';
+export * from '../../data/pools/be-space-code.data.ts';
+export * from '../../data/pools/be-search-account.data.ts';
+export * from '../../data/pools/search-random-event.data.ts';
+export * from '../../data/pools/crystal-report-scope.data.ts';

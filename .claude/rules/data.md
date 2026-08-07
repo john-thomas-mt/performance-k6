@@ -5,18 +5,22 @@ paths: ["source/data/**"]
 # Data & Fixture Conventions (`source/data/`)
 
 ## Layout
-Data is split first by kind (`payloads/` request bodies, `uploads/` file fixtures, `creds/` user pool),
-then within `payloads/`/`uploads/` by module (with a sub-module level when a module has several flows),
-mirroring `source/apis/` and the app nav (`#/momentusAssistant/<page>`):
+Data is split first by kind (`payloads/` request bodies, `pools/` value pools a journey selects from,
+`uploads/` file fixtures, `creds/` user pool), then within `payloads/`/`uploads/` by module (with a
+sub-module level when a module has several flows), mirroring `source/apis/` and the app nav
+(`#/momentusAssistant/<page>`):
 
 ```
 source/data/
   creds/users.data.ts                        # cross-cutting user pool (encrypted, committed)
+  pools/<pool>.data.ts                       # generated value pool, one per NeoLoad data variable
   payloads/<module>/*.data.ts                # request-body data for that module's flows
   payloads/<module>/<sub>/*.data.ts          # add a sub-module level only when a module needs it
   payloads/<module>/helpers.ts               # optional module-local helper shared by that module's builders
   uploads/<module>/<sub>/                    # files fed to http.file()
 ```
+
+The generated fidelity-tier kinds (`chrome/`, `static/`, `transport/`) are covered by `rules/fidelity.md`.
 
 Module (and sub-module) names match the corresponding `source/apis/<feature>.api.ts` wrapper and the
 test file's feature area, so a reader can jump between wrapper, data, and test without guessing.
@@ -52,6 +56,31 @@ Request bodies are **TS object builders**, never `.json`/`.txt` templates loaded
 - Logic shared across a single module's builders lives in a module-local `helpers.ts`. Once a transform is shared across more than one data module, promote it to `source/utils/helpers/payload.helper.ts` (e.g. `today_midnight_utc`, shared by the event and service-order date windows) rather than duplicating it per module — see `rules/helpers.md`.
 - Callers import and call the builder directly in the VU function — no init-context `open()`.
 
+## Value pools — `source/data/pools/`
+A pool is the set of *existing* records a journey picks its input from — the k6 home for a NeoLoad
+`<variable-file>` / `<variable-list>` data variable (`${P_26_2_CopyEvents.eventName}`). One module per
+NeoLoad variable, named for the variable (`copy-events.data.ts` ← `P_26_2_CopyEvents`), exporting a
+`string[]` for a single column, or an array of row objects when a journey needs several columns of the
+same row together.
+
+- **Pools are generated, complete, and not hand-edited.** Write one with
+  `node .claude/scripts/gen-pool.cjs <path in the NeoLoad project> <P_VarName> <column> source/data/pools/<name>.data.ts`,
+  which resolves the variable's definition and emits every row behind a do-not-hand-edit header (the same
+  generate-don't-transcribe rule the captured-payload builders follow). `node .claude/scripts/neoload-vars.cjs "<VU tree>"`
+  prints the ready-to-run command for every pool a VU references. Carrying only the first few rows
+  narrows the data spread the run exercises — a run that touches 5 spaces instead of 824 is not the
+  recorded workload, and it passes every check while doing it, so completeness is the pool's whole point.
+- **Select with `pick_pool_value(pool)`** (helpers barrel) rather than indexing in the flow, so every
+  journey spreads across the pool the same way and concurrent VUs land on different rows.
+- **A pool holds pre-existing records the journey reads; rows a seed creates are discovered at runtime
+  instead.** When a NeoLoad data file's rows share a long generated prefix (`Performance BookingEvent
+  <epoch>`), that file is its paired data-script VU's output: the k6 port finds those rows through the
+  seed marker (`rules/seeds.md`), and no pool module is generated. `neoload-vars.cjs` flags the prefix.
+- **A value the recording varies stays varied here.** A NeoLoad variable with two or more rows is a pool
+  even when it is short (a 2-value scope flag) — collapsing it to one literal in the flow drops a
+  branch the recording exercised. A single-row `<variable-list>` (the env/version matrix) is a lookup,
+  not a pool: it belongs in `source/config/`.
+
 ## Upload fixtures — `source/data/uploads/<module>/<sub>/`
 Anything passed to `http.file()` goes here, never in the request-body folders:
 - Opened by literal path in the init context: `open('../data/uploads/<module>/<sub>/<file>')`
@@ -79,7 +108,7 @@ Anything passed to `http.file()` goes here, never in the request-body folders:
   ```
 
 ## Loading rules
-- Request-body builders are imported as TS modules — no `open()`.
+- Request-body builders and pools are imported as TS modules — no `open()`.
 - The user pool ships as `userCredentials` (encrypted) in `users.data.ts` and is decrypted in `setup()` (see User pool), keyed by `config.cryptoKey`.
 - `open()` is reserved for `source/data/uploads/**` fixtures and is init-context only — never inside
   the VU function (see `rules/tests.md`).

@@ -20,37 +20,15 @@ import {
   fire_transport,
   fetch_bundle_versions,
   think,
+  pick_pool_value,
 } from '../utils/exports/helpers.exp.ts';
-import { roomDiagramUploadChrome, roomDiagramUploadStatic, roomDiagramUploadTransport } from '../utils/exports/data.exp.ts';
+import {
+  roomDiagramUploadChrome,
+  roomDiagramUploadStatic,
+  roomDiagramUploadTransport,
+  eventSearchKeywords,
+} from '../utils/exports/data.exp.ts';
 import { User, SetupData, EventRow, EventDocumentContext, EventDocumentFixture, FidelityLevel } from '../utils/exports/types.exp.ts';
-
-const SEARCH_KEYWORDS = [
-  'performance',
-  'venue',
-  'event',
-  'sport',
-  'concert',
-  'hall',
-  'function',
-  'center',
-  'party',
-  'wedding',
-  'conference',
-  'seminar',
-  'class',
-  'lunch',
-  'dinner',
-  'football',
-  'soccer',
-  'basketball',
-  'booking',
-  'contract',
-  'exhibition',
-  'dates',
-  'show',
-  'club',
-  'demo',
-];
 
 export const roomDiagramUploadThresholds = {
   'http_req_duration{name:SearchEvents}': ['p(95)<3000'],
@@ -77,7 +55,7 @@ export function room_diagram_upload_journey(user: User, data: SetupData, files: 
   const level = fidelity_level();
   const iter = exec.scenario.iterationInTest;
   const wdwid = `AA${90310 + iter}`;
-  const keyword = SEARCH_KEYWORDS[iter % SEARCH_KEYWORDS.length];
+  const keyword = pick_pool_value(eventSearchKeywords);
   const fixture = files[iter % files.length];
 
   const subs: Subs = {
