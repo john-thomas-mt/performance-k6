@@ -73,6 +73,48 @@ low for that reason.
 
 The same trap applies to the preset dashboard below, which uses `avg:` where it needs `sum:`.
 
+## The second feed: generator CPU and RAM
+
+k6 knows nothing about the box it runs on, so agent resource usage reaches Datadog by its own path.
+`resource-sampler.ps1` (Windows) / `resource-sampler.cjs` (Linux) writes a CSV row per second, and
+`metric-forwarder.cjs` tails that CSV and posts its numeric columns to the plain metrics intake as
+gauges (`POST /api/v2/series`, `DD-API-KEY` header). Same reasoning as the OTLP route above: nothing
+installed on the agent, no billable infrastructure host.
+
+Three decisions worth recording:
+
+- **The forwarder is separate from the samplers rather than folded into them.** There are two resource
+  samplers, one per OS, plus the GC sampler, so posting from inside each would mean an intake client
+  written twice across two languages. Keeping the samplers as plain CSV writers also keeps the
+  published artifact unaffected when a submit fails: the CSV is the record, Datadog is the live view.
+  Any CSV shaped `timestamp,<numeric columns…>` works, so pointing a second instance at `gc-usage.csv`
+  is a yaml change rather than a code change.
+- **The hostname is an ordinary `agent:` tag, not a `host` resource.** The intake accepts a host
+  resource on a submitted series, but the point of the agentless route is that these boxes never
+  become monitored hosts, so nothing is submitted that asks Datadog to treat one as an entity.
+- **Points keep their 1-second resolution.** The forwarder batches every 10 seconds, matching
+  `K6_OTEL_EXPORT_INTERVAL`, but sends every 1-second row in the batch instead of averaging them:
+  custom-metric billing counts distinct timeseries per hour, not data points, so full resolution costs
+  the same as a tenth of it.
+
+The series are `k6.agent.*`, one per CSV column lowercased, tagged `service`, `env`, `version`, `site`,
+`build_number` and `agent`. The first five mirror what OTLP derives from the resource attributes so the
+dashboard's template variables filter both feeds identically. There is deliberately **no `scenario`
+tag** — a machine-level metric has no scenario — so `$scenario` does not filter the generator panels.
+
+Two limits, both cosmetic and neither touching `resource-usage.csv`. A failed submit is logged and
+abandoned rather than retried, because requeued points would age out of the intake's one-hour window
+anyway; the run step raises a build warning when the forwarder log contains `submit failed`, on the
+same reasoning as the OTLP warning. And the pipeline force-kills the forwarder when k6 exits, so the
+last batch, up to 10 seconds of samples, may never be sent.
+
+What was verified locally, with the intake stubbed: CSV tailing across both samplers' formats (CRLF
+with a UTC-offset stamp from PowerShell, LF with `Z` from Node), a partial trailing row held back until
+complete, blank cells skipped rather than sent as zero, rows older than the intake's window dropped
+before they can fail the batch they travel in, no duplicate points across batches, and the payload
+shape and headers. The **round trip to the real intake is unverified** until the next queued run, since
+the masked key is not available locally.
+
 ## Datadog-side setup that is not automatic
 
 Metric creation is automatic: no registration or schema, metrics appear in Metrics Summary within a
@@ -127,8 +169,10 @@ that runs continuously is what would turn a rounding error into a real line item
   remain the reporting source of truth.
 - **No retry buffer.** Without an Agent, a network blip mid-run leaves a gap in the live dashboard.
   Accepted deliberately: the dashboard is a sanity check, and the artifacts are unaffected.
-- **No load-generator host correlation.** The agent boxes are not monitored hosts, so generator CPU and
-  memory stay in the `resource-usage.html` and `gc-usage.html` artifacts.
+- **The generator is still not a monitored host.** Its CPU, RAM and network now stream as custom metrics
+  (see [the second feed](#the-second-feed-generator-cpu-and-ram)), so they graph live and can be
+  alerted on, but there is no host entity, host map, or process-level detail behind them. k6's own Go
+  runtime and GC counters are not forwarded at all and stay in the `gc-usage.html` artifact.
 - **Payload cap not yet measured at full scale.** The intake caps a request at 512 KiB compressed. A
   12-metric probe was 2453 bytes uncompressed, and k6 sends no compression by default. A full five-flow
   run has not been measured against that ceiling; if it comes close, set
@@ -155,6 +199,7 @@ dashboard on a green build, so the run step scans the console log and raises a b
 - [k6 Datadog output](https://grafana.com/docs/k6/latest/results-output/real-time/datadog/) (the StatsD route, superseded)
 - [Datadog k6 integration](https://docs.datadoghq.com/integrations/k6/) (the Agent-plus-DogStatsD setup it documents, and the preset dashboard's metric list)
 - [Datadog OTLP metrics intake](https://docs.datadoghq.com/opentelemetry/setup/otlp_ingest/metrics/)
+- [Datadog submit-metrics API](https://docs.datadoghq.com/api/latest/metrics/submit-metrics/) (the agent-metric feed: payload shape, 500 KB cap, one-hour timestamp window)
 - [Datadog OTLP metric types mapping](https://docs.datadoghq.com/metrics/open_telemetry/otlp_metric_types/)
 - [Datadog OTel semantic mapping](https://docs.datadoghq.com/opentelemetry/schema_semantics/semantic_mapping/)
 - [Datadog custom metrics billing](https://docs.datadoghq.com/account_management/billing/custom_metrics/)
