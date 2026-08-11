@@ -27,6 +27,7 @@ everything else in reading order.
 | [runtime-correlated-payloads.md](./runtime-correlated-payloads.md)       | Design & risk analysis for fetching save payloads at runtime instead of hardcoding column tables — metric-skew and bug-coverage risks, with live evidence                                     |
 | [neoload-timing-parity.md](./neoload-timing-parity.md)                   | The measured runs behind matching k6 `group_duration` to NeoLoad transaction time, and the per-page-batching model they led to (superseded on the connection-reuse question by the doc below) |
 | [neoload-connection-reuse-model.md](./neoload-connection-reuse-model.md) | Why NeoLoad reused connections (it ran over HTTP/2), so keep-alive-off was never a faithful match; the finding that retired the `noConnReuse` / `batchPerHost` / `forceHttp1` knobs           |
+| [datadog-live-metrics.md](./datadog-live-metrics.md)                     | Streaming live run metrics to Datadog for an in-flight health view — the agentless OTLP route, what was measured, the manual percentile toggle, and why the artifacts stay authoritative      |
 
 ## Conventions for these docs
 
