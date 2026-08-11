@@ -3,14 +3,20 @@ import { Options } from 'k6/options';
 type Profile = Pick<Options, 'vus' | 'iterations' | 'stages'>;
 
 const profiles: { [profile: string]: Profile } = {
-  smoke: {
+  'smoke': {
     vus: 1,
     iterations: 1,
   },
-  neoload: {
+  'neoload': {
     stages: [
       { duration: '5m', target: 10 },
       { duration: '35m', target: 10 },
+    ],
+  },
+  'neoload-smoke': {
+    stages: [
+      { duration: '2m', target: 10 },
+      { duration: '8m', target: 10 },
     ],
   },
 };
