@@ -252,8 +252,10 @@ What was verified locally, with the intake stubbed: CSV tailing across both samp
 with a UTC-offset stamp from PowerShell, LF with `Z` from Node), a partial trailing row held back until
 complete, blank cells skipped rather than sent as zero, rows older than the intake's window dropped
 before they can fail the batch they travel in, no duplicate points across batches, and the payload
-shape and headers. The **round trip to the real intake is unverified** until the next queued run, since
-the masked key is not available locally.
+shape and headers. **The round trip to the real intake is verified too**, from a local run rather than a
+queued one: the forwarder reads its key from the `datadog` field of gitignored `temp/secret.json`, so
+`dd-run.ps1 -WithAgentFeed` exercises the same path CI does, and the resulting `k6perf.agent.*` gauges read
+back from the intake matching the sampler CSV they came from.
 
 ## Datadog-side setup that is not automatic
 
