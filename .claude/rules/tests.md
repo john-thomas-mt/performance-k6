@@ -21,6 +21,7 @@ The entry-point layer k6 runs directly. A test spec drives one or more journeys 
 
 ## Execution shape
 - `smoke.spec.ts` fixes its own small `per-vu-iterations` shape, overridable via `-e VUS=`/`-e ITERS=` for the dev ladder
+- **Size `maxDuration` to the run.** k6's `per-vu-iterations` executor defaults `maxDuration` to **10m**; when it elapses the unrun remainder of each VU's iterations is silently converted to `dropped_iterations` and the run ends early, with no failed check or crossed threshold to signal it. `smoke.spec.ts` leaves the default, which fits the dev ladder. A run sized past 10m (a raised `-e ITERS=`, a slow journey, a long-window observation run) needs `maxDuration` set explicitly to cover it, the way the `source/seeds/` scripts do. Check `dropped_iterations` in the summary to confirm a run actually completed the iterations it was asked for
 - For real load, `source/tests/neoload.spec.ts` shapes executors from `load_profile()` (`source/config/profiles.config.ts`, selected with `-e PROFILE=`, default `neoload`) rather than hardcoding `vus`/`stages`: one `ramping-vus` scenario per flow sharing the profile's stages, with each iteration paced to a fixed cycle time via `pace()` (`source/utils/helpers/pacing.helper.ts`, `-e PACING=`, default 300s). `smoke.spec.ts` keeps its own small `per-vu-iterations` shape for the dev ladder
 
 ## Data & init context
