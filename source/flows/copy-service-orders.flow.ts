@@ -29,7 +29,7 @@ import { User, ServiceOrderSetup, ServiceOrderRow, EventRow, FidelityLevel } fro
 export function discover_service_order_pool(version: string, user: User) {
   const { bearerToken } = login_to_events(user, version);
 
-  const seedEvent = search_events(bearerToken, version, config.seedEventDesc)
+  const seedEvent = search_events(bearerToken, version, config.seedEventDesc, 'DiscoverSeedEvent')
     .filter((e) => e.desc.startsWith(config.seedEventDesc))
     .reduce<EventRow | null>((newest, e) => (newest && Number(newest.evtId) >= Number(e.evtId) ? newest : e), null);
   if (!seedEvent) {

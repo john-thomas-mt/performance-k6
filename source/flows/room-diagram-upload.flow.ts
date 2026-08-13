@@ -3,7 +3,9 @@ import exec from 'k6/execution';
 import { login_to_events } from './login.flow.ts';
 import {
   search_events,
+  searchEventsThresholds,
   open_event_detail,
+  openEventDetailThresholds,
   cache_document_file,
   open_event_document_form,
   save_event_document,
@@ -31,8 +33,8 @@ import {
 import { User, SetupData, EventRow, EventDocumentContext, EventDocumentFixture, FidelityLevel } from '../utils/exports/types.exp.ts';
 
 export const roomDiagramUploadThresholds = {
-  'http_req_duration{name:SearchEvents}': ['p(95)<3000'],
-  'http_req_duration{name:OpenEventDetail}': ['p(95)<5000'],
+  ...searchEventsThresholds,
+  ...openEventDetailThresholds,
   'http_req_duration{name:CacheFiles}': ['p(95)<10000'],
   'http_req_duration{name:OpenEventDocumentForm}': ['p(95)<5000'],
   'http_req_duration{name:SaveEventDocument}': ['p(95)<10000'],

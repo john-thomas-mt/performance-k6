@@ -2,9 +2,11 @@ import { check, group, fail } from 'k6';
 import { login_to_events } from './login.flow.ts';
 import {
   search_events,
+  searchEventsThresholds,
   open_copy_form,
   save_event_copy,
   open_event_detail,
+  openEventDetailThresholds,
   get_window_version,
   signalr_negotiate,
 } from '../utils/exports/apis.exp.ts';
@@ -26,10 +28,10 @@ import { User, SetupData, EventRow, FidelityLevel } from '../utils/exports/types
 const COPY_WINDOW_ID = 'EB2212';
 
 export const copyEventThresholds = {
-  'http_req_duration{name:SearchEvents}': ['p(95)<1500'],
+  ...searchEventsThresholds,
+  ...openEventDetailThresholds,
   'http_req_duration{name:OpenCopyForm}': ['p(95)<2500'],
   'http_req_duration{name:SaveEventCopy}': ['p(95)<13000'],
-  'http_req_duration{name:OpenEventDetail}': ['p(95)<2500'],
 };
 
 type Subs = { [token: string]: string };

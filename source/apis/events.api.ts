@@ -29,6 +29,14 @@ import {
   TransportTable,
 } from '../utils/exports/types.exp.ts';
 
+export const searchEventsThresholds = {
+  'http_req_duration{name:SearchEvents}': ['p(95)<3000'],
+};
+
+export const openEventDetailThresholds = {
+  'http_req_duration{name:OpenEventDetail}': ['p(95)<5000'],
+};
+
 export function get_event_control_info(token: string, version: string, row: EventRow, name = 'GetControlInfo') {
   const res = http.post(`${config.baseUrl}/api/USIDataGridServer/GetControlInfo`, JSON.stringify(eventControlInfoPayload(row)), {
     headers: build_headers(token, version),
