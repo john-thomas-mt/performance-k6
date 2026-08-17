@@ -12,8 +12,8 @@ the summary shows. The caller has already secured approval to send traffic — j
 ## Steps
 
 1. Run the **exact** `k6 run` command the caller gives you, appending `--quiet` and redirecting to a
-   temp log before reading it (the live progress bar floods the pipe): `<command> --quiet > temp/<name>.log 2>&1`.
-   Use the caller's suggested log name, or `temp/k6-verify.log`.
+   temp log before reading it (the live progress bar floods the pipe): `<command> --quiet > temp/claude/reports/<name>.log 2>&1`.
+   Use the caller's suggested log name, or `temp/claude/reports/k6-verify.log`.
 2. Read the log and extract the verdict signals below.
 
 ## Verdict signals to report

@@ -6,7 +6,7 @@
 // Usage:
 //   node .claude/scripts/inspect-capture.cjs <capture-file> [searchValue]
 //
-// <capture-file>  a JSON request/response body (e.g. temp/captures/raw/save2.reqbody)
+// <capture-file>  a JSON request/response body (e.g. temp/claude/captures/save2.reqbody)
 // [searchValue]   optional: print every JSON path where this value appears (find consumers)
 
 const fs = require('fs');

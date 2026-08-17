@@ -46,7 +46,7 @@ For each env in the matrix, in order:
 
 **`main` first is deliberate.** It's the highest-priority env and the one where next-version drift appears first — a failure there is the early warning for the change that will hit the next release. A clean `main` plus clean released envs is the goal; fail fast on `main` before spending traffic on the rest.
 
-The reporter returns each env's verdict — the same signals the 3-step run uses (`checks` 100%, `http_req_failed` 0, `dropped_iterations` 0, `iterations` > 0, no threshold crossed, no `WARN`/`ERRO`) — so triage from its verdict rather than reading every env's full summary into context. It saves each run's log under `temp/` if a failure needs a deeper look.
+The reporter returns each env's verdict — the same signals the 3-step run uses (`checks` 100%, `http_req_failed` 0, `dropped_iterations` 0, `iterations` > 0, no threshold crossed, no `WARN`/`ERRO`) — so triage from its verdict rather than reading every env's full summary into context. It saves each run's log under `temp/claude/reports/` if a failure needs a deeper look.
 
 ## 2. Triage a failure
 
@@ -65,7 +65,7 @@ Present a journey × env grid — each cell pass / drift / correlation-fail / da
 
 ## 4. Restore
 
-Restore the authoring default with a bare `npm run setup` (site `PERF`, env `main`) so the next inner-loop run targets `main` again. `temp/` is disposable scratch otherwise.
+Restore the authoring default with a bare `npm run setup` (site `PERF`, env `main`) so the next inner-loop run targets `main` again. `temp/claude/` is disposable scratch otherwise.
 
 ## Branch-cut ritual
 

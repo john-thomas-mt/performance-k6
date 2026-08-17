@@ -5,7 +5,7 @@ description: End-to-end — explore an app flow with playwright-cli, script it s
 
 # Generate test — explore, script, verify in one pass
 
-One continuous flow: drive the app, build an in-context correlation picture, write the k6 test directly, then prove it with a 3-step run escalation. No `temp/captures/*.md` artifact — script straight from what you observed.
+One continuous flow: drive the app, build an in-context correlation picture, write the k6 test directly, then prove it with a 3-step run escalation. No `temp/claude/captures/*.md` artifact — script straight from what you observed.
 
 **Exploration and scripting stay in the main conversation — never delegate exploration to a subagent.** They need the conversation's app knowledge and the correlation picture that scripting consumes, and the user must see step-by-step progress; a subagent starts cold and loses everything on interruption.
 
@@ -18,7 +18,7 @@ One continuous flow: drive the app, build an in-context correlation picture, wri
 3. Get **approval once, upfront, for the whole sequence** (exploration + the three verification runs). With that approval, run all three steps and any re-runs without prompting again.
 4. **Target `main` on PERF** — the unreleased, highest-priority env authoring always runs against, so the script is written for the newest schema and trickles down to released envs. A bare `npm run setup` writes exactly this (site `PERF`, env `main` are the defaults). Read `source/config/env.config.ts` for the app URL (`baseUrl`; the sales-ai `tenantId` is not stored — it's correlated at runtime). For **exploration** you need a live login: `source/data/creds/users.data.ts` ships usernames plaintext but passwords **AES-GCM-encrypted**, so decrypt the first user with the `temp/secret.json` passphrase (via `decrypt_users`) — you can't read a usable password straight from the file. The generated test draws from the full pool via `pick_user` (see §3).
 5. `playwright-cli list` — if any session shows `[incompatible please re-open]`, `playwright-cli kill-all` first.
-6. **Recon the repo first (delegated).** Dispatch `k6-authoring-analyst` with the flow description for an *authoring kit* — reusable wrappers/endpoints, the closest journey template and its group spine, the right `login_*` entry, the `SetupData` slice, and the barrel + `smoke.spec.ts` wiring points. It writes the full kit to `temp/recon-kit.md` and returns a short index; work from the index, and `grep temp/recon-kit.md` for a single slice (a wrapper signature, an insertion line) as you script — so the kit's bulk never sits in the main context. Read a `source/` file directly only when the kit is insufficient.
+6. **Recon the repo first (delegated).** Dispatch `k6-authoring-analyst` with the flow description for an *authoring kit* — reusable wrappers/endpoints, the closest journey template and its group spine, the right `login_*` entry, the `SetupData` slice, and the barrel + `smoke.spec.ts` wiring points. It writes the full kit to `temp/claude/docs/recon-kit.md` and returns a short index; work from the index, and `grep temp/claude/docs/recon-kit.md` for a single slice (a wrapper signature, an insertion line) as you script — so the kit's bulk never sits in the main context. Read a `source/` file directly only when the kit is insufficient.
 
 ## 1. Explore & observe (in-context)
 
@@ -29,7 +29,7 @@ Ground rules:
 - The app is a heavy SPA behind a VPN and never fires a clean load event, so the **first `open` will hit playwright-cli's ~60s nav timeout — expect that, don't retry blindly**. Give `open` a generous Bash timeout, then poll `snapshot` (or wait for the login-form/nav ref) to confirm it actually settled; only a *second* failed settle is a real blocker (check VPN).
 - `resize 1920 1080` immediately after `open`.
 - Every action prints a snapshot file path — Grep it for the element you need; explicit `snapshot` only when refs are stale.
-- Auth is already scripted (`login_to_events` / `login_to_momentus_assistant`), so **don't spend exploration effort capturing or correlating the auth requests** — you only need the browser logged in to reach the new surface, then go straight to it. Log in through the UI once and `state-save temp/auth-state.json`; if you author several journeys in one session, keep that one warm session alive (don't `kill-all` between them) so the bootstrap + login is paid once. Reserve `state-load` for recovering *this* session after a crash, and only with a state you saved this session — a stale/old file hangs the SPA bootstrap ("Preparing Your Momentus Experience") instead of prompting re-login. Capture the auth requests via UI login only when scripting a genuinely new/unscripted auth path.
+- Auth is already scripted (`login_to_events` / `login_to_momentus_assistant`), so **don't spend exploration effort capturing or correlating the auth requests** — you only need the browser logged in to reach the new surface, then go straight to it. Log in through the UI once and `state-save temp/claude/scratchpad/auth-state.json`; if you author several journeys in one session, keep that one warm session alive (don't `kill-all` between them) so the bootstrap + login is paid once. Reserve `state-load` for recovering *this* session after a crash, and only with a state you saved this session — a stale/old file hangs the SPA bootstrap ("Preparing Your Momentus Experience") instead of prompting re-login. Capture the auth requests via UI login only when scripting a genuinely new/unscripted auth path.
 
 After each **meaningful UI action** (not every intermediate click):
 
@@ -42,7 +42,7 @@ After each **meaningful UI action** (not every intermediate click):
    ```bash
    playwright-cli -s=perf request-headers <n> && playwright-cli -s=perf request-body <n> && playwright-cli -s=perf response-body <n>
    ```
-   Keep only dynamic/auth headers (authorization, version, x-nonce, wsid, content-type). **Keep raw bytes out of the main context** — redirect request/response bodies to `temp/captures/raw/` (or the scratchpad), then dissect them with `node .claude/scripts/inspect-capture.cjs <file> [value]`: it prints the envelope shape, the populated transport cells with their column names, and the correlation candidates (GUIDs, timestamps, row keys, tokens), and with a second arg finds every path a value appears at. Pull out only what you need; never print a full body or snapshot. This is the main lever on exploration's token cost.
+   Keep only dynamic/auth headers (authorization, version, x-nonce, wsid, content-type). **Keep raw bytes out of the main context** — redirect request/response bodies to `temp/claude/captures/` (a one-off helper script instead goes to `temp/claude/scratchpad/<task>/`), then dissect them with `node .claude/scripts/inspect-capture.cjs <file> [value]`: it prints the envelope shape, the populated transport cells with their column names, and the correlation candidates (GUIDs, timestamps, row keys, tokens), and with a second arg finds every path a value appears at. Pull out only what you need; never print a full body or snapshot. This is the main lever on exploration's token cost.
 
 Exclude static assets, analytics/telemetry, and repeated identical fetches.
 
@@ -64,7 +64,7 @@ Correlated correctly = the script still works after every session-scoped value r
 
 ## 3. Script
 
-- Grep `source/` for each endpoint path — reuse existing wrappers before writing new ones (the recon kit `temp/recon-kit.md` already lists these; `grep` it, don't re-read `source/`).
+- Grep `source/` for each endpoint path — reuse existing wrappers before writing new ones (the recon kit `temp/claude/docs/recon-kit.md` already lists these; `grep` it, don't re-read `source/`).
 - Model a new builder on an existing captured-payload builder by reading its **shape** — the payload arrow plus one extracted `: TransportTable` builder head — and `grep` for the signature; never read the full column list into context. Never `Read` a `*.data.ts` without a `limit`: `Read` only the head (the payload arrow) and `grep` for the one block you need (a `TransportTable` head, a `SearchFilters` entry). A full read of a column-heavy builder is the single biggest avoidable main-context cost.
 - Generate a large captured-payload builder with the committed generator rather than hand-transcribing columns (fewer tokens, no transcription drift): `node .claude/scripts/gen-payload-builder.cjs <capture> <spec.json>`, where the spec names the output path, export name, which JSON paths become `params` (parameterized args), which become `regenerate` expressions (client-side values like `` `${Date.now()}` ``), and an optional `extractTable` to lift a nested transport table into its own `: TransportTable` builder. Then review the generated file against the data rules.
 - Auth chain already exists: `login_to_momentus_assistant` from `source/flows/login.flow.ts`.

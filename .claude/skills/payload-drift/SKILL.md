@@ -35,7 +35,7 @@ k6 run source/tests/smoke.spec.ts
 Every journey runs once (one iteration per k6 scenario). From the reporter's verdict:
 - **All checks pass** → no drift. Done.
 - **A check fails** → note which one. Check names are unique per journey, so a failure identifies the
-  journey and step even though scenario logs interleave. The reporter saves the run log under `temp/` for the §2 body-level triage.
+  journey and step even though scenario logs interleave. The reporter saves the run log under `temp/claude/reports/` for the §2 body-level triage.
 
 ## 2. Triage a failure
 A failed save-success check (e.g. `New event created`, `Service order items saved`) on a journey
@@ -52,14 +52,14 @@ than assuming `Save2`.
 ## 3. (Optional) Pinpoint the structural change
 When the save returns 200-with-error and the body doesn't say which field is wrong, diff the builder's
 emitted body against a fresh recording. Re-capture the current payload for that action (drive the app via
-the `generate-test` flow's exploration and save the request body to `temp/captures/raw/<name>.json`),
+the `generate-test` flow's exploration and save the request body to `temp/claude/captures/<name>.json`),
 then:
 ```
 # run the committed builder and print its emitted payload as JSON (use the exported builder name)
-node .claude/scripts/materialize-template.cjs source/data/payloads/<module>/<file>.data.ts <builderName> > temp/object.json
+node .claude/scripts/materialize-template.cjs source/data/payloads/<module>/<file>.data.ts <builderName> > temp/claude/scratchpad/payload-drift/object.json
 
 # shape-diff it against the fresh recording (exit 0 = clean, 1 = drift)
-node .claude/scripts/compare-payload.cjs temp/object.json temp/captures/raw/<name>.json
+node .claude/scripts/compare-payload.cjs temp/claude/scratchpad/payload-drift/object.json temp/claude/captures/<name>.json
 ```
 The diff ignores dynamic leaf values and reports only structure — added/removed fields and type
 changes — naming the drifted column where the array carries a stable id field.
@@ -79,4 +79,4 @@ the checks pass.
 - This only works if each script asserts **body-level** save success, not just HTTP 200 — Momentus
   returns 200 on a failed save (`Save2` and its siblings alike). A status-only check lets drift pass
   green; fix the check first.
-- `temp/` (captures, extracted JSON) is disposable scratch — wipe it freely afterward.
+- `temp/claude/` (captures, scratchpad work) is disposable scratch — wipe it freely afterward.
