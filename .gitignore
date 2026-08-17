@@ -1,6 +1,6 @@
 # Exploration artifacts (playwright-cli / playwright-mcp output, captures)
 temp/
-scratchpad/
+reports/
 .playwright/
 .playwright-cli/
 .playwright-mcp/
