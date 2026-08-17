@@ -11,13 +11,11 @@ A journey is authored and proven against **`main`** (the unreleased, highest-pri
 
 ## The matrix is the ReleaseVersion type
 
-`source/utils/types/config.type.ts` is the **single source of truth** for which envs are live:
+`source/utils/types/config.type.ts` is the **single source of truth** for which envs are live: the
+`ReleaseVersion` union is `'main'` plus one member per currently-released version path segment, newest
+first.
 
-```ts
-export type ReleaseVersion = 'main' | '26_2' | '26_1' | '25_4';
-```
-
-Read the union members straight from that file to build the matrix — never hardcode a version list in this skill. `main` is always present and always resolves to the *next unreleased* version; the numbered segments are the currently-released versions, newest first, sliding by one at each branch cut.
+Read the union members straight from that file to build the matrix — never hardcode a version list in this skill, not even as an illustration (it goes stale at the next branch cut). `main` is always present and always resolves to the *next unreleased* version; the numbered segments are the currently-released versions, newest first, sliding by one at each branch cut.
 
 ## Modes
 

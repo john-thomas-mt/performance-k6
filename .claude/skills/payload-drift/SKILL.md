@@ -7,7 +7,7 @@ description: Detect whether captured save payloads embedded in the data builders
 
 The committed `source/data/**.data.ts` builders embed captured save-payload templates. Every write in
 the suite currently funnels through the one generic `GenericDetailServer/Save2` endpoint, so those
-templates are `Save2` bodies today — but the same drift can hit any captured write body. When the QE
+templates are `Save2` bodies today — but the same drift can hit any captured write body. When the target
 environment changes — a Momentus release, or a config change (UDF sets, layouts, price lists) — the
 live API can start expecting a differently-shaped payload, and the embedded template goes stale.
 
@@ -18,14 +18,14 @@ no separate tooling. The comparator scripts here are an *optional* pinpoint aid 
 where a save returns HTTP 200 with an error body.
 
 ## When to use
-- After QE takes a Momentus release or a configuration change.
+- After the target env takes a Momentus release or a configuration change.
 - When a journey starts failing with server validation errors (cryptic `ResultValue`, "column not
   found", range rejections) that aren't correlation breaks.
 - As a pre-load sanity check that the embedded payloads still match the environment.
 
 ## Before starting
-This sends real traffic to QE (VPN required). Tell the user before running, and take run approval
-once for the whole sequence.
+This sends real traffic to the env `temp/setup.json` points at — `PERF`, the only site perf tests run
+on (VPN required). Tell the user before running, and take run approval once for the whole sequence.
 
 ## 1. Run the smoke test
 Run the full smoke suite via `k6-run-reporter` — hand it the command below and tell it the journeys create data, so its verdict names any failed save-success check (and the failing wrapper's logged `HTTP <status>`) without pulling the verbose summary into the main context:

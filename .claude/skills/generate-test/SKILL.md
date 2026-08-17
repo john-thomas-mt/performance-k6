@@ -78,7 +78,7 @@ Correlated correctly = the script still works after every session-scoped value r
 
 ## 4. Verify — 3-step progressive run
 
-Three pre-flight checks first (all zero traffic — they only parse/typecheck, never run VUs):
+Pre-flight first (zero traffic — these only parse/typecheck, never run VUs):
 
 - `npx tsc --noEmit` — typecheck the `.ts` you generated (data builders, `source/`, test). k6 strips types at parse time, so `k6 inspect` never catches a type error — this is the only check that does.
 - `k6 inspect source/tests/smoke.spec.ts` — fix until syntax/imports/options resolve clean and the journey's new k6 scenario entry resolves in the aggregate gate.
