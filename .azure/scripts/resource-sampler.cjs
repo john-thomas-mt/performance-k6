@@ -1,8 +1,11 @@
 const os = require('node:os');
 const fs = require('node:fs');
+const path = require('node:path');
 
-const [, , outPath = 'temp/resource-usage.csv', intervalArg = '1'] = process.argv;
+const [, , outPath = 'reports/resources/resource-usage.csv', intervalArg = '1'] = process.argv;
 const intervalMs = Math.max(1, Number(intervalArg)) * 1000;
+
+fs.mkdirSync(path.dirname(outPath), { recursive: true });
 
 function cpuTimes() {
   let idle = 0;

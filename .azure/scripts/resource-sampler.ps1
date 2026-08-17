@@ -1,5 +1,5 @@
 param(
-  [string]$OutPath = 'temp/resource-usage.csv',
+  [string]$OutPath = 'reports/resources/resource-usage.csv',
   [int]$Interval = 1
 )
 
@@ -7,6 +7,7 @@ $ErrorActionPreference = 'Stop'
 $inv = [System.Globalization.CultureInfo]::InvariantCulture
 $totalMB = [math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1MB)
 
+New-Item -ItemType Directory -Force -Path (Split-Path -Path $OutPath -Parent) | Out-Null
 Set-Content -Path $OutPath -Encoding ascii -Value 'timestamp,cpu_percent,ram_percent,ram_used_mb,net_rx_kBps,net_tx_kBps,load1'
 
 $counters = @(

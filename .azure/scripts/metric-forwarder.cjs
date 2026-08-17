@@ -9,7 +9,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const https = require('node:https');
 
-const [, , csvPath = 'temp/resource-usage.csv', metricPrefix = 'k6.agent.', intervalArg = '10', tagsArg = ''] = process.argv;
+const [, , csvPath = 'reports/resources/resource-usage.csv', metricPrefix = 'k6.agent.', intervalArg = '10', tagsArg = ''] = process.argv;
 const intervalMs = Math.max(1, Number(intervalArg)) * 1000;
 
 // The key is read from the environment, never argv, so it cannot surface in a process list.

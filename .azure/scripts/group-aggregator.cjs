@@ -5,6 +5,7 @@
 // never lands in memory, buckets group_duration by its group tag, and writes a CSV (for diffing
 // against a NeoLoad export) plus an HTML table (matching the other k6-results artifacts).
 const fs = require('node:fs');
+const path = require('node:path');
 const zlib = require('node:zlib');
 const readline = require('node:readline');
 const { readExecReq, configSection, page, esc } = require('./chart-lib.cjs');
@@ -12,12 +13,14 @@ const { readExecReq, configSection, page, esc } = require('./chart-lib.cjs');
 const [
   ,
   ,
-  inputPath = 'temp/k6-metrics.json.gz',
-  csvPath = 'temp/group-metrics.csv',
-  htmlPath = 'temp/group-metrics.html',
+  inputPath = 'reports/metrics/k6-metrics.json.gz',
+  csvPath = 'reports/metrics/group-metrics.csv',
+  htmlPath = 'reports/metrics/group-metrics.html',
   specPath = '',
   execReqPath = '',
 ] = process.argv;
+
+fs.mkdirSync(path.dirname(htmlPath), { recursive: true });
 
 const TITLE = 'k6 per-transaction timings (group_duration) — k6 run';
 

@@ -1,7 +1,17 @@
 const fs = require('node:fs');
+const path = require('node:path');
 const { readExecReq, configSection, page, svgChart } = require('./chart-lib.cjs');
 
-const [, , csvPath = 'temp/resource-usage.csv', htmlPath = 'temp/resource-usage.html', specPath = '', execReqPath = ''] = process.argv;
+const [
+  ,
+  ,
+  csvPath = 'reports/resources/resource-usage.csv',
+  htmlPath = 'reports/resources/resource-usage.html',
+  specPath = '',
+  execReqPath = '',
+] = process.argv;
+
+fs.mkdirSync(path.dirname(htmlPath), { recursive: true });
 
 const raw = fs.existsSync(csvPath) ? fs.readFileSync(csvPath, 'utf8').trim() : '';
 const lines = raw ? raw.split(/\r?\n/) : [];

@@ -4,11 +4,13 @@
 // the endpoint (before k6 is up / after it exits) are skipped silently.
 const fs = require('node:fs');
 const http = require('node:http');
+const path = require('node:path');
 
-const [, , outPath = 'temp/gc-usage.csv', intervalArg = '1', address = '127.0.0.1:6565'] = process.argv;
+const [, , outPath = 'reports/resources/gc-usage.csv', intervalArg = '1', address = '127.0.0.1:6565'] = process.argv;
 const intervalMs = Math.max(1, Number(intervalArg)) * 1000;
 const MB = 1024 * 1024;
 
+fs.mkdirSync(path.dirname(outPath), { recursive: true });
 fs.writeFileSync(
   outPath,
   'timestamp,gc_count,gc_pause_sum_s,gc_pause_max_s,heap_inuse_mb,heap_alloc_mb,next_gc_mb,goroutines,threads,alloc_total_mb\n',
