@@ -9,6 +9,11 @@
 // summary-forwarder.cjs to post to Datadog. Those percentiles are computed over every sample in the run,
 // so they are the exact figures the dashboard's live sketch estimates can only approximate
 // (docs/datadog-live-metrics.md). Keeping the two CSVs apart holds the NeoLoad-diff artifact's shape fixed.
+//
+// A fourth, request-series.csv, does the same one level down: http_req_duration keyed by scenario,
+// transaction and request, so the requests table gets the same exact tail the transactions table has.
+// It feeds the same forwarder with a different prefix and tag-column count, and touches neither of the
+// two artifacts above.
 const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
@@ -24,6 +29,7 @@ const [
   specPath = '',
   execReqPath = '',
   seriesPath = 'reports/metrics/group-series.csv',
+  requestSeriesPath = 'reports/metrics/request-series.csv',
 ] = process.argv;
 
 fs.mkdirSync(path.dirname(htmlPath), { recursive: true });
@@ -62,6 +68,13 @@ const COLS = ['count', 'avg', 'min', 'med', 'p90', 'p95', 'p99', 'max'];
 // Bucketed by scenario and then by group: the forwarded series needs a scenario tag matching what the
 // live OTLP feed carries, while the CSV and HTML below merge those buckets back down to group alone.
 const scenarios = new Map();
+// Flat, because only the forwarded series needs it: nothing merges requests back down the way the
+// NeoLoad-diff CSV merges transactions across scenarios.
+const requests = new Map();
+
+function groupName(tags) {
+  return (tags.group || '').replace(/^(::)+/, ''); // top-level group tag is '::<name>'
+}
 
 function record(line) {
   if (!line || line.charCodeAt(0) !== 123) return; // 123 = '{'; skip blanks/non-object lines fast
@@ -71,13 +84,19 @@ function record(line) {
   } catch {
     return;
   }
-  if (obj.type !== 'Point' || obj.metric !== 'group_duration') return;
+  if (obj.type !== 'Point') return;
+  const isGroup = obj.metric === 'group_duration';
+  if (!isGroup && obj.metric !== 'http_req_duration') return;
   const data = obj.data;
   if (!data || !data.tags) return;
   const value = data.value;
   if (typeof value !== 'number' || Number.isNaN(value)) return;
-  let name = (data.tags.group || '').replace(/^(::)+/, ''); // top-level group tag is '::<name>'
-  if (!name) name = '(root)';
+  if (isGroup) recordGroup(data, value);
+  else recordRequest(data, value);
+}
+
+function recordGroup(data, value) {
+  const name = groupName(data.tags) || '(root)';
   // k6 omits the scenario tag on setup()/teardown() groups, so that bucket's scenario stays empty and
   // the forwarder drops the tag rather than inventing a scenario the live feed does not report.
   const scenario = data.tags.scenario || '';
@@ -92,6 +111,20 @@ function record(line) {
     byGroup.set(name, arr);
   }
   arr.push(value);
+}
+
+function recordRequest(data, value) {
+  // A request made outside any group keeps an empty transaction cell for the same reason an empty
+  // scenario stays empty above, rather than being folded into a '(root)' transaction that has no
+  // counterpart on the live feed.
+  const key = [data.tags.scenario || '', groupName(data.tags), data.tags.name || ''];
+  const id = JSON.stringify(key);
+  let entry = requests.get(id);
+  if (!entry) {
+    entry = { key, values: [] };
+    requests.set(id, entry);
+  }
+  entry.values.push(value);
 }
 
 function num(v) {
@@ -125,6 +158,16 @@ function writeSeries() {
   fs.writeFileSync(seriesPath, ['scenario,transaction,' + COLS.join(','), ...lines].join('\n') + '\n');
 }
 
+function writeRequestSeries() {
+  const lines = [...requests.keys()].sort().map((id) => {
+    const { key, values } = requests.get(id);
+    const s = stats(values);
+    return [...key, s.count, ...COLS.slice(1).map((c) => num(s[c]))].join(',');
+  });
+  fs.writeFileSync(requestSeriesPath, ['scenario,transaction,request,' + COLS.join(','), ...lines].join('\n') + '\n');
+  return lines.length;
+}
+
 function finish() {
   const groups = mergedByGroup();
   const rows = [...groups.keys()].sort().map((name) => ({ name, ...stats(groups.get(name)) }));
@@ -132,6 +175,7 @@ function finish() {
   const csvBody = rows.map((r) => [r.name, r.count, ...COLS.slice(1).map((c) => num(r[c]))].join(',')).join('\n');
   fs.writeFileSync(csvPath, ['group,' + COLS.join(','), csvBody].filter(Boolean).join('\n') + '\n');
   writeSeries();
+  const requestRows = writeRequestSeries();
 
   const exec = readExecReq(execReqPath);
   const style =
@@ -163,7 +207,9 @@ function finish() {
   }
 
   fs.writeFileSync(htmlPath, page(TITLE, style + body));
-  console.log(`Wrote ${csvPath}, ${htmlPath} and ${seriesPath} (${rows.length} transactions)`);
+  console.log(
+    `Wrote ${csvPath}, ${htmlPath}, ${seriesPath} (${rows.length} transactions) ` + `and ${requestSeriesPath} (${requestRows} requests)`,
+  );
 }
 
 if (!fs.existsSync(inputPath)) {
