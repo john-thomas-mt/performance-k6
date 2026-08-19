@@ -8,8 +8,9 @@ the measured footprint of one load run, and the arithmetic that turns that footp
 invoice.
 
 Everything in "What we actually send" and "What it comes to" was read out of the live org, not
-estimated. Everything in "How Datadog charges" comes from Datadog's own docs, with the one figure I
-could not source officially called out as such.
+estimated, and the bottom line is Datadog's own billing computation rather than ours. Everything in
+"How Datadog charges" comes from Datadog's own docs. Contract pricing is deliberately not reproduced
+here, so this doc is safe to circulate: every conclusion rests on committed quantities and measured usage.
 
 ## How Datadog charges for metrics
 
@@ -55,35 +56,88 @@ metric per timeseries:
 The multiplier applies whether or not the metric is configured under Metrics without Limits. This is
 where most of our footprint comes from, and it is the main lever if the footprint ever needs cutting.
 
-### Included allotment, and what an overage costs
+### Included allotment, and where ours comes from
 
-| Plan       | Included custom metrics |
-| ---------- | ----------------------- |
-| Pro        | 100 per monitored host  |
-| Enterprise | 200 per monitored host  |
+Custom metrics are not bought directly on our contract. The allotment is derived from other committed
+lines, and Datadog computes it from the **committed** quantity rather than the quantity actually
+metered:
+
+| Plan                                      | Custom metrics contributed |
+| ----------------------------------------- | -------------------------- |
+| Infrastructure Pro                        | 100 per host per month     |
+| Infrastructure Enterprise                 | 200 per host per month     |
+| Serverless Workload Monitoring, Apps      | 20 per app instance        |
+| Serverless Workload Monitoring, Functions | 5 per function             |
+
+APM (either tier), Database Monitoring, Network Monitoring and Serverless APM contribute nothing.
 
 Above the allotment, Datadog's docs give the ingested rate as **$0.10 per 100 ingested custom metrics**
-and the indexed rate as "an amount that is specified in your current contract", so there is no official
-list price for the indexed number. The figure widely quoted outside Datadog is **$5.00 per 100 indexed
-custom metrics per month** ($0.05 each). I have used that below purely to put a dollar sign on the
-arithmetic. It is **not** a verified rate and should be replaced with the contract rate before anyone
-quotes it. See [What I still need from you](#what-i-still-need-from-you).
+and the indexed rate only as "an amount that is specified in your current contract". Ours is a negotiated
+private-offer term with no public list price, so no rate is quoted anywhere in this doc. It turns out not to
+matter: measured billable usage is zero, so there is no quantity for a rate to price.
 
-### Two contract models, and which one you are on changes the question
+### The contract we are billing into
 
-Datadog now sells custom metrics under either model, and the docs are explicit that they are different
-SKUs:
+Custom metrics are not purchased on this contract. The allotment falls out of the committed host and
+serverless lines, and Datadog derives it from the **committed** quantity rather than the quantity actually
+metered. Commercial terms are deliberately not reproduced here: only the committed quantities and each
+line's per-unit allotment are needed to reach the number, so this doc stays safe to circulate.
+
+| Committed line                    | Committed qty | Allotment per unit | Custom metrics contributed |
+| --------------------------------- | ------------: | ------------------ | -------------------------: |
+| Infra Hosts, **Pro** tier         |           300 | 100 per host       |                     30,000 |
+| Serverless App Instances          |           300 | 20 per instance    |                      6,000 |
+| Serverless Workload Functions     |            75 | 5 per function     |                        375 |
+| APM Enterprise Hosts              |           130 | none, either tier  |                          0 |
+| DBM Hosts                         |            20 | none               |                          0 |
+| Network Hosts                     |           100 | none               |                          0 |
+| Logs, spans, RUM, Synthetics      |             - | none               |                          0 |
+| Custom metrics                    |             0 | not purchased      |                          - |
+| **Total included custom metrics** |               |                    |                 **36,375** |
+
+All three inputs to that number are confirmed:
+
+- **The Infrastructure plan is Pro, so 100 per host.** Every committed line on the Planned Usage page
+  reconciles to Datadog's published annual list rate to the dollar, and the infrastructure line lands on the
+  Pro rate rather than the Enterprise one. The "APM **Enterprise** Hosts" line names the APM tier, not the
+  Infrastructure plan, and APM contributes no custom-metric allotment at either tier. It is the single most
+  confusable thing on the card.
+- **The serverless lines are the allotment-bearing SKU**, confirmed from metered usage rather than by
+  matching names. On the Usage Summary's Serverless tab, Serverless App Instance Hours resolves to an average
+  of 232 against 300 committed and Serverless Workload Functions to 74.0 against 75 committed, so the metered
+  products map onto those committed lines. The app-instance figure is composed of Azure Web App, Function App
+  and Container App instance hours plus ECS hours, which is exactly what Serverless Workload Monitoring
+  counts, and it is metered separately from the Serverless Apps APM line that contributes nothing.
+- **The contract is cardinality pricing.** There are no Metric Names, Indexed Points or Ingest Points line
+  items, which are what a Metric Name pricing contract breaks cost into.
+
+The subscription is transacted as an AWS Marketplace private offer, so the on-demand rate per 100 is a
+negotiated term that exists only on the offer's rate card. No public list price for it exists, which is why
+no rate is quoted anywhere in this doc. It turns out not to matter (see below).
+
+One consequence worth noting separately: we are committed to 300 Infra Hosts and metering about 100. Because
+the allotment is calculated on the committed number, the headroom is three times what the metered count would
+suggest. That gap is a conversation about the host commitment rather than a metrics question, but the unused
+two thirds is part of what makes this feed free.
+
+### Two contract models, and why only one of them applies to us
+
+Datadog sells custom metrics under either model, and the docs are explicit that they are different SKUs:
 
 | Model                   | Billable units                                                                                                                                                            | What to watch                                                                       |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | **Cardinality pricing** | Distinct timeseries, monthly hourly average, as above                                                                                                                     | Tag cardinality, and the distribution multiplier                                    |
 | **Metric Name pricing** | Distinct metric _names_ with over 100 indexed datapoints in the month, plus indexed datapoints beyond a 10M-per-name baseline, plus ingested datapoints beyond 5x indexed | Number of metric names, not their cardinality. "Cardinality no longer drives cost." |
 
-Under Metric Name pricing our exposure is the count of distinct `k6perf.*` names we submit, a few
-dozen, and the datapoint volume is nowhere near the baseline: the busiest run measured moved roughly
-1.5M billable datapoints after multipliers, against a pooled baseline of 10M **per name**. Under
-cardinality pricing the exposure is the timeseries count computed below. Either way the answer comes
-out small, for different reasons.
+**We are on cardinality pricing**, so the timeseries arithmetic in this doc is the operative one. The
+Planned Usage card carries no Metric Names, Indexed Points or Ingest Points line items, which are the
+line items a Metric Name pricing contract breaks cost into.
+
+Recorded for completeness in case the contract is ever renegotiated onto the other model: our exposure
+there would be the count of distinct `k6perf.*` names we submit, a few dozen, and the datapoint volume
+is nowhere near the baseline. The busiest run measured moved roughly 1.5M billable datapoints after
+multipliers, against a pooled baseline of 10M **per name**. The answer comes out small under either
+model, for different reasons.
 
 ### Metrics without Limits: ingested vs indexed
 
@@ -135,61 +189,84 @@ splits only three of them.
 
 ### The computed number checks out against Datadog's own meter
 
-`datadog.estimated_usage.metrics.custom` is the org's hourly billable count. Over the three clock hours
-build `20260817.1` was live it read **7,686 / 7,711 / 7,584**, against an org baseline of about 139 in
-the hours either side. So the run's footprint is about 7,550 by Datadog's own count, within about 5% of
-the 7,952 computed from the table. The gap is combinations that did not appear in every hour.
+`datadog.estimated_usage.metrics.custom` is the org's hourly billable count. Sampled at five-minute
+resolution across the window build `20260817.1` was live, it sits near 136 at baseline, then steps to a
+plateau that opens at **7,686**, holds **7,711** for eleven consecutive samples, closes at **7,584**, and
+drops straight back to baseline. So the run's footprint is **7,711** by Datadog's own count, within 3% of the
+7,952 computed above. The gap is tag combinations that did not appear in every sample.
 
-Two details worth keeping:
+Three things in that trace matter:
 
-- **The three hours are flat, not rising.** 7,686 then 7,711 then 7,584. The footprint is set by the
-  script's shape and is fully present in the first hour, so a longer run does not grow it. This is the
-  "load level does not drive cost" point, measured.
-- **89% of the footprint is the distribution multiplier.** 1,199 of the 2,101 timeseries are
-  distributions, and they account for 7,050 of the 7,952 custom metrics.
+- **The plateau is flat, not rising.** The footprint is set by script shape, not by elapsed time or load. A
+  longer run widens the plateau, it does not raise it. This is the "load does not drive cost" claim measured
+  rather than argued.
+- **The plateau is about 65 minutes wide**, so a run occupies roughly one of the month's 730 billable hours.
+  Because it straddled a clock boundary it touched three hourly buckets, which read 630 / 7,702 / 471, but
+  only one of those is a full hour of footprint. An earlier revision of this doc read those three plateau
+  samples as three separate clock hours and so overstated a run's contribution by about 3x.
+- **89% of the footprint is the distribution multiplier.** 1,199 of the 2,101 timeseries are distributions,
+  and they account for 7,050 of the 7,952. Any real saving has to come from there, which is what the levers
+  table is ordered by.
 
 ## What it comes to
 
 ### The org we are billing into
 
-| Reading (Aug 2026 month to date, 432 hours)                    |  Value |
-| -------------------------------------------------------------- | -----: |
-| Billable infrastructure hosts, `datadog.estimated_usage.hosts` |    100 |
-| Included custom metrics at Pro (100/host)                      | 10,000 |
-| Included custom metrics at Enterprise (200/host)               | 20,000 |
-| Org billable custom metrics, hourly mean over the month        |    224 |
-| Same, with k6 run hours excluded                               |    149 |
-| Median non-run hour                                            |    139 |
-| k6's contribution to the monthly average                       |     75 |
+Datadog's own Usage Summary is the authority on what the org uses, and its Estimated Month-To-Date Cost view
+is the authority on what that costs.
 
-k6 is **33% of the org's custom-metric average** and simultaneously **0.7% of a Pro allotment**. Both
-are true, and the second is the one that reaches the invoice: the org is using 224 of at least 10,000
-included custom metrics, so every k6 timeseries today sits inside the allotment and its marginal cost is
-**zero**.
+| Reading                                                            |  Value |
+| ------------------------------------------------------------------ | -----: |
+| Included custom metrics, from the committed lines above            | 36,375 |
+| Floor if only Infra Hosts are counted                              | 30,000 |
+| Custom metric hours used, 1 to 17 Aug 2026 (Datadog Usage Summary) |  73.8K |
+| Same, as an hourly average over the 408 hours                      |    181 |
+| Typical quiet hour                                                 |    136 |
+| k6's contribution to the monthly average                           |     11 |
+| **On-demand billable custom metric hours, August**                 |  **0** |
+| **Estimated month-to-date cost, Custom Metrics**                   | **$0** |
 
-The 75 came from 11 run hours across 18 days, including one full CI run at about 7,600 and several
-smaller local and validation runs.
+**The zero is the answer, and it is the strong form of it.** It is attached to the billable usage
+_quantity_, not to a dollar amount that happens to round down: Datadog subtracts the allotment before
+computing billable usage, so "0 custom metric hours" means the entitlement covered every custom metric the org
+produced in August, k6's spike included. The contractual rate per 100 is irrelevant when the quantity it
+multiplies is zero.
+
+Two supporting notes on that reading:
+
+- The unfiltered on-demand view shows $482.37 for the month across other products, and Custom Metrics does
+  appear in its legend. That is Datadog enumerating every product in the legend regardless of value. Filtering
+  to Custom Metrics alone returns a chart flat on $0 for every day of the month.
+- The view reports usage 72 hours after the fact, so the 17 Aug run may not be fully reported yet. It cannot
+  change the outcome: the 12 Aug validation runs are well past the lag and also read $0, and the projection
+  below puts the month's average near 150 against 36,375. Re-check after 20 Aug to close it completely.
+
+The org meter and the billed page differ by about 8% for the same window (168 against 181), which is expected
+of a metric named `estimated_usage`. The billed page is the figure to cite; the meter is what allows the
+decomposition, since it is the only source that can separate k6's hours from the baseline.
 
 ### If run frequency goes up
 
-Monthly average added = footprint x hours live / 730. At a 7,550 footprint and 3 clock hours per run:
+Monthly average added = the plateau's excess over baseline x its width / 730. Measured on the 17 Aug run,
+that is 7,573 excess across 65 minutes, so **one run adds about 11** to the month's average.
 
-| Runs per month | Added to monthly average | Total org average | Share of a 10,000 allotment | Illustrative overage cost |
-| -------------: | -----------------------: | ----------------: | --------------------------: | ------------------------: |
-|              1 |                       31 |               180 |                        1.8% |                        $0 |
-|              4 |                      124 |               273 |                        2.7% |                        $0 |
-|              8 |                      248 |               397 |                        4.0% |                        $0 |
-|             20 |                      621 |               770 |                        7.7% |                        $0 |
-|             40 |                    1,241 |             1,390 |                         14% |                        $0 |
-|            100 |                    3,103 |             3,252 |                         33% |                        $0 |
+| Runs per month   | k6 adds | Org average | Share of the 36,375 allotment | Billable |
+| ---------------- | ------: | ----------: | ----------------------------: | -------: |
+| 1                |      11 |         152 |                          0.4% |        0 |
+| 4                |      45 |         186 |                          0.5% |        0 |
+| 8                |      90 |         231 |                          0.6% |        0 |
+| 20               |     225 |         366 |                          1.0% |        0 |
+| 40               |     450 |         591 |                          1.6% |        0 |
+| 100              |   1,124 |       1,265 |                          3.5% |        0 |
+| Continuous, 24/7 |   7,570 |       7,711 |                         21.2% |        0 |
 
-Every row is $0 because none of them reaches the allotment. To exit the allotment on k6 metrics alone,
-at a 7,550 footprint, would take roughly **950 run hours a month**, about 315 runs, which is more hours
-than a month contains once you account for the three-hour occupancy. Under cardinality pricing this
-dashboard cannot generate a custom-metric overage on its own at any realistic run cadence. The only way
-it contributes to one is if the rest of the org's usage grows to fill the allotment first, at which
-point k6's 75 to 600 average becomes marginal spend at the contract rate (at the unverified $5/100,
-between $4 and $31 a month).
+The last row settles the question. If the pipeline never stopped, occupying all 730 hours of the month, the
+monthly average would be the plateau itself, 7,711, a fifth of the allotment. The maximum possible average
+**is** the plateau, so **no run cadence produces a custom-metric overage at this footprint**.
+
+The only route to one is a much larger script. The full 33-flow NeoLoad suite at roughly 45,000 per run hour
+lands at 407 on the monthly average at four runs a month, still about 1% of the allotment, and would have to
+run something like 80% of every hour of the month before it crossed 36,375.
 
 ## What would actually change the number
 
@@ -199,9 +276,10 @@ Ranked by how much they move it:
    being the per-combination multiplier once the seven `http_req_*` distributions and their percentile
    settings are counted. The five ported flows produce 48 transactions and about 50 endpoint names.
    Porting the full NeoLoad suite (33 flows in the load model) would scale the footprint about 6x, to
-   roughly 45,000 per run hour. At that size the arithmetic still holds (45,000 x 3 x 4 runs / 730 = 740
-   average, still inside the allotment), but it stops being a rounding error and the levers below start
-   to matter.
+   roughly 45,000 per run hour. At that size the arithmetic still holds: four runs a month lands at 407 on
+   the monthly average, about 1% of the 36,375 allotment. But it stops being a rounding error, and such a
+   suite would have to run roughly 80% of every hour of the month before it crossed the allotment, which
+   makes it the first configuration where the levers below matter.
 2. **Enabling percentile aggregation on more distributions.** Each one doubles that metric's
    contribution. Today only `http_req_duration` and `group_duration` have it. Turning it on for the six
    component metrics would add 4,890 to a run's footprint, the largest single increase available. It is
@@ -242,24 +320,22 @@ names. It last received data on 2026-08-11, with `k6perf.*` taking over on 2026-
 and costs nothing ongoing under cardinality pricing. Under Metric Name pricing it would have counted as
 billable metric names for August, the month it was submitted in, and it will age out on its own.
 
-## What I still need from you
+## How the open questions resolved
 
-The arithmetic above is complete except for the contract terms. Four answers would turn the illustrative
-figures into real ones:
+This analysis began with four questions about the subscription that measurement alone could not settle. All
+four are now closed, and none of them required a commercial term to be disclosed.
 
-1. **Pro or Enterprise?** Sets the allotment at 100 or 200 per host, so 10,000 or 20,000 included.
-2. **Cardinality pricing or Metric Name pricing on the custom-metrics SKU?** They are different
-   contracts and the number to watch differs under each. If it is Metric Name pricing, the question
-   becomes "how many distinct `k6perf.*` names do we submit", and the cardinality tables above become
-   background.
-3. **The contract rate per 100 indexed custom metrics.** Datadog's docs will not state it, only the
-   contract does. Everything marked illustrative above uses an unverified $5.00.
-4. **Is there already a committed custom-metrics volume in the contract, above the per-host allotment?**
-   If so the headroom is larger still than the 10,000 assumed here.
+| Question                                                | Answer                      | How it was settled                                                                   |
+| ------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------ |
+| Infrastructure Pro or Enterprise, so 100 or 200 / host? | **Pro**, 100 per host       | Committed lines reconcile to Datadog's published annual list rates                   |
+| Cardinality pricing or Metric Name pricing?             | **Cardinality**             | No Metric Names, Indexed Points or Ingest Points line items exist                    |
+| Does the serverless line carry an allotment?            | **Yes**, 6,375 of the total | Metered usage maps onto the committed quantities, composition is Workload Monitoring |
+| What is the on-demand rate per 100?                     | **Moot**                    | Billable usage is 0, so there is no quantity for a rate to price                     |
 
-Worth confirming too that the invoice's host count matches the 100 that `datadog.estimated_usage.hosts`
-reports, since the whole allotment scales off it. The host inventory lists 344 entries, so the billable
-number is already well below the inventory and the two should not be confused.
+The rate only becomes worth chasing if the footprint grows by something like fortyfold, which in practice
+means the full 33-flow suite running close to continuously. Treat that as the trigger to revisit this doc,
+not as a loose end to chase now. It lives on the private offer's rate card rather than anywhere in the Datadog
+UI, because no custom-metric volume is committed for the Planned Usage page to price.
 
 ## Sources
 
