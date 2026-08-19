@@ -176,11 +176,13 @@ zero traffic, so the generated reports can state what actually ran. It reads `te
 
 The group aggregator turns the k6 JSON firehose into per-transaction `group_duration` timings, so
 each k6 group compares one-to-one with its NeoLoad transaction. It emits a CSV for diffing against a
-NeoLoad export plus an HTML table matching the other artifacts, and a third CSV keyed by scenario and
-transaction that the summary forwarder posts to Datadog in the same step. Those percentiles are computed
-over every sample in the run, so unlike the live feed they are exact and do not shift with the dashboard
-window. Splitting the two CSVs keeps the NeoLoad-diff artifact byte-identical whether or not the run
-streamed.
+NeoLoad export plus an HTML table matching the other artifacts, and two further CSVs the summary
+forwarder posts to Datadog in the same step: one keyed by scenario and transaction, one keyed by
+scenario, transaction and request. Those percentiles are computed over every sample in the run, so
+unlike the live feed they are exact and do not shift with the dashboard window. The forwarder is called
+twice with a different prefix and tag-column count rather than being extended, since it is already
+generic over any CSV shaped as tag columns followed by numeric ones. Keeping the forwarded CSVs apart
+from the diff CSV keeps the NeoLoad-diff artifact byte-identical whether or not the run streamed.
 
 All reporting steps run on `condition: always()`, so a failed or threshold-breaching run still
 publishes its diagnostics.

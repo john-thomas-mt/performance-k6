@@ -107,8 +107,60 @@ Measured on the 40-second window `15:17:10-15:17:50` of the 2026-08-18 15:10 run
 **Failed** and **Dropped** carried the rollup until this check and read a green `0` over a 40-second window
 holding 10 real request failures. Dropping it costs nothing, because `.as_count()` already forces sum-based
 time aggregation and the two forms agree wherever both render: on aligned windows **Failed** read 24 both
-ways and **Dropped** 32 both ways. **Failed checks**, **Failed** and **Dropped** therefore all carry
-`.as_count()` with no rollup.
+ways and **Dropped** 32 both ways. **Failed checks**, **Failed** and **Dropped** therefore all carry `.as_count()` with no rollup.
+
+A review sweep on 2026-08-19 found four more tiles in the same class that had been missed: **Passed**,
+**Error rate %** (both operands), **Throughput Total** and **VU iterations Completed**. Measured on the
+40-second window `08:56:10-08:56:50` of the 17-Aug run, the three export points in range total 5,728,
+`.as_count()` alone returns 5,728, and the rolled-up form returns blank. None of the four wraps
+`default_zero()`, so they blanked rather than reading a false zero, which makes this cosmetic where the
+**Failed** and **Dropped** case was a false negative. All four now carry `.as_count()` with no rollup.
+
+Verified after the change on the same 2026-08-18 15:10 run. On the misaligned 40-second window
+`15:17:10-15:17:50` UTC, which holds no minute boundary, one variable changed:
+
+| Tile                    | Shipped (`.as_count()`) | Same window, rollup re-added |
+| ----------------------- | ----------------------- | ---------------------------- |
+| Passed                  | 106                     | blank                        |
+| Throughput Total        | 5.367332 MB             | blank                        |
+| VU iterations Completed | 13                      | blank                        |
+
+Non-blank is only half of it, since the form also has to agree where both render. Over the aligned window
+`15:15:00-15:20:00` UTC, broken out per scenario, the two forms returned the same number in every cell:
+
+| Scenario              | iterations, no rollup | rolled | `data_received`, no rollup |    rolled |
+| --------------------- | --------------------: | -----: | -------------------------: | --------: |
+| `crystal_report`      |                    10 |     10 |                  3,513,504 | 3,513,504 |
+| `room_diagram_upload` |                    13 |     13 |                  2,703,333 | 2,703,333 |
+| `copy_service_orders` |                    15 |     15 |                  2,847,299 | 2,847,299 |
+| `book_event`          |                    10 |     10 |                    821,420 |   821,420 |
+| `copy_event`          |                    13 |     13 |                  2,737,612 | 2,737,612 |
+| setup/teardown        |                     - |      - |                     30,305 |    30,305 |
+
+That extends the agreement already measured on `checks.total`, `http_req_failed.total` and
+`dropped_iterations` to the two metric families this sweep touched.
+
+What decides it is whether `.as_count()` is reachable at all:
+
+| Tile                       | Metric                                | `.as_count()` | Rollup             |
+| -------------------------- | ------------------------------------- | ------------- | ------------------ |
+| Failed checks              | `checks.total`                        | yes           | none               |
+| Failed                     | `http_req_failed.total`               | yes           | none               |
+| Dropped                    | `dropped_iterations`                  | yes           | none               |
+| Passed                     | `http_req_failed.total`               | yes           | none               |
+| Error rate %               | `http_req_failed.total` x2            | yes           | none               |
+| Throughput Total           | `data_received` + `data_sent`         | yes           | none               |
+| VU iterations Completed    | `iterations`                          | yes           | none               |
+| Transactions Total         | `count:group_duration`                | no            | `.rollup(sum, 60)` |
+| Transactions Avg. duration | `sum:` / `count:group_duration`       | no            | `.rollup(sum, 60)` |
+| Requests Avg. duration     | `sum:http_req_duration` / `http_reqs` | numerator no  | `.rollup(sum, 60)` |
+
+The last three cannot be fixed and are not meant to be. They read `count:` or `sum:` off the
+`group_duration` and `http_req_duration` distributions, where `.as_count()` does not exist and dropping the
+rollup triggers the 838-read-as-784 collapse described above. Both **Avg. duration** tiles keep it on the
+denominator too, since a blanked distribution-sum numerator blanks the ratio whatever the denominator does.
+Those three still go blank on a window holding no minute boundary. That is the floor of the metric type
+rather than an oversight, so do not sweep their rollups off for consistency.
 
 This applies to scalar tiles only. The per-minute timeseries widgets keep the rollup, since a chart plots
 the buckets themselves rather than reducing them to one number, so a bucket the window excludes is a bar not
@@ -271,13 +323,32 @@ is for, and the two sit together in the Transactions group for that reason.
 
 **An empty tag cell drops the tag rather than inventing a value.** k6 omits `scenario` on `setup()` and
 `teardown()` groups, so those rows carry no scenario tag and render as `N/A`, matching how the live feed
-reports the same points.
+reports the same points. The request feed follows the same rule for a request made outside any group.
+
+**All eight statistics have a column, Min and Med included.** An exact median is the one figure on a row
+that shows skew against Avg, which the sketch p50 could never do: at 6-9 samples per bucket it could not
+separate itself from p90, and that is why p50 came off the sketch table rather than being kept there. On
+`local-3` the `SignIn` request under `book_event` reads Med 561.17 ms against Avg 1702.25 ms and p99
+17503.42 ms, and the distance between the first two is what the column is for.
+
+**The same feed runs one level down for requests.** `group-aggregator.cjs` also buckets `http_req_duration`
+by scenario, transaction and request into `reports/metrics/request-series.csv`, which the same forwarder
+posts as `k6perf.request.*`:
+
+```
+node .azure/scripts/summary-forwarder.cjs reports/metrics/request-series.csv k6perf.request. 3 temp/dd-tags.txt
+```
+
+The forwarder needed no change, being generic over any `<tag columns>,<numeric columns>` CSV. The requests
+table needs this more than the transactions table did, since the resolution limit below returns an identical
+value in two adjacent percentile columns on 14 of its 25 rows. The cost is about 1,300 gauge timeseries
+(roughly 163 request combinations x 8 statistics, with no distribution multiplier) against a run's existing
+7,952 and an org allotment of 36,375, so it is zero in practice (`docs/datadog-cost-model.md`).
 
 The feed is gated by the same `DD_API_KEY` flag as the other two. `run-k6.ps1` writes the tag string to
 `temp/dd-tags.txt` only while streaming and removes it otherwise, so a stale file cannot tag a later run's
 summary with the wrong build, and the forwarder skips silently when either that file or the key is absent.
-`group-metrics.csv`, the NeoLoad-diff artifact, is byte-identical either way. `med` is forwarded alongside
-the rest but not currently shown, so adding a p50 column is a dashboard-only change.
+`group-metrics.csv`, the NeoLoad-diff artifact, is byte-identical either way.
 
 ### A Datadog percentile is a sketch estimate, so validate it by traceability
 
@@ -479,18 +550,26 @@ minute of the first export. Two things are not:
 
 Negligible today, and structurally hard to make expensive. Billable custom metrics are "the total of
 all distinct custom metrics for each hour in a given month, divided by the number of hours in the
-month", and the load pipeline is manually queued, so the series exist for only a couple of clock hours
-per run.
+month", and the load pipeline is manually queued, so the series exist for about one clock hour per run.
 
 Measured on build `20260817.1`, the five-flow profile resolves to 2,101 timeseries, which bill as
 **7,952 custom metrics** once the distribution multiplier is applied (5x per distribution timeseries,
-10x where percentile aggregation is enabled). Datadog's own hourly meter agreed, reading 7,686 / 7,711 /
-7,584 over the three hours the run was live against a ~139 baseline. Over August month to date that
-came to 75 on a monthly average of 224, against an allotment of at least 10,000.
+10x where percentile aggregation is enabled). Datadog's own meter agreed: sampled every five minutes it
+holds a flat plateau of **7,711** for the ~65 minutes the run is live, against a ~136 baseline either
+side. That plateau is one billable hour, so a run adds about 11 to the month's average.
+
+Datadog bills all of it at **zero**. Its Estimated Month-To-Date Cost view filtered to Custom Metrics
+reads `0 custom metric hours` of on-demand billable usage and $0.00 for August: the 36,375 allotment
+derived from the committed host and serverless lines absorbs the whole feed, k6's spike included.
+
+The two end-of-run summary feeds add to that but barely: they are gauges, which carry no distribution
+multiplier, so the transaction feed is about 8 statistics x 48 transactions and the request feed about
+8 x 163 request combinations, roughly 1,700 custom metrics on top of the 7,952. Both are one-shot, so
+they exist for a single clock hour per run.
 
 The lever that matters is **run frequency, not tag cardinality**: VU count and run length change how
-many samples land in each series, not how many series exist. Even a continuous schedule stays inside
-the allotment at this footprint.
+many samples land in each series, not how many series exist. Even running continuously, 24/7, the average would be the
+plateau itself, 7,711, a fifth of the allotment, so no run cadence can produce an overage.
 
 Full derivation, the per-metric breakdown, the two Datadog contract models, and the levers if it ever
 needs cutting are in [docs/datadog-cost-model.md](./datadog-cost-model.md).
@@ -512,7 +591,8 @@ needs cutting are in [docs/datadog-cost-model.md](./datadog-cost-model.md).
   The `k6perf.` prefix restores them, now confirmed rather than inferred: read back against their own
   `k6-metrics.json.gz`, Min, Max, Avg and Count are exact to 0.00% on all 25 rows of both detail tables,
   and `max:` returns the true slowest request instead of an interval sum. What remains is the percentile
-  resolution limit above, not a namespace problem.
+  resolution limit above, not a namespace problem, and the exact per-request feed now answers it on the
+  table below the sketch one, at the price of only appearing once the run ends.
 - **No retry buffer.** Without an Agent, a network blip mid-run leaves a gap in the live dashboard.
   Accepted deliberately: the dashboard is a sanity check, and the artifacts are unaffected.
 - **The generator is still not a monitored host.** Its CPU, RAM and network now stream as custom metrics
