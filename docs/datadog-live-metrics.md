@@ -75,9 +75,9 @@ the same run read 0.29 req/s at 15 minutes and 3.67 req/s at 8.
 
 Pin the bucket instead. `.as_count().rollup(sum, 60)` fixes the interval ourselves, so nothing is
 inferred and the value cannot change with the zoom. The dashboard's throughput panels are therefore
-denominated **per minute**, which also keeps scalar arithmetic out of the widget query. Ratio panels
-(error rate, check failure rate) are immune either way, since an identical distortion in numerator and
-denominator cancels in the division.
+denominated **per minute**, so no rate arithmetic is inferred. Ratio panels (error rate, check
+failure rate) are immune either way, since an identical distortion in numerator and denominator
+cancels in the division.
 
 A fixed bucket also reads _differently from k6's summary, and more usefully_: mid-run minutes showed 0.87
 req/s where k6 reported 0.73 for the run as a whole, the difference being the partial minutes at ramp-up
@@ -85,6 +85,56 @@ and shutdown that the whole-run average folds in. Expect the first and last buck
 low for that reason.
 
 The same trap applies to the preset dashboard below, which uses `avg:` where it needs `sum:`.
+
+### The single-value failure tiles pin nothing
+
+Pinning the bucket has one exception, and it is the opposite failure. A `.rollup(sum, 60)` bucket is keyed
+by its start timestamp, so a scalar tile only sees buckets whose `:00` second falls inside its window, the
+same alignment rule the [percentile section](#percentiles-need-an-explicit-merging-rollup) describes. Over a
+window holding no minute boundary the rolled-up query returns nothing, and because these tiles wrap the
+result in `default_zero()` the gap renders as `0` on a green background: a clean bill of health over a
+window full of failures.
+
+Measured on the 40-second window `15:17:10-15:17:50` of the 2026-08-18 15:10 run:
+
+| Query                                                | Reads      |
+| ---------------------------------------------------- | ---------- |
+| `sum:k6perf.checks.total{condition:zero}.as_count()` | 2, correct |
+| the same, `+ .rollup(sum, 60)`                       | 0, green   |
+| `sum:k6perf.http_req_failed.total{…}.as_count()`     | 106        |
+| the same, `+ .rollup(sum, 60)`                       | blank      |
+
+**Failed** and **Dropped** carried the rollup until this check and read a green `0` over a 40-second window
+holding 10 real request failures. Dropping it costs nothing, because `.as_count()` already forces sum-based
+time aggregation and the two forms agree wherever both render: on aligned windows **Failed** read 24 both
+ways and **Dropped** 32 both ways. **Failed checks**, **Failed** and **Dropped** therefore all carry
+`.as_count()` with no rollup.
+
+This applies to scalar tiles only. The per-minute timeseries widgets keep the rollup, since a chart plots
+the buckets themselves rather than reducing them to one number, so a bucket the window excludes is a bar not
+drawn rather than a total understated. Counts that are not `.as_count()`-based, `count:` on a distribution
+as above, still need the pinned bucket for the reason given there.
+
+### Per-minute figures average active minutes only
+
+The `/min` figures reduce the pinned 60s bucket with the `avg` aggregator, and Datadog averages only the
+buckets that exist. A minute carrying no traffic is absent rather than zero, so it never pulls the mean
+down, and under per-iteration pacing the figure sits above the whole-run rate: the validation run read
+121 transactions/min against a whole-run 89. That is the more useful number for judging in-flight
+throughput, but it is not the run average and the two should not be read against each other. Both the
+tiles and the matching table columns are therefore named `/active min`, so the caveat travels with the
+figure instead of living in a widget title that a table column does not inherit.
+
+### Throughput tiles are labelled in MB
+
+`data_received` and `data_sent` are byte counters, and neither carries unit metadata in Datadog:
+`unit` reads null on both, and there is no API in the MCP surface to set it. A raw tile therefore
+rendered `791.6 M` with nothing to say what was being counted. The two Throughput tiles divide by
+1e6 in the query and label the result `MB`, using decimal scaling to match k6's own summary so the
+tile and the published artifact can be read against each other. The conversion is exact: the
+791,579,022 bytes Datadog holds for build `20260817.1` render as 791.6 MB, and the per-active-minute
+tile as 158.3 MB. The cost is resolution at the bottom of the range, since a run that moves under a
+megabyte reads 0.0.
 
 ### Averages need a sum/count formula, not `avg:`
 
@@ -120,16 +170,114 @@ An explicit `.rollup(<interval>)` merges the sketches inside each bucket, and re
 reports the worst bucket:
 
 ```
-p95:k6perf.group_duration{…} by {scenario,group}.rollup(900)
+p95:k6perf.group_duration{…} by {scenario,group}.rollup(300)
 ```
 
-Two constraints, both measured. **The rollup must not exceed the dashboard's time window** or the widget
-returns nothing: `.rollup(1800)` read over a 15-minute view came back empty, and `.rollup(86400)` came
-back empty over an hour. And **a run straddling two buckets reads low**, because `max` picks the worse
-bucket rather than merging both: at `.rollup(1800)` the 11-minute validation run fell in one bucket and
-matched k6 within ~2%, while at `.rollup(900)` it split and the worst row read -21%. 900 is the
-compromise the dashboard ships with, since a blank widget is worse than a conservative number; widen it
-if the board is only ever read at an hour or more.
+Three constraints, all measured. **A bucket is keyed by its start timestamp**, at fixed multiples of the
+rollup interval from epoch, and a widget only sees buckets whose timestamp falls inside its window. A view
+that lands wholly between two boundaries therefore returns nothing however much data it holds. This is
+alignment, not width: on build `20260817.1`, `.rollup(900)` over `08:55-09:00` came back blank on all 47
+transactions, while `09:00-09:03`, a _shorter_ window, returned every one, because it contains the 09:00
+boundary. An earlier reading of this as "the rollup must not exceed the window" is wrong, and it matters
+because widening the window is not reliably the cure.
+
+And **the bucket must stay wide enough to resolve the tail.** At the 2-3 samples per minute this profile
+produces, a per-bucket percentile cannot see its own outlier, and reducing with `max` does not recover it
+because every thin bucket independently misses its own. Measured on `copyserviceorders_04_searchevent`:
+
+| Minute      | 08:55    | 08:56 | 08:57 | 08:58 | 08:59    | 09:00 |
+| ----------- | -------- | ----- | ----- | ----- | -------- | ----- |
+| samples     | 2        | 3     | 3     | 2     | 3        | 2     |
+| max (ms)    | **4731** | 1275  | 1224  | 1096  | **3393** | 1272  |
+| p95@60 (ms) | 1213     | 1232  | 1213  | 1096  | 1232     | 1221  |
+
+`.rollup(60)` reduced with `max` reports 1232 ms for that row against 3222 ms at `.rollup(300)`, a 62%
+understatement with a 4731 ms observation sitting in the window. Rows that are _consistently_ slow agree
+across intervals, so a spot check on one or two rows will not surface this; it only bites the rows whose
+slowness is intermittent, which are the ones the board exists to find. Do not lower the interval to 60.
+
+Finally, **a run straddling two buckets reads low**, because `max` picks the worse bucket rather than
+merging both: at `.rollup(1800)` the 11-minute validation run fell in one bucket and matched k6 within
+~2%, while at `.rollup(900)` it split and the worst row read -21%.
+
+**300 is the interval the dashboard ships with**, and it buys short-window rendering at a real cost to
+the whole-run tail. Compared cell for cell on build `20260817.1` over the whole run, `.rollup(300)` and
+`.rollup(900)` returned the same value on all 47 transactions and all 45 requests across every percentile
+column (p50/p90/p95/p99), the largest divergence anywhere being 1.4e-5 ms of floating-point noise. **That
+equivalence does not generalise**, and reading it as "300 costs nothing" is the trap. Build `local-3`, an
+8-minute run that fell inside a single 900s bucket but split across two 300s ones, diverged on 6 of 83
+rows, five of the six reading lower at 300:
+
+| row                           | `.rollup(300)` | `.rollup(900)` | change |
+| ----------------------------- | -------------- | -------------- | ------ |
+| `saveeventcopy`               | 6780.8 ms      | 12413.2 ms     | -45.4% |
+| `t004_copyevent_06_clicksave` | 8041.7 ms      | 12413.2 ms     | -35.2% |
+| `readreportmastergrid`        | 761.9 ms       | 849.2 ms       | -10.3% |
+| `signout`                     | 456.7 ms       | 356.4 ms       | +28.2% |
+
+Both readings trace to real observations, so neither is invalid by the traceability rule below; the true
+95th-percentile sample for `saveeventcopy` was 15894.9 ms and _both_ intervals under-read it. This is the
+straddling effect above, one interval down, and it is why a whole-run percentile here is a live signal
+rather than the tail figure of record. That figure comes from the exact feed in the next section.
+
+The trade is deliberate. A window that renders low is recoverable by widening it; a window that renders
+blank looks like a broken query, which is the failure that prompted the change. 300 also narrows the
+blank-window risk from "any view under 15 minutes missing a :00/:15/:30/:45 boundary" to "any view under
+5 minutes missing a :00/:05/:10 boundary". The two p95 timeseries widgets use the same 300 for the same
+reason; they previously ran at `.rollup(60)`, which is why they disagreed with the tables.
+
+### The exact whole-run tail arrives as a third feed
+
+Everything above bounds how good a sketch estimate can be. None of it makes one exact, and at this
+profile's sample counts nothing can: a `.rollup(300)` bucket holds 6-9 samples per row, which is both why
+p90, p95 and p99 collapse onto a single number and why the interval choice moves the answer by 45%.
+
+The obvious escape route, dropping the rollup so Datadog merges the whole window into one sketch, does not
+exist. Measured over the whole 12-minute `local-3` run:
+
+| row                                   | no rollup | `.rollup(300)` | `.rollup(900)` | `max:`   |
+| ------------------------------------- | --------- | -------------- | -------------- | -------- |
+| `t004_copyevent_06_clicksave`         | 17552 ms  | 8041.7 ms      | 12413.2 ms     | 17552 ms |
+| `t31_roomdiagramfilestorage_02_login` | 22409 ms  | 1290.7 ms      | 1290.7 ms      | 22409 ms |
+| `t002_bookingevent_02_login`          | 21525 ms  | 1176.0 ms      | 1176.0 ms      | 21525 ms |
+
+Without a merging rollup each export interval's sketch is evaluated on its own and `max` picks the largest,
+so the column degenerates into the Max column: it equalled `max:` to the decimal on 40 of 48 rows.
+
+So the exact figures are computed outside Datadog and posted in. `group-aggregator.cjs` already reproduces
+k6's own `TrendSink.P` interpolation over every `group_duration` sample in the run for the artifact table;
+it now writes those same statistics a second time to `reports/metrics/group-series.csv`, keyed by scenario
+and transaction, and `summary-forwarder.cjs` posts that file once when the run ends as `k6perf.transaction.*`
+gauges:
+
+```
+max:k6perf.transaction.p95{$service,$site,$scenario,$build_number} by {scenario,transaction}
+```
+
+A gauge needs no merging, so there is no rollup, no bucket alignment and no sample-count floor. Read back
+against `local-3`'s own `group-series.csv`, all 48 rows and all eight statistics matched to the decimal:
+
+| row                           | exact       | `.rollup(300)` | `.rollup(900)` |
+| ----------------------------- | ----------- | -------------- | -------------- |
+| `t004_copyevent_06_clicksave` | 13225.91 ms | 8041.7 ms      | 12413.2 ms     |
+| `t30_crystalreport_02_login`  | 21899.58 ms | 21691.29 ms    | 21691.29 ms    |
+| `t002_bookingevent_02_login`  | 4234.15 ms  | 1176.0 ms      | 1176.0 ms      |
+
+Two properties to know about it.
+
+**The points land when the run ends.** There is one value per transaction per run, so the table is empty
+while a run is in flight and does not respond to zooming into a sub-window. That is what the sketch table
+is for, and the two sit together in the Transactions group for that reason.
+
+**An empty tag cell drops the tag rather than inventing a value.** k6 omits `scenario` on `setup()` and
+`teardown()` groups, so those rows carry no scenario tag and render as `N/A`, matching how the live feed
+reports the same points.
+
+The feed is gated by the same `DD_API_KEY` flag as the other two. `run-k6.ps1` writes the tag string to
+`temp/dd-tags.txt` only while streaming and removes it otherwise, so a stale file cannot tag a later run's
+summary with the wrong build, and the forwarder skips silently when either that file or the key is absent.
+`group-metrics.csv`, the NeoLoad-diff artifact, is byte-identical either way. `med` is forwarded alongside
+the rest but not currently shown, so adding a p50 column is a dashboard-only change.
 
 ### A Datadog percentile is a sketch estimate, so validate it by traceability
 
@@ -153,12 +301,14 @@ one-interval tolerance**, since the exporter batches every 10s and pushes a samp
 `07:39` bucket; without the tolerance, boundary points read as mismatches and a run's first partial minute
 reads as a missing point.
 
-**The p99 column is finer-grained than the data supports.** At 21-31 samples per row per 900s bucket the
+**The p99 column is finer-grained than the data supports.** At the 6-9 samples per row a 300s bucket holds the
 sketch cannot separate adjacent percentiles, and on 14 of 25 rows two adjacent columns returned an
 identical value (usually p95 and p99). The `neoload` profile yields the same order of samples per bucket,
 so this is the steady-state behaviour rather than an artifact of a short validation run. The numbers are
 accurate; it is the apparent precision that misleads, so read p99 per row as "somewhere in the tail"
-rather than as a distinct figure from p95.
+rather than as a distinct figure from p95. For the same reason the tables ship `p90`/`p95`/`p99` and no
+`p50`: on a load run the median is already answered by the `Avg (ms)` column beside it, and the figures
+worth reading here are the ones in the tail.
 
 ### Zero-filling belongs on tiles, not on grouped tables
 
@@ -186,6 +336,30 @@ single-value tile has no rows to invent, and those read from a `condition:nonzer
 does not exist on a clean run, so without it "no failures" and "query broken" look identical. The cost is
 that they read `0` rather than blank when no run is in the window, which is the right trade for a tile and
 the wrong one for a table.
+
+### The request-time breakdown is average-based, not percentile-based
+
+k6 submits every request-timing component, and `http_req_duration` is exactly
+`http_req_sending + http_req_waiting + http_req_receiving`. The **Where request time goes** chart stacks
+those three as areas so the stack height is the average request duration, and carries
+`http_req_blocked + http_req_connecting + http_req_tls_handshaking` as a separate dashed line, since
+connection setup sits outside `http_req_duration` and stacking it would misstate the total.
+
+The identity holds to the last digit and is worth re-checking if the chart is ever rebuilt: on build
+`20260817.1` the three bands summed to 22.567696761336798 ms against a measured mean duration of
+22.56769676133679 ms, and the per-minute series matched `http_req_duration` on all six buckets.
+
+The bands are averages, and they have to be. `k6perf.http_req_waiting` has percentile aggregation
+disabled (`is_percentiles_enabled: false`), so a `pNN:` query against it returns nothing; only
+`http_req_duration` and `group_duration` carry the toggle. Enabling it on the component metrics is
+possible but forward-only with no backfill, so any percentile view of the breakdown would start blank.
+Averages need no toggle, and they follow the sum/count rule above rather than an `avg:` prefix.
+
+What the chart is for is telling a server-side slowdown from a transport one. On a warm run the split is
+lopsided, 92.2% server wait against 7.1% response transfer and 0.7% request send, with connection setup
+at 0.04 ms because connections are reused. The signal is in the shape changing: the opening minute of the
+2026-08-12 run shows 428 ms of connection setup against roughly 0.2 ms once warm, which is what
+connection establishment looks like before the pool fills.
 
 ### The `k6.` namespace belongs to the k6 integration
 
@@ -303,17 +477,23 @@ minute of the first export. Two things are not:
 
 ## Cost
 
-Negligible, because of how Datadog counts. Billable custom metrics are "the total of all distinct
-custom metrics for each hour in a given month, divided by the number of hours in the month". The load
-pipeline is manually queued at roughly 40 minutes per run, so the series exist for only a couple of
-clock hours per run:
+Negligible today, and structurally hard to make expensive. Billable custom metrics are "the total of
+all distinct custom metrics for each hour in a given month, divided by the number of hours in the
+month", and the load pipeline is manually queued, so the series exist for only a couple of clock hours
+per run.
 
-```
-3,000 series x 8 active hours / 730 hours in a month = ~33 billable custom metrics
-```
+Measured on build `20260817.1`, the five-flow profile resolves to 2,101 timeseries, which bill as
+**7,952 custom metrics** once the distribution multiplier is applied (5x per distribution timeseries,
+10x where percentile aggregation is enabled). Datadog's own hourly meter agreed, reading 7,686 / 7,711 /
+7,584 over the three hours the run was live against a ~139 baseline. Over August month to date that
+came to 75 on a monthly average of 224, against an allotment of at least 10,000.
 
-The lever that matters is **run frequency, not tag cardinality**. Putting this pipeline on a schedule
-that runs continuously is what would turn a rounding error into a real line item.
+The lever that matters is **run frequency, not tag cardinality**: VU count and run length change how
+many samples land in each series, not how many series exist. Even a continuous schedule stays inside
+the allotment at this footprint.
+
+Full derivation, the per-metric breakdown, the two Datadog contract models, and the levers if it ever
+needs cutting are in [docs/datadog-cost-model.md](./datadog-cost-model.md).
 
 ## Known limits
 
@@ -322,9 +502,11 @@ that runs continuously is what would turn a rounding error into a real line item
   bucket. Base2 exponential histograms removed that (0.3-1.1% bucket width at the scales k6 picks), and
   a run read back against its own JSON firehose now matches on every count and total and to ~2% on
   merged percentiles. What remains is query-side: percentiles cannot be merged across an arbitrary
-  window, only across a fixed rollup that must fit inside the view, so a Datadog percentile is always
-  "the worst N-minute window" rather than the whole run. The published artifacts stay the reporting
-  source of truth for that reason, not because the data on the wire is lossy.
+  window, only across a fixed rollup whose bucket boundary must fall inside the view, so a sketch percentile is always
+  "the worst N-minute window" rather than the whole run. The whole-run figure reaches the board as a
+  separate end-of-run feed instead (see [the third feed](#the-exact-whole-run-tail-arrives-as-a-third-feed)),
+  which is exact but does not move with the window. The published artifacts stay the reporting source of
+  truth regardless, not because the data on the wire is lossy.
 - **Per-request Min, Max and percentiles are only as good as the namespace.** They were unusable while
   the metrics sat under `k6.` (see [the namespace section](#the-k6-namespace-belongs-to-the-k6-integration)).
   The `k6perf.` prefix restores them, now confirmed rather than inferred: read back against their own

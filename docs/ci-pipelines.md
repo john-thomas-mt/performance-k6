@@ -133,9 +133,10 @@ Three background processes are started before k6 and killed in a `finally` block
   `--address` and `--profiling-enabled` expose. This measures the load generator, not the system
   under test, and it is how generator saturation is distinguished from application slowness.
 - The **metric forwarder** tails the resource CSV and posts gauges to Datadog. It only starts when
-  streaming is on.
+  streaming is on. Its end-of-run counterpart, the **summary forwarder**, runs later as a reporting
+  step rather than alongside k6, because the figures it posts do not exist until the run is over.
 
-**The streaming gate.** One flag, `$streamToDatadog`, gates both live feeds, and an unset
+**The streaming gate.** One flag, `$streamToDatadog`, gates all three feeds, and an unset
 `DD_API_KEY` is the off switch. The check is not a simple truthiness test: an undefined Azure
 pipeline variable arrives as the literal string `$(DD_API_KEY)`, so the `-notmatch '^\$\('` clause is
 what keeps that case on the skip path instead of streaming with a junk key.
@@ -145,7 +146,10 @@ rather than camelCase, and `site=PERF` reads back as `site:perf`. A hand-typed `
 silently matches nothing. The release version is deliberately not tagged on the k6 feed:
 `service.version` already surfaces it as the `version` tag, and a second copy would drift. The
 forwarder's tags are set to mirror what OTLP derives from the resource attributes, because the
-dashboard's template variables have to filter both feeds identically.
+dashboard's template variables have to filter every feed identically. That tag string is handed to the
+summary forwarder through `temp/dd-tags.txt` rather than recomposed by the reporting step, so the
+service-naming convention stays in one place, and its absence is what tells that step this run had no
+live feed to sit beside.
 
 **Failure warnings.** Both feeds log their failures and keep going: k6 logs an OTLP export failure at
 info level and still exits 0. Without the post-run log scan, a bad key or blocked egress would leave
@@ -172,7 +176,11 @@ zero traffic, so the generated reports can state what actually ran. It reads `te
 
 The group aggregator turns the k6 JSON firehose into per-transaction `group_duration` timings, so
 each k6 group compares one-to-one with its NeoLoad transaction. It emits a CSV for diffing against a
-NeoLoad export plus an HTML table matching the other artifacts.
+NeoLoad export plus an HTML table matching the other artifacts, and a third CSV keyed by scenario and
+transaction that the summary forwarder posts to Datadog in the same step. Those percentiles are computed
+over every sample in the run, so unlike the live feed they are exact and do not shift with the dashboard
+window. Splitting the two CSVs keeps the NeoLoad-diff artifact byte-identical whether or not the run
+streamed.
 
 All reporting steps run on `condition: always()`, so a failed or threshold-breaching run still
 publishes its diagnostics.
