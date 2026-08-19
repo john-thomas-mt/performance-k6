@@ -2,8 +2,13 @@
 // Every k6 group() emits a group_duration Point tagged with the group name; think() sits between
 // groups, so group_duration is pure in-transaction wall-clock — the 1:1 analog of a NeoLoad
 // transaction. Streams the (optionally gzipped) firehose line-by-line so a multi-hundred-MB output
-// never lands in memory, buckets group_duration by its group tag, and writes a CSV (for diffing
-// against a NeoLoad export) plus an HTML table (matching the other k6-results artifacts).
+// never lands in memory, buckets group_duration by its scenario and group tags, and writes a CSV (for
+// diffing against a NeoLoad export) plus an HTML table (matching the other k6-results artifacts).
+//
+// A third output, group-series.csv, carries the same statistics keyed by scenario and transaction for
+// summary-forwarder.cjs to post to Datadog. Those percentiles are computed over every sample in the run,
+// so they are the exact figures the dashboard's live sketch estimates can only approximate
+// (docs/datadog-live-metrics.md). Keeping the two CSVs apart holds the NeoLoad-diff artifact's shape fixed.
 const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
@@ -18,6 +23,7 @@ const [
   htmlPath = 'reports/metrics/group-metrics.html',
   specPath = '',
   execReqPath = '',
+  seriesPath = 'reports/metrics/group-series.csv',
 ] = process.argv;
 
 fs.mkdirSync(path.dirname(htmlPath), { recursive: true });
@@ -53,7 +59,9 @@ function stats(values) {
 }
 
 const COLS = ['count', 'avg', 'min', 'med', 'p90', 'p95', 'p99', 'max'];
-const groups = new Map();
+// Bucketed by scenario and then by group: the forwarded series needs a scenario tag matching what the
+// live OTLP feed carries, while the CSV and HTML below merge those buckets back down to group alone.
+const scenarios = new Map();
 
 function record(line) {
   if (!line || line.charCodeAt(0) !== 123) return; // 123 = '{'; skip blanks/non-object lines fast
@@ -70,10 +78,18 @@ function record(line) {
   if (typeof value !== 'number' || Number.isNaN(value)) return;
   let name = (data.tags.group || '').replace(/^(::)+/, ''); // top-level group tag is '::<name>'
   if (!name) name = '(root)';
-  let arr = groups.get(name);
+  // k6 omits the scenario tag on setup()/teardown() groups, so that bucket's scenario stays empty and
+  // the forwarder drops the tag rather than inventing a scenario the live feed does not report.
+  const scenario = data.tags.scenario || '';
+  let byGroup = scenarios.get(scenario);
+  if (!byGroup) {
+    byGroup = new Map();
+    scenarios.set(scenario, byGroup);
+  }
+  let arr = byGroup.get(name);
   if (!arr) {
     arr = [];
-    groups.set(name, arr);
+    byGroup.set(name, arr);
   }
   arr.push(value);
 }
@@ -82,11 +98,40 @@ function num(v) {
   return v.toFixed(2);
 }
 
+function mergedByGroup() {
+  const merged = new Map();
+  for (const byGroup of scenarios.values()) {
+    for (const [name, values] of byGroup) {
+      let arr = merged.get(name);
+      if (!arr) {
+        arr = [];
+        merged.set(name, arr);
+      }
+      for (const value of values) arr.push(value);
+    }
+  }
+  return merged;
+}
+
+function writeSeries() {
+  const lines = [];
+  for (const scenario of [...scenarios.keys()].sort()) {
+    const byGroup = scenarios.get(scenario);
+    for (const name of [...byGroup.keys()].sort()) {
+      const s = stats(byGroup.get(name));
+      lines.push([scenario, name, s.count, ...COLS.slice(1).map((c) => num(s[c]))].join(','));
+    }
+  }
+  fs.writeFileSync(seriesPath, ['scenario,transaction,' + COLS.join(','), ...lines].join('\n') + '\n');
+}
+
 function finish() {
+  const groups = mergedByGroup();
   const rows = [...groups.keys()].sort().map((name) => ({ name, ...stats(groups.get(name)) }));
 
   const csvBody = rows.map((r) => [r.name, r.count, ...COLS.slice(1).map((c) => num(r[c]))].join(',')).join('\n');
   fs.writeFileSync(csvPath, ['group,' + COLS.join(','), csvBody].filter(Boolean).join('\n') + '\n');
+  writeSeries();
 
   const exec = readExecReq(execReqPath);
   const style =
@@ -118,7 +163,7 @@ function finish() {
   }
 
   fs.writeFileSync(htmlPath, page(TITLE, style + body));
-  console.log(`Wrote ${csvPath} and ${htmlPath} (${rows.length} transactions)`);
+  console.log(`Wrote ${csvPath}, ${htmlPath} and ${seriesPath} (${rows.length} transactions)`);
 }
 
 if (!fs.existsSync(inputPath)) {

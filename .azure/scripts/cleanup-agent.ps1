@@ -6,7 +6,7 @@ param(
   [string]$ReportsRoot = 'reports'
 )
 
-foreach ($f in 'temp/secret.json', 'temp/setup.json', 'temp/exec-req.json') {
+foreach ($f in 'temp/secret.json', 'temp/setup.json', 'temp/exec-req.json', 'temp/dd-tags.txt') {
   if (Test-Path $f) { Remove-Item -Path $f -Force }
 }
 

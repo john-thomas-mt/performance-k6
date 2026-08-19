@@ -33,6 +33,10 @@ $gcCsv = Join-Path $resourcesDir 'gc-usage.csv'
 $consoleLog = Join-Path $logsDir 'k6-console.log'
 $forwarderLog = Join-Path $logsDir 'metric-forwarder.log'
 $k6Address = '127.0.0.1:6565'
+# Read after the run by summary-forwarder.cjs, which posts the exact per-transaction percentiles
+# group-aggregator.cjs computes. Written only while streaming and removed otherwise, so one flag still
+# gates every feed and a stale file cannot tag a later run's summary with the wrong build.
+$ddTagsFile = Join-Path 'temp' 'dd-tags.txt'
 
 # Mirrors the app's own APM service naming so k6 metrics sort beside the service under test, prefixed
 # k6/ so a load generator is never mistaken for an application.
@@ -104,8 +108,13 @@ if ($streamToDatadog) {
   $forwarderTags = "service:$datadogService,env:$DatadogEnv,version:$ReleaseVersion,site:$Site,build_number:$BuildNumber"
   $forwarderArgs = @((Join-Path $PSScriptRoot 'metric-forwarder.cjs'), $resourceCsv, 'k6perf.agent.', '10', $forwarderTags)
   $forwarder = Start-Process node -ArgumentList $forwarderArgs -PassThru -NoNewWindow -RedirectStandardError $forwarderLog
+  # Handed to the post-run summary feed through a file rather than recomposed by its caller, so the
+  # service-naming convention above stays in one place.
+  New-Item -ItemType Directory -Force -Path 'temp' | Out-Null
+  Set-Content -Path $ddTagsFile -Value $forwarderTags -Encoding utf8
   Write-Host "Streaming live metrics to Datadog as service '$datadogService'"
 } else {
+  if (Test-Path $ddTagsFile) { Remove-Item $ddTagsFile -Force }
   Write-Host 'DD_API_KEY not set - skipping Datadog streaming (published artifacts are unaffected)'
 }
 
