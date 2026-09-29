@@ -33,16 +33,6 @@ function extract_encrypted_sn(body: JSONValue) {
   return item ? (item.EncryptedSN as string) : null;
 }
 
-export function sign_in(username: string, password: string, version: string) {
-  const res = post_sign_in(username, password, version);
-
-  const token = extract_bearer_token(res.json());
-  check(token, { 'SignIn: bearer token present': (t) => t !== null });
-  if (!token) fail('sign_in: could not extract bearer token from response');
-
-  return token;
-}
-
 export function sign_in_session(username: string, password: string, version: string) {
   const res = post_sign_in(username, password, version);
 
@@ -58,32 +48,6 @@ export function sign_in_session(username: string, password: string, version: str
   if (!encUserId) fail('sign_in_session: could not extract EncryptedSN');
 
   return { bearerToken, encUserId, ssoToken };
-}
-
-export function ma_authenticate(bearerToken: string, version: string) {
-  const res = http.post(`${config.baseUrl}/api/MomentusAssistantServer/Authenticate`, null, {
-    headers: build_headers(bearerToken, version),
-    tags: { name: 'MAAuthenticate' },
-  });
-
-  const ok = check(res, {
-    'MAAuthenticate: status is 201': (r) => r.status === 201,
-    'MAAuthenticate: returns JWT array': (r) => {
-      try {
-        const body = r.json();
-        return Array.isArray(body) && body.length > 0 && typeof body[0] === 'string';
-      } catch {
-        return false;
-      }
-    },
-  });
-
-  if (!ok) {
-    console.error(`[VU ${__VU}] ma_authenticate failed — HTTP ${res.status}: ${body_text(res)}`);
-    fail('ma_authenticate did not succeed');
-  }
-
-  return (res.json() as string[])[0];
 }
 
 export function sign_out(token: string, version: string, name = 'SignOut') {

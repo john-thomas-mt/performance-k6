@@ -25,9 +25,7 @@ Read what you need under `source/` and return this digest, tightly:
 - **Closest journey template**: the existing `source/flows/*.flow.ts` whose shape best matches the
   requested flow, named, with its group spine (e.g. "login → create(Save2) → search(GetGridData2) →
   detail(GetInitialData2)") so the author can mirror it.
-- **Login entry**: which `login.flow.ts` export to use (`login_to_events` vs
-  `login_to_momentus_assistant`) and why (core-app bearer token vs sales-ai JWT), and whether
-  `encUserId` is needed.
+- **Login entry**: `login_to_events` from `login.flow.ts`, and whether `encUserId` is needed.
 - **Data-builder shape**: for any captured-payload builder the author will model against, describe its
   *structure* (payload arrow at top, extracted `: TransportTable` builder below, which cell carries the
   parameterized value) — do NOT reproduce the column list.

@@ -19,8 +19,7 @@ each folder's own rule file (`rules/apis.md`, `rules/flows.md`, `rules/helpers.m
 ## Correlation — never hardcode dynamic values
 Every value the server generates must be extracted at runtime from a prior response:
 - App `version` header → `fetch_server_version()` (regex on `app85.cshtml`); throws if the page fetch fails or the `?v=` token is missing (no static fallback)
-- Momentus bearer token (`<id>|<hex>`) → `sign_in()` response
-- Sales-ai JWT → `ma_authenticate()` response
+- Momentus bearer token (`<id>|<hex>`) → `sign_in_session()` response
 - Sales-ai `tenantId` → decoded from the sales-ai JWT's `tenant_id` claim via `tenant_id_from_jwt()`; throws if the claim is absent (no static fallback)
 - `traceId` → upload/submit responses; reuse it for follow-up status requests
 Client-generated values (`x-nonce`, `wsid`, sessionIds, timestamps) are produced fresh per request with `crypto.randomUUID()` / `new Date()`, never copied from a capture.
