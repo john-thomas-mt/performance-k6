@@ -77,3 +77,4 @@ export * from '../../data/pools/be-search-account.data.ts';
 export * from '../../data/pools/search-random-event.data.ts';
 export * from '../../data/pools/crystal-report-scope.data.ts';
 export * from '../../data/pools/lead-account.data.ts';
+export * from '../../data/pools/service-orders.data.ts';
