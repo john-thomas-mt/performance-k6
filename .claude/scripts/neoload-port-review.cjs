@@ -276,6 +276,21 @@ for (const r of spineReqs.filter((x) => x.cls === 'SPINE' && x.template && x.tem
   }
 }
 if (!leaks) ok(`no recorded token value found in ${scopedText.length} reached k6 files (${aligned} templated bodies aligned)`);
+const handWritten = scopedText.filter(({ f }) => !/[\\/]data[\\/]payloads[\\/]/.test(f));
+const LITERALS = [
+  [/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i, 'GUID'],
+  [/\b\d+\|[A-Za-z0-9+/=]{16,}/, 'bearer-token'],
+];
+let literals = 0;
+for (const { f, lines } of handWritten)
+  lines.forEach((l, i) => {
+    for (const [re, what] of LITERALS)
+      if (re.test(l)) {
+        literals++;
+        flag(`${what} literal at ${rel(f)}:${i + 1}`);
+      }
+  });
+if (!literals) ok(`no GUID or bearer-token literal in the ${handWritten.length} hand-written k6 files`);
 if (unaligned.length) info(`could not align ${unaligned.length} templated bodies to their recording: ${unaligned.join(', ')}`);
 
 // ---- 5. variables / data pools ------------------------------------------------------------------

@@ -46,6 +46,7 @@ How to read the common FLAGs:
 | spine endpoint `NeoLoad ×n, k6 ×m` | a later write consumes its extract (see §3 of the output) | pure UI paint the classifier missed — say which |
 | `in k6, not recorded in this step` | the call moved to the wrong group (timings mis-attributed) | it's a shared helper fired at a step boundary |
 | token-literal leak | the value is server-minted or per-record (ids, keys, stamps, names that must be unique) | it's the recorder's typed input the server only echoes back, identical every run |
+| GUID / bearer-token literal | a session token, API key or record GUID pasted into a flow, wrapper or type file | a fixed schema or app id the server expects on every call — cite where it's constant |
 | consumed but extracted nowhere | nothing in k6 produces the value | a jsAction or the `_N` occurrence of a multi-match extractor produces it |
 | pool rows differ | truncated or retyped pool | the module header documents a deliberate filter — check the reason still holds |
 | pool across versions `DIFFERS` | the journey runs on a version whose rows are not the ported ones | rows are env-independent or discovered at runtime |
