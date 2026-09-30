@@ -162,3 +162,5 @@ Final structural pass against the auto-loaded rules. Delegate the compliance sca
 Report: NeoLoad steps ported vs dropped-as-chrome, wrappers reused vs created, **data pools ported (variable → module → row count, and any left to runtime seed discovery)**, correlation decisions (and any NeoLoad smells corrected), the 3-step results, and the run commands.
 
 The 3-step run proves the journey on `main` only. NeoLoad re-recorded per version precisely because it couldn't parameterize this; k6 can. Offer to hand off to `verify-envs` — targeting **the journey just ported** (pass its scenario name automatically; don't make the user restate it) — to prove the port trickles down across the `ReleaseVersion` matrix and surface any cross-version drift. A separate, user-approved traffic run, not part of this skill.
+
+Also suggest `/neoload-port-review <journey>` in a **fresh session** — a zero-traffic second look against the recording that doesn't inherit this session's assumptions.

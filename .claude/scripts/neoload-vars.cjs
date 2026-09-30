@@ -260,6 +260,10 @@ const refsInTree = (treeDir) => {
     }
   };
   walk(treeDir);
+  const vuXml = `${treeDir.replace(/[\\/]+$/, '')}.xml`;
+  if (fs.existsSync(vuXml)) {
+    for (const m of fs.readFileSync(vuXml, 'utf8').matchAll(/\$\{(P_[A-Za-z0-9_]+)(?:\.([A-Za-z0-9_]+))?\}/g)) add(m[1], m[2]);
+  }
   return refs;
 };
 
@@ -356,6 +360,7 @@ module.exports = {
   poolValues,
   poolReport,
   kebab,
+  commonPrefix,
 };
 
 // ---- CLI ---------------------------------------------------------------------------------------
