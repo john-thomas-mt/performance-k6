@@ -13,6 +13,8 @@ import {
   bookEventThresholds,
   lead_account_journey,
   leadAccountThresholds,
+  contact_service_order_journey,
+  contactServiceOrderThresholds,
   loginThresholds,
 } from '../utils/exports/flows.exp.ts';
 import { pick_user, fetch_server_version, decrypt_users } from '../utils/exports/helpers.exp.ts';
@@ -38,6 +40,7 @@ const allScenarios: { [scenario: string]: Scenario } = {
   room_diagram_upload: once('room_diagram_upload'),
   book_event: once('book_event'),
   lead_account: once('lead_account'),
+  contact_service_order: once('contact_service_order'),
 };
 
 const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
@@ -47,6 +50,7 @@ const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
   room_diagram_upload: roomDiagramUploadThresholds,
   book_event: bookEventThresholds,
   lead_account: leadAccountThresholds,
+  contact_service_order: contactServiceOrderThresholds,
 };
 
 const selected = __ENV.SCENARIO;
@@ -111,4 +115,8 @@ export function book_event(data: SmokeSetup) {
 
 export function lead_account(data: SmokeSetup) {
   lead_account_journey(pick_user(data.users), data);
+}
+
+export function contact_service_order(data: SmokeSetup) {
+  contact_service_order_journey(pick_user(data.users), data);
 }

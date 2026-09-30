@@ -53,6 +53,12 @@ const JOURNEY_SPINE = {
     '/api/USIMultiSelectSuperBoxPageServer/GetInitialData': ['08'],
     '/api/USIMultiSelectSuperBoxPageServer/save': ['08'],
   },
+  'contact-service-order': {
+    '/api/ObjectColumnCacheServer/GetObjectColumns': ['03', '06'],
+    '/api/GenericListServer/GetInitialData2': ['03', '05'],
+    '/api/USISearchComboServer/SaveRecentlyUsed': ['07'],
+    '/api/GenericDetailServer/HandleDependentFields2': ['07'],
+  },
 };
 // endpoints a later release drops but that still exist on an older *live* release — emit with a removedIn guard
 // so fire time skips them only where they're gone (version_at_least), keeping them on the releases that serve
