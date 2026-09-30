@@ -8,6 +8,8 @@ import {
   copyServiceOrdersThresholds,
   crystal_report_journey,
   crystalReportThresholds,
+  lead_account_journey,
+  leadAccountThresholds,
   room_diagram_upload_journey,
   roomDiagramUploadThresholds,
   discover_service_order_pool,
@@ -40,6 +42,7 @@ export const options: Options = {
     copy_event: scenario('copy_event'),
     copy_service_orders: scenario('copy_service_orders'),
     crystal_report: scenario('crystal_report'),
+    lead_account: scenario('lead_account'),
     room_diagram_upload: scenario('room_diagram_upload'),
   },
   thresholds: {
@@ -49,6 +52,7 @@ export const options: Options = {
     ...copyEventThresholds,
     ...copyServiceOrdersThresholds,
     ...crystalReportThresholds,
+    ...leadAccountThresholds,
     ...roomDiagramUploadThresholds,
     checks: ['rate>0.95'],
   },
@@ -84,6 +88,10 @@ export function copy_service_orders(data: SmokeSetup) {
 
 export function crystal_report(data: SmokeSetup) {
   pace(PACING, () => crystal_report_journey(pick_user(data.users), data));
+}
+
+export function lead_account(data: SmokeSetup) {
+  pace(PACING, () => lead_account_journey(pick_user(data.users), data));
 }
 
 export function room_diagram_upload(data: SmokeSetup) {

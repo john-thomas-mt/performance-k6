@@ -26,6 +26,7 @@ import {
   LeadFields,
   LeadFormLayout,
   LeadFormSession,
+  LeadSaveResponse,
   LeadSaveResult,
   LeadSearchComboRow,
 } from '../utils/exports/types.exp.ts';
@@ -198,31 +199,30 @@ export function save_lead(token: string, version: string, session: LeadFormSessi
     name,
   );
 
-  const result = () => (res.json() as LeadSaveResult[])[0];
-  const ok = check(res, {
-    [`${name}: ResultValue is 0 (success)`]: () => {
-      try {
-        return result().ResultValue === 0;
-      } catch {
-        return false;
-      }
-    },
-    [`${name}: returns new lead row key`]: () => {
-      try {
-        const k = result().AddedRowKeys;
-        return Array.isArray(k) && k.length > 0;
-      } catch {
-        return false;
-      }
-    },
+  let result: LeadSaveResult | undefined;
+  let leadId = '';
+  try {
+    const [saveResult, echo] = res.json() as LeadSaveResponse;
+    result = saveResult;
+    const leadTable = echo?.TransportDataTables[0];
+    leadId = leadTable ? get_cell(leadTable, 'CR870_LEAD_ID') : '';
+  } catch {
+    result = undefined;
+  }
+
+  const ok = check(result, {
+    [`${name}: ResultValue is 0 (success)`]: (r) => r?.ResultValue === 0,
+    [`${name}: returns new lead id`]: () => /^\d+$/.test(leadId),
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] save_lead failed — ${body_text(res).slice(0, 400)}`);
+    console.error(
+      `[VU ${__VU}] save_lead failed — ResultValue ${result?.ResultValue}, MessageInfoList ${JSON.stringify(result?.MessageInfoList ?? null)}: ${body_text(res).slice(0, 400)}`,
+    );
     fail(`${name} did not succeed`);
   }
 
-  return result().AddedRowKeys![0].split('|')[1];
+  return leadId;
 }
 
 export function open_lead_detail(
@@ -257,7 +257,9 @@ export function convert_lead_to_account(token: string, version: string, editWdwi
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] convert_lead_to_account failed for lead ${leadId} — ${body_text(res).slice(0, 400)}`);
+    console.error(
+      `[VU ${__VU}] convert_lead_to_account failed for lead ${leadId} — ResultValue ${result?.ResultValue}, MessageInfoList ${JSON.stringify(result?.MessageInfoList ?? null)}: ${body_text(res).slice(0, 400)}`,
+    );
     fail(`${name} did not succeed`);
   }
 }

@@ -2,9 +2,14 @@ import { TransportTable } from './common.type.ts';
 
 export type LeadSaveResult = {
   ResultValue: number;
-  AddedRowKeys: string[] | null;
   MessageInfoList?: { MessageKey?: string; MessageMode?: number }[] | null;
 };
+
+export type LeadSaveEcho = {
+  TransportDataTables: TransportTable[];
+};
+
+export type LeadSaveResponse = [LeadSaveResult, LeadSaveEcho];
 
 export type LeadConvertResult = {
   LeadID: string;
