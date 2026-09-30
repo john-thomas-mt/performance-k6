@@ -11,6 +11,8 @@ import {
   roomDiagramUploadThresholds,
   book_event_journey,
   bookEventThresholds,
+  lead_account_journey,
+  leadAccountThresholds,
   loginThresholds,
 } from '../utils/exports/flows.exp.ts';
 import { pick_user, fetch_server_version, decrypt_users } from '../utils/exports/helpers.exp.ts';
@@ -35,6 +37,7 @@ const allScenarios: { [scenario: string]: Scenario } = {
   crystal_report: once('crystal_report'),
   room_diagram_upload: once('room_diagram_upload'),
   book_event: once('book_event'),
+  lead_account: once('lead_account'),
 };
 
 const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
@@ -43,6 +46,7 @@ const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
   crystal_report: crystalReportThresholds,
   room_diagram_upload: roomDiagramUploadThresholds,
   book_event: bookEventThresholds,
+  lead_account: leadAccountThresholds,
 };
 
 const selected = __ENV.SCENARIO;
@@ -103,4 +107,8 @@ export function room_diagram_upload(data: SmokeSetup) {
 
 export function book_event(data: SmokeSetup) {
   book_event_journey(pick_user(data.users), data);
+}
+
+export function lead_account(data: SmokeSetup) {
+  lead_account_journey(pick_user(data.users), data);
 }
