@@ -153,6 +153,11 @@ Run each step via `k6-run-reporter` (hand it the exact command, and note the jou
 
 Loop rules (per `generate-test`): fix, re-run; if the fix touched correlation/shared state, re-run from step 1; cap at ~2–3 attempts per step, then surface to the user. A `p(95)` latency threshold crossing under 2-VU load is a performance observation, not a correctness failure — the ladder proves correctness, not SLO.
 
+**Verify the journey as ported.**
+- **The last ladder pass is on the final code.** If the flow or its wrappers change after a step passed, re-run that step and the ones after it (from step 1 if the change touched correlation or shared state). A type-only edit doesn't count.
+- **Keep the pool pick as NeoLoad makes it.** If a random pool row fails, never hard-wire the pick to the row NeoLoad recorded just to get a green run: that stops the port spreading load across the pool, and the bad rows fail anyway under load. Decode the failure, report the row and its `MessageKey`, and stop.
+- **The ladder is the only traffic.** Don't offer or recommend any other run: no pool sweeps, extra iterations or retests. The only exceptions are the §4a `FIDELITY=full` run (when the user chose tiers), the targeted live fallback below, and the §6 `verify-envs` hand-off offer.
+
 **Targeted live fallback:** if a step fails and decoding points to drift (the recorded shape no longer matches the current app), drive just that one request with `playwright-cli` to see the current traffic — not a full re-record (expect the first `open` to hit the SPA nav timeout — poll `snapshot` rather than retrying; see `generate-test` §1).
 
 ## 6. Refactor & report
@@ -163,4 +168,4 @@ Report: NeoLoad steps ported vs dropped-as-chrome, wrappers reused vs created, *
 
 The 3-step run proves the journey on `main` only. NeoLoad re-recorded per version precisely because it couldn't parameterize this; k6 can. Offer to hand off to `verify-envs` — targeting **the journey just ported** (pass its scenario name automatically; don't make the user restate it) — to prove the port trickles down across the `ReleaseVersion` matrix and surface any cross-version drift. A separate, user-approved traffic run, not part of this skill.
 
-Also suggest `/neoload-port-review <journey>` in a **fresh session** — a zero-traffic second look against the recording that doesn't inherit this session's assumptions.
+Also suggest `/neoload-port-review <journey>` in a **fresh session** — a zero-traffic second look against the recording that doesn't inherit this session's assumptions. Only suggest it: never run the review, or its script, in this session. The porting context would make it cost more and would bias the second look.
