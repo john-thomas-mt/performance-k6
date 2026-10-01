@@ -117,10 +117,12 @@ for (const file of srcFiles) {
   }
 }
 const ENDPOINT = /['"`](?:\$\{[^}]+\}\/api\/|\/?api\/)?([A-Z][A-Za-z0-9]+\/[A-Z][A-Za-z0-9_]+)(?=['"`?])/g;
+// the public REST API (/api/v1/Reports/10/204/RunReport) has more than two segments; key it the way the NeoLoad side does
+const PUBLIC_API_ENDPOINT = /\/api\/(v\d+(?:\/[A-Za-z0-9_]+)+)(?=['"`?])/g;
 // every call site counts, so a wrapper called twice (or two wrappers sharing one post helper) reaches its
 // endpoint twice; `stack` guards recursion only, `seen` collects every function reached for the later sections
 const reach = (text, seen = new Set(), stack = new Set()) => {
-  const endpoints = [...text.matchAll(ENDPOINT)].map((m) => m[1]);
+  const endpoints = [...text.matchAll(ENDPOINT), ...text.matchAll(PUBLIC_API_ENDPOINT)].map((m) => m[1]);
   if (stack.size > 5) return { endpoints, seen };
   for (const m of text.matchAll(/\b([a-z_][A-Za-z0-9_]*)\s*\(/g)) {
     const fn = m[1];
