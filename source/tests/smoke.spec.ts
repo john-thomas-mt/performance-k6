@@ -15,12 +15,14 @@ import {
   leadAccountThresholds,
   contact_service_order_journey,
   contactServiceOrderThresholds,
+  payment_receipt_report_journey,
+  paymentReceiptReportThresholds,
   loginThresholds,
 } from '../utils/exports/flows.exp.ts';
-import { pick_user, fetch_server_version, decrypt_users } from '../utils/exports/helpers.exp.ts';
+import { pick_user, fetch_server_version, decrypt_users, decrypt_api_credentials } from '../utils/exports/helpers.exp.ts';
 import { commonThresholds, config } from '../utils/exports/config.exp.ts';
 import { SmokeSetup } from '../utils/exports/types.exp.ts';
-import { userCredentials } from '../utils/exports/data.exp.ts';
+import { userCredentials, publicApiCredentials } from '../utils/exports/data.exp.ts';
 import { roomDiagramFiles } from '../data/uploads/events/room-diagrams.index.ts';
 
 const VUS = Number(__ENV.VUS) || 1;
@@ -41,6 +43,7 @@ const allScenarios: { [scenario: string]: Scenario } = {
   book_event: once('book_event'),
   lead_account: once('lead_account'),
   contact_service_order: once('contact_service_order'),
+  payment_receipt_report: once('payment_receipt_report'),
 };
 
 const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
@@ -51,6 +54,7 @@ const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
   book_event: bookEventThresholds,
   lead_account: leadAccountThresholds,
   contact_service_order: contactServiceOrderThresholds,
+  payment_receipt_report: paymentReceiptReportThresholds,
 };
 
 const selected = __ENV.SCENARIO;
@@ -60,6 +64,8 @@ if (selected && !allScenarios[selected]) {
 
 const soPoolScenarios = new Set(['copy_service_orders']);
 const needsSoPool = !selected || soPoolScenarios.has(selected);
+const apiCredentialScenarios = new Set(['payment_receipt_report']);
+const needsApiCredentials = !selected || apiCredentialScenarios.has(selected);
 
 const activeThresholds: { [metric: string]: string[] } = selected
   ? allThresholds[selected]
@@ -84,13 +90,14 @@ export async function setup() {
   if (users.length === 0) {
     throw new Error('data/creds/users.data.ts is empty — add at least one user entry');
   }
+  const apiCredentials = needsApiCredentials ? await decrypt_api_credentials(publicApiCredentials, cryptoKey) : null;
   const version = fetch_server_version();
   const soPool = needsSoPool ? discover_service_order_pool(version, users[0]) : [];
   console.log(`Server version: ${version}`);
   if (needsSoPool) {
     console.log(`Smoke: ${soPool.length} seeded service order(s) discovered`);
   }
-  return { version, users, soPool };
+  return { version, users, soPool, apiCredentials };
 }
 
 export function copy_event(data: SmokeSetup) {
@@ -119,4 +126,8 @@ export function lead_account(data: SmokeSetup) {
 
 export function contact_service_order(data: SmokeSetup) {
   contact_service_order_journey(pick_user(data.users), data);
+}
+
+export function payment_receipt_report(data: SmokeSetup) {
+  payment_receipt_report_journey(data);
 }
