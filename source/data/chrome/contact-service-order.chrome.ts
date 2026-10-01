@@ -144,6 +144,18 @@ export const contactServiceOrderChrome: { [step: string]: ChromeRequest[][] } = 
         body: '[\r\n\t"10",\r\n\t"GridSingleRowContextMenu",\r\n\t286,\r\n\t[\r\n\t\t{\r\n\t\t\t"Key": "OrgCode",\r\n\t\t\t"Value": "10"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "WindowObjectID",\r\n\t\t\t"Value": 286\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "wdwid",\r\n\t\t\t"Value": "ES8300"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "WdwType",\r\n\t\t\t"Value": 1\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "wdwMode",\r\n\t\t\t"Value": 0\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "RemoveEditLayoutLink",\r\n\t\t\t"Value": false\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "ContextObjectID",\r\n\t\t\t"Value": 0\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "AcctDesig",\r\n\t\t\t"Value": "C"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "MenuType",\r\n\t\t\t"Value": 1\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "MenuObjectID",\r\n\t\t\t"Value": 0\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "MenuContextObjectID",\r\n\t\t\t"Value": 0\r\n\t\t}\r\n\t],\r\n\t"[]",\r\n\t"",\r\n\t609,\r\n\t1,\r\n\t3,\r\n\tfalse\r\n]',
       },
     ],
+    [
+      {
+        method: 'GET',
+        path: '/api/WindowServer/GetWindowInfo?astrWindowID=ES8300',
+      },
+    ],
+    [
+      {
+        method: 'GET',
+        path: '/api/WindowServer/GetWindowInfo?astrWindowID=ES8300',
+      },
+    ],
   ],
   '04': [
     [
@@ -207,13 +219,6 @@ export const contactServiceOrderChrome: { [step: string]: ChromeRequest[][] } = 
         method: 'POST',
         path: '/api/ObjectColumnCacheServer/GetObjectColumns',
         body: '[1637,"",0,"",[]]',
-      },
-    ],
-    [
-      {
-        method: 'POST',
-        path: '/api/ObjectColumnCacheServer/GetObjectColumns',
-        body: '[1659,"",0,"",[]]',
       },
     ],
     [
@@ -365,6 +370,18 @@ export const contactServiceOrderChrome: { [step: string]: ChromeRequest[][] } = 
         body: '[\r\n\t"10",\r\n\t"GridSingleRowContextMenu",\r\n\t4,\r\n\t[\r\n\t\t{\r\n\t\t\t"Key": "OrgCode",\r\n\t\t\t"Value": "10"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "WindowObjectID",\r\n\t\t\t"Value": 4\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "wdwid",\r\n\t\t\t"Value": "EM8066"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "WdwType",\r\n\t\t\t"Value": 1\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "wdwMode",\r\n\t\t\t"Value": 0\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "RemoveEditLayoutLink",\r\n\t\t\t"Value": false\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "ContextObjectID",\r\n\t\t\t"Value": 0\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "MenuType",\r\n\t\t\t"Value": 1\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "MenuObjectID",\r\n\t\t\t"Value": 0\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "MenuContextObjectID",\r\n\t\t\t"Value": 0\r\n\t\t}\r\n\t],\r\n\t"[]",\r\n\t"",\r\n\t0,\r\n\t1,\r\n\t2,\r\n\tfalse\r\n]',
       },
     ],
+    [
+      {
+        method: 'GET',
+        path: '/api/WindowServer/GetWindowInfo?astrWindowID=EM8066',
+      },
+    ],
+    [
+      {
+        method: 'GET',
+        path: '/api/WindowServer/GetWindowInfo?astrWindowID=EM8066',
+      },
+    ],
   ],
   '06': [
     [
@@ -372,6 +389,20 @@ export const contactServiceOrderChrome: { [step: string]: ChromeRequest[][] } = 
         method: 'POST',
         path: '/api/GenericSearchServer/GetInitialData2',
         body: '[\r\n\t[\r\n\t\t{\r\n\t\t\t"Key": "OrgCode",\r\n\t\t\t"Value": "10"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "WindowObjectID",\r\n\t\t\t"Value": 456\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "wdwid",\r\n\t\t\t"Value": "EM9131"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "WdwType",\r\n\t\t\t"Value": 2\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "wdwMode",\r\n\t\t\t"Value": 0\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "RemoveEditLayoutLink",\r\n\t\t\t"Value": false\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "ContextObjectID",\r\n\t\t\t"Value": 456\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "OrdCatSeq",\r\n\t\t\t"Value": "0"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "MenuType",\r\n\t\t\t"Value": 6\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "MenuObjectID",\r\n\t\t\t"Value": 4\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "MenuContextObjectID",\r\n\t\t\t"Value": 0\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "EditWdwID",\r\n\t\t\t"Value": "EM2005"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "ForceOneColumnLayout",\r\n\t\t\t"Value": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "ShowHelpTextInfo",\r\n\t\t\t"Value": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "MoveGeneralSectionToNewTab",\r\n\t\t\t"Value": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "ShowQuickInfoHeader",\r\n\t\t\t"Value": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "SectionUDFSets",\r\n\t\t\t"Value": "41|-125|10|C|"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "PriceList",\r\n\t\t\t"Value": ""\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "IsExhibitorOrder",\r\n\t\t\t"Value": "N"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "BoothNumber",\r\n\t\t\t"Value": ""\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "StartDate",\r\n\t\t\t"Value": "${C_StartDate}"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "EndDate",\r\n\t\t\t"Value": "${C_EndDate}"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "Status",\r\n\t\t\t"Value": "${C_Status}"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "IsUsedForSectionFiltering",\r\n\t\t\t"Value": "Y"\r\n\t\t}\r\n\t],\r\n\t"EM9131",\r\n\t0,\r\n\t457,\r\n\t456,\r\n\t0,\r\n\t{\r\n\t\t"AutoRefresh": "N",\r\n\t\t"EnterUserID": "USISETTING",\r\n\t\t"FilterCriteria": "",\r\n\t\t"ID": 1307,\r\n\t\t"ObjectID": 457,\r\n\t\t"OrgCode": null,\r\n\t\t"ResultsCount": 0,\r\n\t\t"ResultsLimit": 0,\r\n\t\t"ResultsTime": 0,\r\n\t\t"SearchDesc": "",\r\n\t\t"SearchFilters": [],\r\n\t\t"ThemeID": 0,\r\n\t\t"USIID": 2378,\r\n\t\t"UpdateUserID": "USISETTING",\r\n\t\t"UserID": "",\r\n\t\t"SourceUSIID": 0,\r\n\t\t"ConvertToUserDisplayTimeZone": false\r\n\t},\r\n\t2,\r\n\t[\r\n\t\t965\r\n\t],\r\n\ttrue\r\n]',
+      },
+    ],
+    [
+      {
+        method: 'POST',
+        path: '/api/ObjectColumnCacheServer/GetObjectColumns',
+        body: '[457,"",0,"",[]]',
+      },
+    ],
+    [
+      {
+        method: 'POST',
+        path: '/api/ObjectColumnCacheServer/GetObjectColumns',
+        body: '[457,"",0,"",[]]',
       },
     ],
     [
@@ -407,6 +438,18 @@ export const contactServiceOrderChrome: { [step: string]: ChromeRequest[][] } = 
         method: 'POST',
         path: '/api/USIMenuServer/GetMenuItemsObject',
         body: '[\r\n\t"10",\r\n\t"GridSingleRowContextMenu",\r\n\t457,\r\n\t[\r\n\t\t{\r\n\t\t\t"Key": "OrgCode",\r\n\t\t\t"Value": "10"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "WindowObjectID",\r\n\t\t\t"Value": 456\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "wdwid",\r\n\t\t\t"Value": "EM9131"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "WdwType",\r\n\t\t\t"Value": 4\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "wdwMode",\r\n\t\t\t"Value": 0\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "RemoveEditLayoutLink",\r\n\t\t\t"Value": false\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "ContextObjectID",\r\n\t\t\t"Value": 0\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "OrdCatSeq",\r\n\t\t\t"Value": "0"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "MenuType",\r\n\t\t\t"Value": 6\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "MenuObjectID",\r\n\t\t\t"Value": 4\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "MenuContextObjectID",\r\n\t\t\t"Value": 0\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "EditWdwID",\r\n\t\t\t"Value": "EM2005"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "ForceOneColumnLayout",\r\n\t\t\t"Value": false\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "ShowHelpTextInfo",\r\n\t\t\t"Value": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "MoveGeneralSectionToNewTab",\r\n\t\t\t"Value": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "ShowQuickInfoHeader",\r\n\t\t\t"Value": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "SectionUDFSets",\r\n\t\t\t"Value": "41|-125|10|C|"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "PriceList",\r\n\t\t\t"Value": ""\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "IsExhibitorOrder",\r\n\t\t\t"Value": "N"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "BoothNumber",\r\n\t\t\t"Value": ""\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "StartDate",\r\n\t\t\t"Value": "${C_StartDate}"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "EndDate",\r\n\t\t\t"Value": "${C_EndDate}"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "Status",\r\n\t\t\t"Value": "${C_Status}"\r\n\t\t}\r\n\t],\r\n\t"[]",\r\n\t"",\r\n\t456,\r\n\t4,\r\n\t2,\r\n\tfalse\r\n]',
+      },
+    ],
+    [
+      {
+        method: 'GET',
+        path: '/api/WindowServer/GetWindowInfo?astrWindowID=EM9131',
+      },
+    ],
+    [
+      {
+        method: 'GET',
+        path: '/api/WindowServer/GetWindowInfo?astrWindowID=EM9131',
       },
     ],
   ],
@@ -460,13 +503,6 @@ export const contactServiceOrderChrome: { [step: string]: ChromeRequest[][] } = 
         method: 'POST',
         path: '/api/GenericServer/SetSelectedSection',
         body: '[41836,-92,"ST",456,5451,4,1,"10",[439,158,272,41]]',
-      },
-    ],
-    [
-      {
-        method: 'POST',
-        path: '/api/ObjectColumnCacheServer/GetObjectColumns',
-        body: '[2556,"",0,"",[]]',
       },
     ],
     [
@@ -579,6 +615,12 @@ export const contactServiceOrderChrome: { [step: string]: ChromeRequest[][] } = 
         method: 'POST',
         path: '/api/USIMenuServer/GetMenuItemsObject',
         body: '[\r\n\t"10",\r\n\t"GridSingleRowContextMenu",\r\n\t4,\r\n\t[\r\n\t\t{\r\n\t\t\t"Key": "OrgCode",\r\n\t\t\t"Value": "10"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "WindowObjectID",\r\n\t\t\t"Value": 4\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "wdwid",\r\n\t\t\t"Value": "EM8066"\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "WdwType",\r\n\t\t\t"Value": 1\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "wdwMode",\r\n\t\t\t"Value": 0\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "RemoveEditLayoutLink",\r\n\t\t\t"Value": false\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "ContextObjectID",\r\n\t\t\t"Value": 0\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "MenuType",\r\n\t\t\t"Value": 1\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "MenuObjectID",\r\n\t\t\t"Value": 0\r\n\t\t},\r\n\t\t{\r\n\t\t\t"Key": "MenuContextObjectID",\r\n\t\t\t"Value": 0\r\n\t\t}\r\n\t],\r\n\t"[]",\r\n\t"",\r\n\t0,\r\n\t1,\r\n\t2,\r\n\tfalse\r\n]',
+      },
+    ],
+    [
+      {
+        method: 'GET',
+        path: '/api/WindowServer/GetWindowInfo?astrWindowID=EM3883',
       },
     ],
   ],

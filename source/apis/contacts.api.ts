@@ -13,8 +13,10 @@ import {
   serviceOrderEventRecentlyUsedPayload,
   serviceOrderEventFieldsPayload,
   serviceOrderFunctionFieldsPayload,
+  serviceOrderItemsGridPayload,
   contactServiceOrderSavePayload,
   orderUpsellMessageData,
+  orderUpsellDrawerPayload,
 } from '../utils/exports/data.exp.ts';
 import {
   ContactRow,
@@ -27,6 +29,7 @@ import {
 } from '../utils/exports/types.exp.ts';
 
 const SERVICE_ORDER_OBJECT_ID = 456;
+const ORDER_UPSELL_OBJECT_ID = 2556;
 const UPSELL_ACCEPT_ANSWER = 6;
 
 function post_contact(endpoint: string, payload: unknown, token: string, version: string, name: string) {
@@ -54,8 +57,14 @@ function string_at(res: ReturnType<typeof post_contact>, index: number) {
   return typeof value === 'string' ? value : '';
 }
 
-function is_service_order_layout(el: JSONValue): el is ServiceOrderFormLayout {
-  return el !== null && typeof el === 'object' && !Array.isArray(el) && el.d3 === SERVICE_ORDER_OBJECT_ID && typeof el.d1 === 'number';
+function is_window_layout(el: JSONValue, objectId: number): el is ServiceOrderFormLayout {
+  return el !== null && typeof el === 'object' && !Array.isArray(el) && el.d3 === objectId && typeof el.d1 === 'number';
+}
+
+function upsell_suggestion(upsell: ServiceOrderPrompt) {
+  const data = upsell.MessageData;
+  const suggestion = data !== null && typeof data === 'object' && !Array.isArray(data) ? data.SuggestedOrderUpsell : undefined;
+  return suggestion === undefined || suggestion === null ? '' : JSON.stringify(suggestion);
 }
 
 function save_result(res: ReturnType<typeof post_contact>) {
@@ -122,7 +131,7 @@ export function open_service_order_form(token: string, version: string, columnSt
   let bag: ServiceOrderFormBag = {};
   try {
     const envelope = res.json() as JSONValue[];
-    const layout = envelope.find(is_service_order_layout);
+    const layout = envelope.find((el) => is_window_layout(el, SERVICE_ORDER_OBJECT_ID));
     layoutId = layout ? String(layout.d1) : '';
     const rawBag = envelope[7];
     bag = typeof rawBag === 'string' ? (JSON.parse(rawBag) as ServiceOrderFormBag) : {};
@@ -219,6 +228,69 @@ export function refresh_service_order_function_fields(
   return { start: get_cell(header, 'cSTART_DATE_TIME'), end: get_cell(header, 'cEND_DATE_TIME') };
 }
 
+export function read_service_order_items_grid(
+  token: string,
+  version: string,
+  funcId: string,
+  startText: string,
+  endText: string,
+  eventKey: string,
+  resultsCount: number,
+  name = 'ReadServiceOrderItemsGrid',
+) {
+  const res = post_contact(
+    'USIDataGridServer/GetGridData2',
+    serviceOrderItemsGridPayload(funcId, startText, endText, eventKey, resultsCount),
+    token,
+    version,
+    name,
+  );
+  const total = json_at(res, 5);
+  const itemCount = typeof total === 'number' ? total : -1;
+  if (!check(itemCount, { [`${name}: returns the item count`]: (n) => n >= 0 })) {
+    console.error(
+      `[VU ${__VU}] read_service_order_items_grid failed — event ${eventKey} FuncID ${funcId}: ${body_text(res).slice(0, 200)}`,
+    );
+    fail(`${name}: no item count for event ${eventKey}`);
+  }
+  return itemCount;
+}
+
+function post_service_order_save(
+  token: string,
+  version: string,
+  startText: string,
+  endText: string,
+  eventKey: string,
+  orderAcct: string,
+  answers: ServiceOrderPrompt[],
+  name: string,
+) {
+  const res = post_contact(
+    'GenericDetailServer/Save2',
+    contactServiceOrderSavePayload(startText, endText, eventKey, orderAcct, answers),
+    token,
+    version,
+    name,
+  );
+  return { res, result: save_result(res) };
+}
+
+function saved_order_nbr(res: ReturnType<typeof post_contact>, result: ContactServiceOrderSaveResult | undefined, name: string) {
+  if (!check(result, { [`${name}: ResultValue is 0 (success)`]: (r) => r?.ResultValue === 0 })) {
+    console.error(
+      `[VU ${__VU}] ${name} failed — ResultValue ${result?.ResultValue}, MessageInfoList ${JSON.stringify(result?.MessageInfoList ?? null).slice(0, 400)}`,
+    );
+    fail(`${name} did not succeed`);
+  }
+  const orderNbr = get_cell(find_transport_table(res, 'ER100_ORD_NBR', name), 'ER100_ORD_NBR');
+  if (!check(orderNbr, { [`${name}: returns new order number`]: (n) => /^\d+$/.test(n) })) {
+    console.error(`[VU ${__VU}] ${name} failed — no ER100_ORD_NBR in ${body_text(res).slice(0, 300)}`);
+    fail(`${name}: no order number returned`);
+  }
+  return orderNbr;
+}
+
 export function save_contact_service_order(
   token: string,
   version: string,
@@ -228,46 +300,59 @@ export function save_contact_service_order(
   orderAcct: string,
   name = 'SaveContactServiceOrder',
 ) {
-  const first = post_contact(
-    'GenericDetailServer/Save2',
-    contactServiceOrderSavePayload(startText, endText, eventKey, orderAcct, []),
-    token,
-    version,
-    name,
-  );
-  const firstResult = save_result(first);
-  let res = first;
-  let result = firstResult;
+  const { res, result } = post_service_order_save(token, version, startText, endText, eventKey, orderAcct, [], name);
+  if (result?.ResultValue === 0) return { orderNbr: saved_order_nbr(res, result, name), upsell: undefined };
 
-  if (firstResult?.ResultValue !== 0) {
-    const prompt = (firstResult?.MessageInfoList ?? []).find((m) => m.MessageKey === 'OrderUpsell');
-    if (!check(prompt, { [`${name}: prompts for order upsell`]: (p) => p !== undefined })) {
-      console.error(
-        `[VU ${__VU}] save_contact_service_order failed — ResultValue ${firstResult?.ResultValue}, MessageInfoList ${JSON.stringify(firstResult?.MessageInfoList ?? null).slice(0, 400)}`,
-      );
-      fail(`${name} was rejected`);
-    }
-    const answer: ServiceOrderPrompt = { ...prompt, MessageAnswer: UPSELL_ACCEPT_ANSWER, MessageData: orderUpsellMessageData() };
-    res = post_contact(
-      'GenericDetailServer/Save2',
-      contactServiceOrderSavePayload(startText, endText, eventKey, orderAcct, [answer]),
-      token,
-      version,
-      `${name}Confirm`,
-    );
-    result = save_result(res);
-  }
-
-  if (!check(result, { [`${name}: ResultValue is 0 (success)`]: (r) => r?.ResultValue === 0 })) {
+  const upsell = (result?.MessageInfoList ?? []).find((m) => m.MessageKey === 'OrderUpsell');
+  if (!check(upsell, { [`${name}: prompts for order upsell`]: (p) => p !== undefined })) {
     console.error(
       `[VU ${__VU}] save_contact_service_order failed — ResultValue ${result?.ResultValue}, MessageInfoList ${JSON.stringify(result?.MessageInfoList ?? null).slice(0, 400)}`,
     );
-    fail(`${name} did not succeed`);
+    fail(`${name} was rejected`);
   }
-  const orderNbr = get_cell(find_transport_table(res, 'ER100_ORD_NBR', name), 'ER100_ORD_NBR');
-  if (!check(orderNbr, { [`${name}: returns new order number`]: (n) => /^\d+$/.test(n) })) {
-    console.error(`[VU ${__VU}] save_contact_service_order failed — no ER100_ORD_NBR in ${body_text(res).slice(0, 300)}`);
-    fail(`${name}: no order number returned`);
+  return { orderNbr: '', upsell };
+}
+
+export function open_order_upsell_drawer(
+  token: string,
+  version: string,
+  upsell: ServiceOrderPrompt,
+  columnStamp: string,
+  name = 'OpenOrderUpsellDrawer',
+) {
+  const suggestion = upsell_suggestion(upsell);
+  if (!check(suggestion, { [`${name}: prompt carries the upsell suggestion`]: (s) => s !== '' })) {
+    console.error(
+      `[VU ${__VU}] open_order_upsell_drawer failed — no SuggestedOrderUpsell in ${JSON.stringify(upsell.MessageData ?? null).slice(0, 300)}`,
+    );
+    fail(`${name}: no upsell suggestion to open`);
   }
-  return orderNbr;
+  const res = post_contact('GenericDetailServer/GetInitialData2', orderUpsellDrawerPayload(suggestion, columnStamp), token, version, name);
+  let opened = false;
+  try {
+    opened = (res.json() as JSONValue[]).some((el) => is_window_layout(el, ORDER_UPSELL_OBJECT_ID));
+  } catch {
+    opened = false;
+  }
+  if (!check(opened, { [`${name}: returns the drawer layout`]: (o) => o })) {
+    console.error(
+      `[VU ${__VU}] open_order_upsell_drawer failed — no layout for object ${ORDER_UPSELL_OBJECT_ID}: ${body_text(res).slice(0, 200)}`,
+    );
+    fail(`${name}: drawer layout not returned`);
+  }
+}
+
+export function confirm_contact_service_order(
+  token: string,
+  version: string,
+  startText: string,
+  endText: string,
+  eventKey: string,
+  orderAcct: string,
+  upsell: ServiceOrderPrompt,
+  name = 'SaveContactServiceOrderConfirm',
+) {
+  const answer: ServiceOrderPrompt = { ...upsell, MessageAnswer: UPSELL_ACCEPT_ANSWER, MessageData: orderUpsellMessageData() };
+  const { res, result } = post_service_order_save(token, version, startText, endText, eventKey, orderAcct, [answer], name);
+  return saved_order_nbr(res, result, name);
 }
