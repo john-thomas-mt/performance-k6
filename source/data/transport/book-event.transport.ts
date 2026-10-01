@@ -17,12 +17,6 @@ export const bookEventTransport: { [step: string]: ChromeRequest[][] } = {
     [
       {
         method: 'GET',
-        path: '/Content/css/backOffice?v=${C_backOffice_version}',
-      },
-    ],
-    [
-      {
-        method: 'GET',
         path: '/Content/css/splash_bundle?v=',
       },
     ],
@@ -30,6 +24,12 @@ export const bookEventTransport: { [step: string]: ChromeRequest[][] } = {
       {
         method: 'GET',
         path: '/Content/css?v=${C_css_version}',
+      },
+    ],
+    [
+      {
+        method: 'GET',
+        path: '/Content/css/backOffice?v=${C_backOffice_version}',
       },
     ],
     [

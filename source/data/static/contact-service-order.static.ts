@@ -5,14 +5,6 @@ export const contactServiceOrderStatic: { [step: string]: StaticRequest[][] } = 
   '01': [
     [
       {
-        path: '/app/enterprise-dist/framework/themes/snug.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/styles/font-face.css',
-      },
-    ],
-    [
-      {
         path: '/app/enterprise-dist/framework/windows/splash/splash.css',
       },
       {
@@ -21,70 +13,10 @@ export const contactServiceOrderStatic: { [step: string]: StaticRequest[][] } = 
     ],
     [
       {
-        path: '/Scripts/aurelia/resources/elements/draggable/draggable.html',
+        path: '/app/enterprise-dist/framework/themes/snug.css',
       },
       {
-        path: '/app/enterprise-dist/viewmodels/signIn.js',
-      },
-    ],
-    [
-      {
-        path: '/Scripts/aurelia/resources/index.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/Popover--ProgressIndicator/ProgressIndicator.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/signIn.html',
-      },
-      {
-        path: '/app/enterprise-dist/framework/styles/fonts/Roboto-Regular.ttf',
-      },
-    ],
-    [
-      {
-        path: '/app/node_components/localforage/dist/localforage.min.js',
-      },
-      {
-        path: '/app/node_components/toastr/build/toastr.min.js',
-      },
-      {
-        path: '/Scripts/moment-with-locales.min.js',
-      },
-      {
-        path: '/app/node_components/jsrsasign/lib/jsrsasign-all-min.js',
-      },
-      {
-        path: '/app/node_components/@syncfusion/ej2-base/dist/ej2-base.umd.min.js',
-      },
-      {
-        path: '/app/node_components/tether/dist/js/tether.min.js',
-      },
-      {
-        path: '/app/enterprise-dist/icons/local/index.js',
-      },
-    ],
-    [
-      {
-        path: '/content/images/favicon.ico',
-      },
-      {
-        path: '/App/enterprise-dist/usi-core.js',
-      },
-    ],
-    [
-      {
-        path: '/scripts/jsonh.js',
-      },
-      {
-        path: '/App/node_components/clamp-js/clamp.js',
-      },
-      {
-        path: '/scripts/usiFabric.js',
+        path: '/app/enterprise-dist/framework/styles/font-face.css',
       },
     ],
     [
@@ -96,6 +28,17 @@ export const contactServiceOrderStatic: { [step: string]: StaticRequest[][] } = 
       },
       {
         path: '/content/images/splashscreen/Login-Momentus-BG-2-web.jpg',
+      },
+    ],
+    [
+      {
+        path: '/scripts/jsonh.js',
+      },
+      {
+        path: '/App/node_components/clamp-js/clamp.js',
+      },
+      {
+        path: '/scripts/usiFabric.js',
       },
     ],
     [
@@ -184,6 +127,42 @@ export const contactServiceOrderStatic: { [step: string]: StaticRequest[][] } = 
       },
       {
         path: '/app/node_components/bootstrap-sass/assets/javascripts/bootstrap.min.js',
+      },
+    ],
+    [
+      {
+        path: '/content/images/favicon.ico',
+      },
+      {
+        path: '/App/enterprise-dist/usi-core.js',
+      },
+    ],
+    [
+      {
+        path: '/app/node_components/localforage/dist/localforage.min.js',
+      },
+      {
+        path: '/app/node_components/toastr/build/toastr.min.js',
+      },
+      {
+        path: '/Scripts/moment-with-locales.min.js',
+      },
+      {
+        path: '/app/node_components/jsrsasign/lib/jsrsasign-all-min.js',
+      },
+      {
+        path: '/app/node_components/@syncfusion/ej2-base/dist/ej2-base.umd.min.js',
+      },
+      {
+        path: '/app/node_components/tether/dist/js/tether.min.js',
+      },
+      {
+        path: '/app/enterprise-dist/icons/local/index.js',
+      },
+    ],
+    [
+      {
+        path: '/Scripts/aurelia/resources/index.js',
       },
     ],
     [
@@ -359,16 +338,29 @@ export const contactServiceOrderStatic: { [step: string]: StaticRequest[][] } = 
         path: '/app/node_components/@syncfusion/ej2-file-utils/dist/ej2-file-utils.umd.min.js',
       },
     ],
-  ],
-  '02': [
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Button/button.css',
+        path: '/Scripts/aurelia/resources/elements/draggable/draggable.html',
       },
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.TextEditor/TextEditor.css',
+        path: '/app/enterprise-dist/viewmodels/signIn.js',
       },
     ],
+    [
+      {
+        path: '/app/enterprise-dist/views/signIn.html',
+      },
+      {
+        path: '/app/enterprise-dist/framework/styles/fonts/Roboto-Regular.ttf',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/Popover--ProgressIndicator/ProgressIndicator.html',
+      },
+    ],
+  ],
+  '02': [
     [
       {
         path: '/app/enterprise-dist/viewmodels/shell.js',
@@ -424,26 +416,7 @@ export const contactServiceOrderStatic: { [step: string]: StaticRequest[][] } = 
     ],
     [
       {
-        path: '/app/enterprise-dist/components/accordion/accordion.component.html',
-      },
-      {
-        path: '/app/enterprise-dist/components/accordion/accordion.component.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Checkbox/Checkbox.css',
-      },
-      {
-        path: '/app/enterprise-dist/pages/home-page/home-page.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/overlay/overlay.component.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/toast/toast.component.html',
+        path: '/app/enterprise-dist/views/shell.html',
       },
     ],
     [
@@ -471,6 +444,62 @@ export const contactServiceOrderStatic: { [step: string]: StaticRequest[][] } = 
     ],
     [
       {
+        path: '/app/enterprise-dist/framework/common.blocks/leftGlobalMobileNav/leftGlobalMobileNav.html',
+      },
+      {
+        path: '/app/enterprise-dist/components/overlay/overlay.component.css',
+      },
+      {
+        path: '/app/enterprise-dist/components/toast/toast.component.css',
+      },
+      {
+        path: '/app/enterprise-dist/components/accordion/accordion.component.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/overlay/overlay.component.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/toast/toast.component.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/accordion/accordion.interfaces.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/accordion/accordion.component.html',
+      },
+      {
+        path: '/app/enterprise-dist/components/accordion/accordion.component.css',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Checkbox/Checkbox.css',
+      },
+      {
+        path: '/app/enterprise-dist/pages/home-page/home-page.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/pages/home-page/home-page.html',
+      },
+      {
+        path: '/app/enterprise-dist/pages/home-page/home-page.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/MenuButton/MenuButton.html',
+      },
+    ],
+    [
+      {
         path: '/app/enterprise-dist/framework/common.blocks/ButtonContentTemplate/ButtonContentTemplate.html',
       },
       {
@@ -482,7 +511,20 @@ export const contactServiceOrderStatic: { [step: string]: StaticRequest[][] } = 
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/ButtonGadget/ButtonGadget.html',
+        path: '/app/enterprise-dist/framework/windows/home/home.html',
+      },
+      {
+        path: '/app/enterprise-dist/framework/styles/fonts/InterVariable.woff2',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/siteHeader/siteHeader.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/leftGlobalNav/leftGlobalNav.html',
       },
     ],
     [
@@ -503,208 +545,22 @@ export const contactServiceOrderStatic: { [step: string]: StaticRequest[][] } = 
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/MenuButton/MenuButton.html',
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/ButtonGadget/ButtonGadget.html',
       },
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/leftGlobalMobileNav/leftGlobalMobileNav.html',
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Button/button.css',
       },
       {
-        path: '/app/enterprise-dist/components/overlay/overlay.component.css',
-      },
-      {
-        path: '/app/enterprise-dist/components/toast/toast.component.css',
-      },
-      {
-        path: '/app/enterprise-dist/components/accordion/accordion.component.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/leftGlobalNav/leftGlobalNav.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/siteHeader/siteHeader.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/windows/home/home.html',
-      },
-      {
-        path: '/app/enterprise-dist/framework/styles/fonts/InterVariable.woff2',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/pages/home-page/home-page.html',
-      },
-      {
-        path: '/app/enterprise-dist/pages/home-page/home-page.css',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/shell.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/accordion/accordion.interfaces.js',
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.TextEditor/TextEditor.css',
       },
     ],
   ],
   '03': [
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.ComboBox/ComboBox.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DateRange/DateRange.css',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/floating/tooltip/tooltip.component.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/window-message/window-message.component.html',
-      },
-      {
-        path: '/app/enterprise-dist/util00/OfficeApps.js',
-      },
-      {
-        path: '/app/enterprise-dist/util00/workforceSchedulingUtil.js',
-      },
-      {
-        path: '/app/enterprise-dist/util00/MobileUtil.js',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/mobile/contactMobileDetail.js',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/mobile/accountMobileDetail.js',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/CardLayout.Tile/ActivityTemplate/ActivityTemplate.js',
-      },
-      {
-        path: '/app/enterprise-dist/models/AccountsCardInfo.js',
-      },
-      {
-        path: '/app/enterprise-dist/components/window-message/window-message.component.css',
-      },
-      {
-        path: '/app/enterprise-dist/services/OfficeServerAccess.js',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/mobile/headerImageCircle.js',
-      },
-      {
-        path: '/app/enterprise-dist/models/MobileCardInfo.js',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/CardLayout/CardLayout.js',
-      },
-      {
-        path: '/app/node_components/hammerjs/hammer.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/controls00/layoutControls/editLayoutContainer/editLayoutContainer.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/controls00/layoutControls/sectionContainer/sectionContainer.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DatePicker/DatePicker.css',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.HyperLink/HyperLink.html',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.HyperLink/HyperLink.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Label/Label.css',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/USIDataGridMenu/USIDataGridMenu.html',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/DataGrid/dataGridFooter.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/USIDataGridMenu/USIDataGridMenu.css',
-      },
-      {
-        path: '/app/enterprise-dist/icons/local/reading-pane-button-active.svg',
-      },
-      {
-        path: '/app/enterprise-dist/icons/local/reading-pane-button-active-hover.svg',
-      },
-      {
-        path: '/app/enterprise-dist/icons/local/reading-pane-button-inactive.svg',
-      },
-      {
-        path: '/app/enterprise-dist/icons/local/reading-pane-button-inactive-hover.svg',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/pages/list-page/list-page.html',
-      },
-      {
-        path: '/app/enterprise-dist/components/window-message/window-message.component.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/esm00/AccountsClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/pages/base-page/base-page.css',
-      },
-      {
-        path: '/app/enterprise-dist/pages/list-page/list-page.css',
-      },
-    ],
-    [
-      {
         path: '/app/enterprise-dist/pages/list-page/list-page.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/genericList.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/genericPageNavToolbar.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/genericPageSearch.html',
-      },
-      {
-        path: '/app/enterprise-dist/viewstyles/navbarSpillover.css',
-      },
-      {
-        path: '/app/enterprise-dist/viewstyles/genericPageSearch.css',
       },
     ],
     [
@@ -880,11 +736,214 @@ export const contactServiceOrderStatic: { [step: string]: StaticRequest[][] } = 
         path: '/app/enterprise-dist/framework/windows/contentBuilder/images/CB_Video_Icon.svg',
       },
     ],
+    [
+      {
+        path: '/app/enterprise-dist/components/floating/tooltip/tooltip.component.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/pages/list-page/list-page.html',
+      },
+      {
+        path: '/app/enterprise-dist/components/window-message/window-message.component.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/esm00/AccountsClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/pages/base-page/base-page.css',
+      },
+      {
+        path: '/app/enterprise-dist/pages/list-page/list-page.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/window-message/window-message.component.html',
+      },
+      {
+        path: '/app/enterprise-dist/util00/OfficeApps.js',
+      },
+      {
+        path: '/app/enterprise-dist/util00/workforceSchedulingUtil.js',
+      },
+      {
+        path: '/app/enterprise-dist/util00/MobileUtil.js',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/mobile/contactMobileDetail.js',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/mobile/accountMobileDetail.js',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/CardLayout.Tile/ActivityTemplate/ActivityTemplate.js',
+      },
+      {
+        path: '/app/enterprise-dist/models/AccountsCardInfo.js',
+      },
+      {
+        path: '/app/enterprise-dist/components/window-message/window-message.component.css',
+      },
+      {
+        path: '/app/enterprise-dist/services/OfficeServerAccess.js',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/mobile/headerImageCircle.js',
+      },
+      {
+        path: '/app/enterprise-dist/models/MobileCardInfo.js',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/CardLayout/CardLayout.js',
+      },
+      {
+        path: '/app/node_components/hammerjs/hammer.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/views/genericList.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/views/genericPageSearch.html',
+      },
+      {
+        path: '/app/enterprise-dist/viewstyles/navbarSpillover.css',
+      },
+      {
+        path: '/app/enterprise-dist/viewstyles/genericPageSearch.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/views/genericPageNavToolbar.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/USIDataGridMenu/USIDataGridMenu.html',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/DataGrid/dataGridFooter.css',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/USIDataGridMenu/USIDataGridMenu.css',
+      },
+      {
+        path: '/app/enterprise-dist/icons/local/reading-pane-button-active.svg',
+      },
+      {
+        path: '/app/enterprise-dist/icons/local/reading-pane-button-active-hover.svg',
+      },
+      {
+        path: '/app/enterprise-dist/icons/local/reading-pane-button-inactive.svg',
+      },
+      {
+        path: '/app/enterprise-dist/icons/local/reading-pane-button-inactive-hover.svg',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/controls00/layoutControls/editLayoutContainer/editLayoutContainer.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.HyperLink/HyperLink.html',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.HyperLink/HyperLink.css',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Label/Label.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/controls00/layoutControls/sectionContainer/sectionContainer.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.ComboBox/ComboBox.css',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DateRange/DateRange.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DatePicker/DatePicker.css',
+      },
+    ],
   ],
   '04': [
     [
       {
+        path: '/app/enterprise-dist/views/genericDetail.html',
+      },
+      {
+        path: '/app/enterprise-dist/viewstyles/pageFooter.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/Tabs/tabs.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/views/USISectionMenu.html',
+      },
+    ],
+    [
+      {
         path: '/app/enterprise-dist/backOffice/esm00/CommunicationsClientUI.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/backOffice/esm00/RelationshipsClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/esm00/ProjectsClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/esm00/MembershipAccountMembershipClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/sam00/DocumentsClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/esm00/ActivitiesClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/esm00/AccountAffiliationsClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/esm00/GDPRRemovalRequestsClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/viewstyles/USISectionMenu.css',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/esm00/AccountConsentsClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/esm00/NotesClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/esm00/MeetingsClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/ord00/serviceOrdersClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/emc00/EventsClientUI.js',
       },
     ],
     [
@@ -942,66 +1001,7 @@ export const contactServiceOrderStatic: { [step: string]: StaticRequest[][] } = 
     ],
     [
       {
-        path: '/app/enterprise-dist/backOffice/esm00/RelationshipsClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/esm00/ProjectsClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/esm00/MembershipAccountMembershipClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/sam00/DocumentsClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/esm00/ActivitiesClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/esm00/AccountAffiliationsClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/esm00/GDPRRemovalRequestsClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/viewstyles/USISectionMenu.css',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/esm00/AccountConsentsClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/esm00/NotesClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/esm00/MeetingsClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/ord00/serviceOrdersClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/emc00/EventsClientUI.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/Tabs/tabs.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/USISectionMenu.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/genericDetail.html',
-      },
-      {
-        path: '/app/enterprise-dist/viewstyles/pageFooter.css',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/genericPageFooter.html',
+        path: '/app/enterprise-dist/views/genericSearch.html',
       },
     ],
     [
@@ -1011,30 +1011,14 @@ export const contactServiceOrderStatic: { [step: string]: StaticRequest[][] } = 
     ],
     [
       {
-        path: '/app/enterprise-dist/views/genericSearch.html',
+        path: '/app/enterprise-dist/views/genericPageFooter.html',
       },
     ],
   ],
   '06': [
     [
       {
-        path: '/app/enterprise-dist/backOffice/ord00/OrderItemsClientUI.js',
-      },
-    ],
-    [
-      {
         path: '/app/enterprise-dist/pages/add-page/add-page.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/models/OrderItemsCardInfo.js',
-      },
-      {
-        path: '/app/enterprise-dist/models/RegSeatingAssignmentRetrieveData.js',
-      },
-      {
-        path: '/app/enterprise-dist/models/RegistrantForSeatCreation.js',
       },
     ],
     [
@@ -1050,16 +1034,32 @@ export const contactServiceOrderStatic: { [step: string]: StaticRequest[][] } = 
         path: '/app/enterprise-dist/views/pageFooter.html',
       },
     ],
-  ],
-  '07': [
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.ComboBox/Dropdown/Dropdown.css',
+        path: '/app/enterprise-dist/backOffice/ord00/OrderItemsClientUI.js',
       },
     ],
     [
       {
+        path: '/app/enterprise-dist/models/OrderItemsCardInfo.js',
+      },
+      {
+        path: '/app/enterprise-dist/models/RegSeatingAssignmentRetrieveData.js',
+      },
+      {
+        path: '/app/enterprise-dist/models/RegistrantForSeatCreation.js',
+      },
+    ],
+  ],
+  '07': [
+    [
+      {
         path: '/app/enterprise-dist/framework/common.blocks/PopoverHost/PopoverHost.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.ComboBox/Dropdown/Dropdown.css',
       },
     ],
   ],
@@ -1067,19 +1067,6 @@ export const contactServiceOrderStatic: { [step: string]: StaticRequest[][] } = 
     [
       {
         path: '/app/enterprise-dist/backOffice/ord00/OrderUpsellSubstitutionClientUI.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/backOffice/ord00/OrderUpsellClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/models/UpsellsCardInfo.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/CardLayout.Row/UpsellsTemplate/UpsellsTemplate.js',
       },
     ],
     [
@@ -1092,15 +1079,28 @@ export const contactServiceOrderStatic: { [step: string]: StaticRequest[][] } = 
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/CardLayout.Row/UpsellsTemplate/UpsellsTemplate.html',
+        path: '/app/enterprise-dist/backOffice/ord00/OrderUpsellClientUI.js',
       },
       {
-        path: '/app/enterprise-dist/framework/common.blocks/CardLayout.Row/UpsellsTemplate/UpsellsTemplate.css',
+        path: '/app/enterprise-dist/models/UpsellsCardInfo.js',
       },
     ],
     [
       {
         path: '/app/enterprise-dist/views/dataTableMobile.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/CardLayout.Row/UpsellsTemplate/UpsellsTemplate.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/CardLayout.Row/UpsellsTemplate/UpsellsTemplate.html',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/CardLayout.Row/UpsellsTemplate/UpsellsTemplate.css',
       },
     ],
   ],

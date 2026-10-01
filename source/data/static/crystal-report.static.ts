@@ -39,14 +39,6 @@ export const crystalReportStatic: { [step: string]: StaticRequest[][] } = {
   '01': [
     [
       {
-        path: '/app/enterprise-dist/framework/themes/snug.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/styles/font-face.css',
-      },
-    ],
-    [
-      {
         path: '/app/enterprise-dist/framework/windows/splash/splash.css',
       },
       {
@@ -55,70 +47,10 @@ export const crystalReportStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/Scripts/aurelia/resources/elements/draggable/draggable.html',
+        path: '/app/enterprise-dist/framework/themes/snug.css',
       },
       {
-        path: '/app/enterprise-dist/viewmodels/signIn.js',
-      },
-    ],
-    [
-      {
-        path: '/Scripts/aurelia/resources/index.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/Popover--ProgressIndicator/ProgressIndicator.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/signIn.html',
-      },
-      {
-        path: '/app/enterprise-dist/framework/styles/fonts/Roboto-Regular.ttf',
-      },
-    ],
-    [
-      {
-        path: '/app/node_components/localforage/dist/localforage.min.js',
-      },
-      {
-        path: '/app/node_components/toastr/build/toastr.min.js',
-      },
-      {
-        path: '/Scripts/moment-with-locales.min.js',
-      },
-      {
-        path: '/app/node_components/jsrsasign/lib/jsrsasign-all-min.js',
-      },
-      {
-        path: '/app/node_components/@syncfusion/ej2-base/dist/ej2-base.umd.min.js',
-      },
-      {
-        path: '/app/node_components/tether/dist/js/tether.min.js',
-      },
-      {
-        path: '/app/enterprise-dist/icons/local/index.js',
-      },
-    ],
-    [
-      {
-        path: '/content/images/favicon.ico',
-      },
-      {
-        path: '/App/enterprise-dist/usi-core.js',
-      },
-    ],
-    [
-      {
-        path: '/scripts/jsonh.js',
-      },
-      {
-        path: '/App/node_components/clamp-js/clamp.js',
-      },
-      {
-        path: '/scripts/usiFabric.js',
+        path: '/app/enterprise-dist/framework/styles/font-face.css',
       },
     ],
     [
@@ -130,6 +62,17 @@ export const crystalReportStatic: { [step: string]: StaticRequest[][] } = {
       },
       {
         path: '/content/images/splashscreen/Login-Momentus-BG-2-web.jpg',
+      },
+    ],
+    [
+      {
+        path: '/scripts/jsonh.js',
+      },
+      {
+        path: '/App/node_components/clamp-js/clamp.js',
+      },
+      {
+        path: '/scripts/usiFabric.js',
       },
     ],
     [
@@ -218,6 +161,42 @@ export const crystalReportStatic: { [step: string]: StaticRequest[][] } = {
       },
       {
         path: '/app/node_components/bootstrap-sass/assets/javascripts/bootstrap.min.js',
+      },
+    ],
+    [
+      {
+        path: '/content/images/favicon.ico',
+      },
+      {
+        path: '/App/enterprise-dist/usi-core.js',
+      },
+    ],
+    [
+      {
+        path: '/app/node_components/localforage/dist/localforage.min.js',
+      },
+      {
+        path: '/app/node_components/toastr/build/toastr.min.js',
+      },
+      {
+        path: '/Scripts/moment-with-locales.min.js',
+      },
+      {
+        path: '/app/node_components/jsrsasign/lib/jsrsasign-all-min.js',
+      },
+      {
+        path: '/app/node_components/@syncfusion/ej2-base/dist/ej2-base.umd.min.js',
+      },
+      {
+        path: '/app/node_components/tether/dist/js/tether.min.js',
+      },
+      {
+        path: '/app/enterprise-dist/icons/local/index.js',
+      },
+    ],
+    [
+      {
+        path: '/Scripts/aurelia/resources/index.js',
       },
     ],
     [
@@ -393,16 +372,29 @@ export const crystalReportStatic: { [step: string]: StaticRequest[][] } = {
         path: '/app/node_components/@syncfusion/ej2-file-utils/dist/ej2-file-utils.umd.min.js',
       },
     ],
-  ],
-  '02': [
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Button/button.css',
+        path: '/Scripts/aurelia/resources/elements/draggable/draggable.html',
       },
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.TextEditor/TextEditor.css',
+        path: '/app/enterprise-dist/viewmodels/signIn.js',
       },
     ],
+    [
+      {
+        path: '/app/enterprise-dist/views/signIn.html',
+      },
+      {
+        path: '/app/enterprise-dist/framework/styles/fonts/Roboto-Regular.ttf',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/Popover--ProgressIndicator/ProgressIndicator.html',
+      },
+    ],
+  ],
+  '02': [
     [
       {
         path: '/app/enterprise-dist/viewmodels/shell.js',
@@ -458,26 +450,7 @@ export const crystalReportStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/components/accordion/accordion.component.html',
-      },
-      {
-        path: '/app/enterprise-dist/components/accordion/accordion.component.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Checkbox/Checkbox.css',
-      },
-      {
-        path: '/app/enterprise-dist/pages/home-page/home-page.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/overlay/overlay.component.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/toast/toast.component.html',
+        path: '/app/enterprise-dist/views/shell.html',
       },
     ],
     [
@@ -505,6 +478,62 @@ export const crystalReportStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
+        path: '/app/enterprise-dist/framework/common.blocks/leftGlobalMobileNav/leftGlobalMobileNav.html',
+      },
+      {
+        path: '/app/enterprise-dist/components/overlay/overlay.component.css',
+      },
+      {
+        path: '/app/enterprise-dist/components/toast/toast.component.css',
+      },
+      {
+        path: '/app/enterprise-dist/components/accordion/accordion.component.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/overlay/overlay.component.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/toast/toast.component.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/accordion/accordion.interfaces.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/accordion/accordion.component.html',
+      },
+      {
+        path: '/app/enterprise-dist/components/accordion/accordion.component.css',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Checkbox/Checkbox.css',
+      },
+      {
+        path: '/app/enterprise-dist/pages/home-page/home-page.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/pages/home-page/home-page.html',
+      },
+      {
+        path: '/app/enterprise-dist/pages/home-page/home-page.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/MenuButton/MenuButton.html',
+      },
+    ],
+    [
+      {
         path: '/app/enterprise-dist/framework/common.blocks/ButtonContentTemplate/ButtonContentTemplate.html',
       },
       {
@@ -516,7 +545,20 @@ export const crystalReportStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/ButtonGadget/ButtonGadget.html',
+        path: '/app/enterprise-dist/framework/windows/home/home.html',
+      },
+      {
+        path: '/app/enterprise-dist/framework/styles/fonts/InterVariable.woff2',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/siteHeader/siteHeader.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/leftGlobalNav/leftGlobalNav.html',
       },
     ],
     [
@@ -537,61 +579,61 @@ export const crystalReportStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/MenuButton/MenuButton.html',
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/ButtonGadget/ButtonGadget.html',
       },
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/leftGlobalMobileNav/leftGlobalMobileNav.html',
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Button/button.css',
       },
       {
-        path: '/app/enterprise-dist/components/overlay/overlay.component.css',
-      },
-      {
-        path: '/app/enterprise-dist/components/toast/toast.component.css',
-      },
-      {
-        path: '/app/enterprise-dist/components/accordion/accordion.component.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/leftGlobalNav/leftGlobalNav.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/siteHeader/siteHeader.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/windows/home/home.html',
-      },
-      {
-        path: '/app/enterprise-dist/framework/styles/fonts/InterVariable.woff2',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/pages/home-page/home-page.html',
-      },
-      {
-        path: '/app/enterprise-dist/pages/home-page/home-page.css',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/shell.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/accordion/accordion.interfaces.js',
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.TextEditor/TextEditor.css',
       },
     ],
   ],
   '03': [
+    [
+      {
+        path: '/app/enterprise-dist/components/floating/tooltip/tooltip.component.html',
+      },
+      {
+        path: '/app/enterprise-dist/components/floating/tooltip/tooltip.component.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/windows/pageFinder/pageFinder.html',
+      },
+      {
+        path: '/app/enterprise-dist/components/accordion/accordion-group/accordion-group.component.js',
+      },
+      {
+        path: '/app/enterprise-dist/framework/windows/pageFinder/pageFinder.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/accordion/accordion-group/accordion-group.component.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/accordion/accordion-group/accordion-group.component.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/windows/pageFinder/search/search.html',
+      },
+      {
+        path: '/app/enterprise-dist/components/empty-state/empty-state.component.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/empty-state/empty-state.component.html',
+      },
+    ],
     [
       {
         path: '/app/enterprise-dist/pages/list-page/list-page.js',
@@ -767,25 +809,19 @@ export const crystalReportStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/fonts/usifont-messageIcons.ttf',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/accordion/accordion-group/accordion-group.component.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/empty-state/empty-state.component.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/floating/tooltip/tooltip.component.html',
+        path: '/app/enterprise-dist/pages/list-page/list-page.html',
       },
       {
-        path: '/app/enterprise-dist/components/floating/tooltip/tooltip.component.css',
+        path: '/app/enterprise-dist/components/window-message/window-message.component.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/rpw00/ReportMasterClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/pages/base-page/base-page.css',
+      },
+      {
+        path: '/app/enterprise-dist/pages/list-page/list-page.css',
       },
     ],
     [
@@ -798,23 +834,23 @@ export const crystalReportStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/controls00/layoutControls/editLayoutContainer/editLayoutContainer.html',
+        path: '/app/enterprise-dist/views/genericList.html',
       },
     ],
     [
       {
-        path: '/app/enterprise-dist/controls00/layoutControls/sectionContainer/sectionContainer.html',
+        path: '/app/enterprise-dist/views/genericPageNavToolbar.html',
       },
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.HyperLink/HyperLink.html',
+        path: '/app/enterprise-dist/views/genericPageSearch.html',
       },
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.HyperLink/HyperLink.css',
+        path: '/app/enterprise-dist/viewstyles/navbarSpillover.css',
       },
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Label/Label.css',
+        path: '/app/enterprise-dist/viewstyles/genericPageSearch.css',
       },
     ],
     [
@@ -842,64 +878,28 @@ export const crystalReportStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/windows/pageFinder/pageFinder.html',
-      },
-      {
-        path: '/app/enterprise-dist/components/accordion/accordion-group/accordion-group.component.js',
-      },
-      {
-        path: '/app/enterprise-dist/framework/windows/pageFinder/pageFinder.css',
+        path: '/app/enterprise-dist/controls00/layoutControls/editLayoutContainer/editLayoutContainer.html',
       },
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/windows/pageFinder/search/search.html',
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.HyperLink/HyperLink.html',
       },
       {
-        path: '/app/enterprise-dist/components/empty-state/empty-state.component.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/pages/list-page/list-page.html',
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.HyperLink/HyperLink.css',
       },
       {
-        path: '/app/enterprise-dist/components/window-message/window-message.component.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/rpw00/ReportMasterClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/pages/base-page/base-page.css',
-      },
-      {
-        path: '/app/enterprise-dist/pages/list-page/list-page.css',
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Label/Label.css',
       },
     ],
     [
       {
-        path: '/app/enterprise-dist/views/genericList.html',
+        path: '/fonts/usifont-messageIcons.ttf',
       },
     ],
     [
       {
-        path: '/app/enterprise-dist/views/genericPageNavToolbar.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/genericPageSearch.html',
-      },
-      {
-        path: '/app/enterprise-dist/viewstyles/navbarSpillover.css',
-      },
-      {
-        path: '/app/enterprise-dist/viewstyles/genericPageSearch.css',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/accordion/accordion-group/accordion-group.component.css',
+        path: '/app/enterprise-dist/controls00/layoutControls/sectionContainer/sectionContainer.html',
       },
     ],
   ],
@@ -907,6 +907,27 @@ export const crystalReportStatic: { [step: string]: StaticRequest[][] } = {
     [
       {
         path: '/app/enterprise-dist/pages/add-page/add-page.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/pages/add-page/add-page.html',
+      },
+      {
+        path: '/app/enterprise-dist/pages/add-page/add-page.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/views/genericDetail.html',
+      },
+      {
+        path: '/app/enterprise-dist/viewstyles/pageFooter.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/views/pageFooter.html',
       },
     ],
     [
@@ -944,27 +965,6 @@ export const crystalReportStatic: { [step: string]: StaticRequest[][] } = {
         path: '/app/enterprise-dist/models/MobileCardInfo.js',
       },
     ],
-    [
-      {
-        path: '/app/enterprise-dist/pages/add-page/add-page.html',
-      },
-      {
-        path: '/app/enterprise-dist/pages/add-page/add-page.css',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/genericDetail.html',
-      },
-      {
-        path: '/app/enterprise-dist/viewstyles/pageFooter.css',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/pageFooter.html',
-      },
-    ],
   ],
   '05': [
     [
@@ -984,18 +984,13 @@ export const crystalReportStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/components/detail-page-header/detail-page-header.component.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/risk-analysis/risk-analysis.component.html',
+        path: '/app/enterprise-dist/pages/edit-page/edit-page.html',
       },
       {
-        path: '/app/enterprise-dist/components/detail-page-header/detail-page-header.component.css',
+        path: '/app/enterprise-dist/components/detail-page-header/detail-page-header.component.js',
       },
       {
-        path: '/app/enterprise-dist/components/risk-analysis/risk-analysis.component.css',
+        path: '/app/enterprise-dist/components/risk-analysis/risk-analysis.component.js',
       },
     ],
     [
@@ -1011,13 +1006,18 @@ export const crystalReportStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/pages/edit-page/edit-page.html',
+        path: '/app/enterprise-dist/components/risk-analysis/risk-analysis.component.html',
       },
       {
-        path: '/app/enterprise-dist/components/detail-page-header/detail-page-header.component.js',
+        path: '/app/enterprise-dist/components/detail-page-header/detail-page-header.component.css',
       },
       {
-        path: '/app/enterprise-dist/components/risk-analysis/risk-analysis.component.js',
+        path: '/app/enterprise-dist/components/risk-analysis/risk-analysis.component.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/detail-page-header/detail-page-header.component.html',
       },
     ],
   ],
@@ -1052,6 +1052,11 @@ export const crystalReportStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
+        path: '/app/enterprise-dist/framework/Common.Blocks/MenuButton/MenuButton.html',
+      },
+    ],
+    [
+      {
         path: '/app/enterprise-dist/framework/Common.Blocks/ButtonContentTemplate/ButtonContentTemplate.html',
       },
       {
@@ -1063,17 +1068,12 @@ export const crystalReportStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/Common.Blocks/MenuButton/MenuButton.html',
+        path: '/app/enterprise-dist/views/USIMultiSelectSuperBoxPage.html',
       },
     ],
     [
       {
         path: '/app/enterprise-dist/framework/common.blocks/MultiSelectSuperBox/MultiSelectSuperBox.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/USIMultiSelectSuperBoxPage.html',
       },
     ],
   ],

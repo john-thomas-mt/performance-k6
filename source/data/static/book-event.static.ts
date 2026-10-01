@@ -39,14 +39,6 @@ export const bookEventStatic: { [step: string]: StaticRequest[][] } = {
   '01': [
     [
       {
-        path: '/app/enterprise-dist/framework/themes/snug.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/styles/font-face.css',
-      },
-    ],
-    [
-      {
         path: '/app/enterprise-dist/framework/windows/splash/splash.css',
       },
       {
@@ -55,70 +47,10 @@ export const bookEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/Scripts/aurelia/resources/elements/draggable/draggable.html',
+        path: '/app/enterprise-dist/framework/themes/snug.css',
       },
       {
-        path: '/app/enterprise-dist/viewmodels/signIn.js',
-      },
-    ],
-    [
-      {
-        path: '/Scripts/aurelia/resources/index.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/Popover--ProgressIndicator/ProgressIndicator.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/signIn.html',
-      },
-      {
-        path: '/app/enterprise-dist/framework/styles/fonts/Roboto-Regular.ttf',
-      },
-    ],
-    [
-      {
-        path: '/app/node_components/localforage/dist/localforage.min.js',
-      },
-      {
-        path: '/app/node_components/toastr/build/toastr.min.js',
-      },
-      {
-        path: '/Scripts/moment-with-locales.min.js',
-      },
-      {
-        path: '/app/node_components/jsrsasign/lib/jsrsasign-all-min.js',
-      },
-      {
-        path: '/app/node_components/@syncfusion/ej2-base/dist/ej2-base.umd.min.js',
-      },
-      {
-        path: '/app/node_components/tether/dist/js/tether.min.js',
-      },
-      {
-        path: '/app/enterprise-dist/icons/local/index.js',
-      },
-    ],
-    [
-      {
-        path: '/content/images/favicon.ico',
-      },
-      {
-        path: '/App/enterprise-dist/usi-core.js',
-      },
-    ],
-    [
-      {
-        path: '/scripts/jsonh.js',
-      },
-      {
-        path: '/App/node_components/clamp-js/clamp.js',
-      },
-      {
-        path: '/scripts/usiFabric.js',
+        path: '/app/enterprise-dist/framework/styles/font-face.css',
       },
     ],
     [
@@ -130,6 +62,17 @@ export const bookEventStatic: { [step: string]: StaticRequest[][] } = {
       },
       {
         path: '/content/images/splashscreen/Login-Momentus-BG-2-web.jpg',
+      },
+    ],
+    [
+      {
+        path: '/scripts/jsonh.js',
+      },
+      {
+        path: '/App/node_components/clamp-js/clamp.js',
+      },
+      {
+        path: '/scripts/usiFabric.js',
       },
     ],
     [
@@ -218,6 +161,42 @@ export const bookEventStatic: { [step: string]: StaticRequest[][] } = {
       },
       {
         path: '/app/node_components/bootstrap-sass/assets/javascripts/bootstrap.min.js',
+      },
+    ],
+    [
+      {
+        path: '/content/images/favicon.ico',
+      },
+      {
+        path: '/App/enterprise-dist/usi-core.js',
+      },
+    ],
+    [
+      {
+        path: '/app/node_components/localforage/dist/localforage.min.js',
+      },
+      {
+        path: '/app/node_components/toastr/build/toastr.min.js',
+      },
+      {
+        path: '/Scripts/moment-with-locales.min.js',
+      },
+      {
+        path: '/app/node_components/jsrsasign/lib/jsrsasign-all-min.js',
+      },
+      {
+        path: '/app/node_components/@syncfusion/ej2-base/dist/ej2-base.umd.min.js',
+      },
+      {
+        path: '/app/node_components/tether/dist/js/tether.min.js',
+      },
+      {
+        path: '/app/enterprise-dist/icons/local/index.js',
+      },
+    ],
+    [
+      {
+        path: '/Scripts/aurelia/resources/index.js',
       },
     ],
     [
@@ -393,16 +372,29 @@ export const bookEventStatic: { [step: string]: StaticRequest[][] } = {
         path: '/app/node_components/@syncfusion/ej2-file-utils/dist/ej2-file-utils.umd.min.js',
       },
     ],
-  ],
-  '02': [
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Button/button.css',
+        path: '/Scripts/aurelia/resources/elements/draggable/draggable.html',
       },
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.TextEditor/TextEditor.css',
+        path: '/app/enterprise-dist/viewmodels/signIn.js',
       },
     ],
+    [
+      {
+        path: '/app/enterprise-dist/views/signIn.html',
+      },
+      {
+        path: '/app/enterprise-dist/framework/styles/fonts/Roboto-Regular.ttf',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/Popover--ProgressIndicator/ProgressIndicator.html',
+      },
+    ],
+  ],
+  '02': [
     [
       {
         path: '/app/enterprise-dist/viewmodels/shell.js',
@@ -458,26 +450,7 @@ export const bookEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/components/accordion/accordion.component.html',
-      },
-      {
-        path: '/app/enterprise-dist/components/accordion/accordion.component.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Checkbox/Checkbox.css',
-      },
-      {
-        path: '/app/enterprise-dist/pages/home-page/home-page.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/overlay/overlay.component.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/toast/toast.component.html',
+        path: '/app/enterprise-dist/views/shell.html',
       },
     ],
     [
@@ -505,6 +478,62 @@ export const bookEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
+        path: '/app/enterprise-dist/framework/common.blocks/leftGlobalMobileNav/leftGlobalMobileNav.html',
+      },
+      {
+        path: '/app/enterprise-dist/components/overlay/overlay.component.css',
+      },
+      {
+        path: '/app/enterprise-dist/components/toast/toast.component.css',
+      },
+      {
+        path: '/app/enterprise-dist/components/accordion/accordion.component.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/overlay/overlay.component.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/toast/toast.component.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/accordion/accordion.interfaces.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/accordion/accordion.component.html',
+      },
+      {
+        path: '/app/enterprise-dist/components/accordion/accordion.component.css',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Checkbox/Checkbox.css',
+      },
+      {
+        path: '/app/enterprise-dist/pages/home-page/home-page.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/pages/home-page/home-page.html',
+      },
+      {
+        path: '/app/enterprise-dist/pages/home-page/home-page.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/MenuButton/MenuButton.html',
+      },
+    ],
+    [
+      {
         path: '/app/enterprise-dist/framework/common.blocks/ButtonContentTemplate/ButtonContentTemplate.html',
       },
       {
@@ -516,7 +545,20 @@ export const bookEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/ButtonGadget/ButtonGadget.html',
+        path: '/app/enterprise-dist/framework/windows/home/home.html',
+      },
+      {
+        path: '/app/enterprise-dist/framework/styles/fonts/InterVariable.woff2',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/siteHeader/siteHeader.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/leftGlobalNav/leftGlobalNav.html',
       },
     ],
     [
@@ -537,192 +579,25 @@ export const bookEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/MenuButton/MenuButton.html',
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/ButtonGadget/ButtonGadget.html',
       },
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/leftGlobalMobileNav/leftGlobalMobileNav.html',
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Button/button.css',
       },
       {
-        path: '/app/enterprise-dist/components/overlay/overlay.component.css',
-      },
-      {
-        path: '/app/enterprise-dist/components/toast/toast.component.css',
-      },
-      {
-        path: '/app/enterprise-dist/components/accordion/accordion.component.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/leftGlobalNav/leftGlobalNav.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/siteHeader/siteHeader.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/windows/home/home.html',
-      },
-      {
-        path: '/app/enterprise-dist/framework/styles/fonts/InterVariable.woff2',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/pages/home-page/home-page.html',
-      },
-      {
-        path: '/app/enterprise-dist/pages/home-page/home-page.css',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/shell.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/accordion/accordion.interfaces.js',
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.TextEditor/TextEditor.css',
       },
     ],
   ],
   '03': [
     [
       {
-        path: '/app/enterprise-dist/framework/windows/bookingCalendar/pendingGrid/bookingsGrid.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.ComboBox/ComboBox.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DatePicker/DatePicker.css',
-      },
-    ],
-    [
-      {
         path: '/app/enterprise-dist/pages/list-page/list-page.js',
       },
       {
         path: '/app/enterprise-dist/pages/base-page/base-page.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/window-message/window-message.component.html',
-      },
-      {
-        path: '/app/enterprise-dist/components/window-message/window-message.component.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/windows/bookingCalendar/bookingCalendar.js',
-      },
-      {
-        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/calendarGrid.js',
-      },
-      {
-        path: '/app/enterprise-dist/framework/windows/bookingCalendar/pendingGrid/bookingsGrid.js',
-      },
-      {
-        path: '/app/enterprise-dist/controls00/baseControls/calendar/calendarUtil.js',
-      },
-      {
-        path: '/app/enterprise-dist/framework/windows/baseCalendar/baseCalendar.js',
-      },
-      {
-        path: '/app/enterprise-dist/framework/windows/bookingCalendar/ribbon/calendarRibbon.js',
-      },
-      {
-        path: '/app/enterprise-dist/controls00/baseControls/calendar/interfaces.js',
-      },
-      {
-        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/chadmo.js',
-      },
-      {
-        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/chadmoTypes.js',
-      },
-      {
-        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoUtils.js',
-      },
-      {
-        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoColumnHeaders.js',
-      },
-      {
-        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoRows.js',
-      },
-      {
-        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoStyleConstants.js',
-      },
-      {
-        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoShared.js',
-      },
-      {
-        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoBoxSelection.js',
-      },
-      {
-        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoHtmlExporter.js',
-      },
-      {
-        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoContinuousSelection.js',
-      },
-      {
-        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Chadmo.js',
-      },
-      {
-        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoVirtual.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/windows/bookingCalendar/bookingCalendar.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/windows/bookingCalendar/pendingGrid/bookingsGrid.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/windows/bookingCalendar/ribbon/calendarRibbon.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/windows/bookingCalendar/ribbon/controls/button.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/windows/bookingCalendar/ribbon/controls/comboBox.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/windows/bookingCalendar/ribbon/controls/datePicker.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/windows/bookingCalendar/ribbon/controls/switch.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/pages/list-page/list-page.html',
-      },
-      {
-        path: '/app/enterprise-dist/components/window-message/window-message.component.js',
-      },
-      {
-        path: '/app/enterprise-dist/pages/base-page/base-page.css',
-      },
-      {
-        path: '/app/enterprise-dist/pages/list-page/list-page.css',
       },
     ],
     [
@@ -894,6 +769,131 @@ export const bookEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
+        path: '/app/enterprise-dist/pages/list-page/list-page.html',
+      },
+      {
+        path: '/app/enterprise-dist/components/window-message/window-message.component.js',
+      },
+      {
+        path: '/app/enterprise-dist/pages/base-page/base-page.css',
+      },
+      {
+        path: '/app/enterprise-dist/pages/list-page/list-page.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/window-message/window-message.component.html',
+      },
+      {
+        path: '/app/enterprise-dist/components/window-message/window-message.component.css',
+      },
+      {
+        path: '/app/enterprise-dist/framework/windows/bookingCalendar/bookingCalendar.js',
+      },
+      {
+        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/calendarGrid.js',
+      },
+      {
+        path: '/app/enterprise-dist/framework/windows/bookingCalendar/pendingGrid/bookingsGrid.js',
+      },
+      {
+        path: '/app/enterprise-dist/controls00/baseControls/calendar/calendarUtil.js',
+      },
+      {
+        path: '/app/enterprise-dist/framework/windows/baseCalendar/baseCalendar.js',
+      },
+      {
+        path: '/app/enterprise-dist/framework/windows/bookingCalendar/ribbon/calendarRibbon.js',
+      },
+      {
+        path: '/app/enterprise-dist/controls00/baseControls/calendar/interfaces.js',
+      },
+      {
+        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/chadmo.js',
+      },
+      {
+        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/chadmoTypes.js',
+      },
+      {
+        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoUtils.js',
+      },
+      {
+        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoColumnHeaders.js',
+      },
+      {
+        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoRows.js',
+      },
+      {
+        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoStyleConstants.js',
+      },
+      {
+        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoShared.js',
+      },
+      {
+        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoBoxSelection.js',
+      },
+      {
+        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoHtmlExporter.js',
+      },
+      {
+        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoContinuousSelection.js',
+      },
+      {
+        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Chadmo.js',
+      },
+      {
+        path: '/app/enterprise-dist/controls00/baseControls/calendar/grid/chadmo/Utils/chadmoVirtual.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/windows/bookingCalendar/bookingCalendar.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/windows/bookingCalendar/ribbon/calendarRibbon.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/windows/bookingCalendar/ribbon/controls/button.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/windows/bookingCalendar/ribbon/controls/switch.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/windows/bookingCalendar/ribbon/controls/comboBox.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/windows/bookingCalendar/ribbon/controls/datePicker.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/windows/bookingCalendar/pendingGrid/bookingsGrid.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/windows/bookingCalendar/pendingGrid/bookingsGrid.css',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.ComboBox/ComboBox.css',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DatePicker/DatePicker.css',
+      },
+    ],
+    [
+      {
         path: '/app/enterprise-dist/views/pageFooter.html',
       },
       {
@@ -907,27 +907,17 @@ export const bookEventStatic: { [step: string]: StaticRequest[][] } = {
   '04': [
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/CalendarHeader/CalendarHeader.html',
+        path: '/app/enterprise-dist/framework/common.blocks/PopoverHost/PopoverHost.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DatePicker/PopupPicker/PopupPicker.html',
       },
     ],
     [
       {
         path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/CalendarPicker.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/Day/Day.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/Day/Day.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/Decade/Decade.html',
       },
     ],
     [
@@ -940,7 +930,27 @@ export const bookEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
+        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/CalendarHeader/CalendarHeader.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/Day/Day.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/Day/Day.html',
+      },
+    ],
+    [
+      {
         path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/Year/Year.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/Decade/Decade.html',
       },
     ],
     [
@@ -948,26 +958,51 @@ export const bookEventStatic: { [step: string]: StaticRequest[][] } = {
         path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.ComboBox/Dropdown/Dropdown.css',
       },
     ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DatePicker/PopupPicker/PopupPicker.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/PopoverHost/PopoverHost.html',
-      },
-    ],
   ],
   '06': [
     [
       {
-        path: '/app/node_components/hammerjs/hammer.js',
+        path: '/app/enterprise-dist/components/drawer/drawer.component.html',
+      },
+      {
+        path: '/app/enterprise-dist/components/drawer/drawer.component.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/views/genericDetail.html',
       },
     ],
     [
       {
         path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Label/Label.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/Tabs/tabs.html',
+      },
+      {
+        path: '/app/enterprise-dist/viewmodels/genericSearch.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/emc00/ExhibitorTasksClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/emc00/EPConversationClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/ord00/StatisticsClientUI.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/controls00/layoutControls/sectionContainer/sectionContainer.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/views/USISectionMenu.html',
       },
     ],
     [
@@ -988,6 +1023,37 @@ export const bookEventStatic: { [step: string]: StaticRequest[][] } = {
       },
       {
         path: '/app/enterprise-dist/viewstyles/USISectionMenu.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/backOffice/sam00/EventSpaceDiagramClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/emc00/CustomLinksConfigurationClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/emc00/EventServicesClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/ord00/WorkOrdersClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/ord00/PaymentPlansClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/ord00/OrderItemsClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/cta00/ContractsClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/emc00/ESCTasksClientUI.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/controls00/layoutControls/editLayoutContainer/editLayoutContainer.html',
       },
     ],
     [
@@ -1045,78 +1111,31 @@ export const bookEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/backOffice/sam00/EventSpaceDiagramClientUI.js',
+        path: '/app/enterprise-dist/views/genericSearch.html',
       },
       {
-        path: '/app/enterprise-dist/backOffice/emc00/CustomLinksConfigurationClientUI.js',
+        path: '/app/enterprise-dist/models/RegSeatingAssignmentRetrieveData.js',
       },
       {
-        path: '/app/enterprise-dist/backOffice/emc00/EventServicesClientUI.js',
+        path: '/app/enterprise-dist/models/RegistrantForSeatCreation.js',
       },
       {
-        path: '/app/enterprise-dist/backOffice/ord00/WorkOrdersClientUI.js',
+        path: '/app/enterprise-dist/models/BoothHoldsCardInfo.js',
       },
       {
-        path: '/app/enterprise-dist/backOffice/ord00/PaymentPlansClientUI.js',
+        path: '/app/enterprise-dist/backOffice/emc00/functionsUtil.js',
       },
       {
-        path: '/app/enterprise-dist/backOffice/ord00/OrderItemsClientUI.js',
+        path: '/app/enterprise-dist/framework/common.blocks/mobile/eventFunctionMobileDetail.js',
       },
       {
-        path: '/app/enterprise-dist/backOffice/cta00/ContractsClientUI.js',
+        path: '/app/enterprise-dist/models/EventFunctionCardInfo.js',
       },
       {
-        path: '/app/enterprise-dist/backOffice/emc00/ESCTasksClientUI.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/drawer/drawer.component.html',
+        path: '/app/enterprise-dist/BackOffice/ord00/ordersClientUI.js',
       },
       {
-        path: '/app/enterprise-dist/components/drawer/drawer.component.css',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/controls00/layoutControls/editLayoutContainer/editLayoutContainer.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/controls00/layoutControls/sectionContainer/sectionContainer.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/Tabs/tabs.html',
-      },
-      {
-        path: '/app/enterprise-dist/viewmodels/genericSearch.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/emc00/ExhibitorTasksClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/emc00/EPConversationClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/ord00/StatisticsClientUI.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/USISectionMenu.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/genericDetail.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/genericPageFooter.html',
+        path: '/app/enterprise-dist/BackOffice/ord00/OrdersClientUI.js',
       },
     ],
     [
@@ -1147,6 +1166,16 @@ export const bookEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
+        path: '/app/enterprise-dist/views/genericPageFooter.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/views/genericPageSearch.html',
+      },
+    ],
+    [
+      {
         path: '/app/enterprise-dist/views/genericPageNavToolbar.html',
       },
       {
@@ -1170,45 +1199,11 @@ export const bookEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/views/genericPageSearch.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/genericSearch.html',
-      },
-      {
-        path: '/app/enterprise-dist/models/RegSeatingAssignmentRetrieveData.js',
-      },
-      {
-        path: '/app/enterprise-dist/models/RegistrantForSeatCreation.js',
-      },
-      {
-        path: '/app/enterprise-dist/models/BoothHoldsCardInfo.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/emc00/functionsUtil.js',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/mobile/eventFunctionMobileDetail.js',
-      },
-      {
-        path: '/app/enterprise-dist/models/EventFunctionCardInfo.js',
-      },
-      {
-        path: '/app/enterprise-dist/BackOffice/ord00/ordersClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/BackOffice/ord00/OrdersClientUI.js',
+        path: '/app/node_components/hammerjs/hammer.js',
       },
     ],
   ],
   '08': [
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DateRange/DateRange.css',
-      },
-    ],
     [
       {
         path: '/app/enterprise-dist/framework/windows/genericMultipleDetail/genericMultipleDetail.js',
@@ -1226,6 +1221,11 @@ export const bookEventStatic: { [step: string]: StaticRequest[][] } = {
       },
       {
         path: '/app/enterprise-dist/components/floating/peek/peek.component.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/windows/genericMultipleDetail/genericMultipleDetail.html',
       },
     ],
     [
@@ -1249,17 +1249,17 @@ export const bookEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/components/menu/menu-container.html',
-      },
-    ],
-    [
-      {
         path: '/app/enterprise-dist/components/menu/menu-option.html',
       },
     ],
     [
       {
         path: '/app/enterprise-dist/components/menu/menu-option-label.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/menu/menu-container.html',
       },
     ],
     [
@@ -1275,6 +1275,11 @@ export const bookEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
+        path: '/app/enterprise-dist/framework/Common.Blocks/MenuButton/MenuButton.html',
+      },
+    ],
+    [
+      {
         path: '/app/enterprise-dist/framework/Common.Blocks/ButtonContentTemplate/ButtonContentTemplate.html',
       },
       {
@@ -1286,17 +1291,12 @@ export const bookEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/Common.Blocks/MenuButton/MenuButton.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/windows/genericMultipleDetail/genericMultipleDetail.html',
-      },
-    ],
-    [
-      {
         path: '/app/enterprise-dist/views/genericList.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DateRange/DateRange.css',
       },
     ],
   ],

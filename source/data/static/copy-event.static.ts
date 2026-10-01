@@ -5,14 +5,6 @@ export const copyEventStatic: { [step: string]: StaticRequest[][] } = {
   '01': [
     [
       {
-        path: '/app/enterprise-dist/framework/themes/snug.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/styles/font-face.css',
-      },
-    ],
-    [
-      {
         path: '/app/enterprise-dist/framework/windows/splash/splash.css',
       },
       {
@@ -21,70 +13,10 @@ export const copyEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/Scripts/aurelia/resources/elements/draggable/draggable.html',
+        path: '/app/enterprise-dist/framework/themes/snug.css',
       },
       {
-        path: '/app/enterprise-dist/viewmodels/signIn.js',
-      },
-    ],
-    [
-      {
-        path: '/Scripts/aurelia/resources/index.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/Popover--ProgressIndicator/ProgressIndicator.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/signIn.html',
-      },
-      {
-        path: '/app/enterprise-dist/framework/styles/fonts/Roboto-Regular.ttf',
-      },
-    ],
-    [
-      {
-        path: '/app/node_components/localforage/dist/localforage.min.js',
-      },
-      {
-        path: '/app/node_components/toastr/build/toastr.min.js',
-      },
-      {
-        path: '/Scripts/moment-with-locales.min.js',
-      },
-      {
-        path: '/app/node_components/jsrsasign/lib/jsrsasign-all-min.js',
-      },
-      {
-        path: '/app/node_components/@syncfusion/ej2-base/dist/ej2-base.umd.min.js',
-      },
-      {
-        path: '/app/node_components/tether/dist/js/tether.min.js',
-      },
-      {
-        path: '/app/enterprise-dist/icons/local/index.js',
-      },
-    ],
-    [
-      {
-        path: '/content/images/favicon.ico',
-      },
-      {
-        path: '/App/enterprise-dist/usi-core.js',
-      },
-    ],
-    [
-      {
-        path: '/scripts/jsonh.js',
-      },
-      {
-        path: '/App/node_components/clamp-js/clamp.js',
-      },
-      {
-        path: '/scripts/usiFabric.js',
+        path: '/app/enterprise-dist/framework/styles/font-face.css',
       },
     ],
     [
@@ -96,6 +28,17 @@ export const copyEventStatic: { [step: string]: StaticRequest[][] } = {
       },
       {
         path: '/content/images/splashscreen/Login-Momentus-BG-2-web.jpg',
+      },
+    ],
+    [
+      {
+        path: '/scripts/jsonh.js',
+      },
+      {
+        path: '/App/node_components/clamp-js/clamp.js',
+      },
+      {
+        path: '/scripts/usiFabric.js',
       },
     ],
     [
@@ -184,6 +127,42 @@ export const copyEventStatic: { [step: string]: StaticRequest[][] } = {
       },
       {
         path: '/app/node_components/bootstrap-sass/assets/javascripts/bootstrap.min.js',
+      },
+    ],
+    [
+      {
+        path: '/content/images/favicon.ico',
+      },
+      {
+        path: '/App/enterprise-dist/usi-core.js',
+      },
+    ],
+    [
+      {
+        path: '/app/node_components/localforage/dist/localforage.min.js',
+      },
+      {
+        path: '/app/node_components/toastr/build/toastr.min.js',
+      },
+      {
+        path: '/Scripts/moment-with-locales.min.js',
+      },
+      {
+        path: '/app/node_components/jsrsasign/lib/jsrsasign-all-min.js',
+      },
+      {
+        path: '/app/node_components/@syncfusion/ej2-base/dist/ej2-base.umd.min.js',
+      },
+      {
+        path: '/app/node_components/tether/dist/js/tether.min.js',
+      },
+      {
+        path: '/app/enterprise-dist/icons/local/index.js',
+      },
+    ],
+    [
+      {
+        path: '/Scripts/aurelia/resources/index.js',
       },
     ],
     [
@@ -359,16 +338,29 @@ export const copyEventStatic: { [step: string]: StaticRequest[][] } = {
         path: '/app/node_components/@syncfusion/ej2-file-utils/dist/ej2-file-utils.umd.min.js',
       },
     ],
-  ],
-  '02': [
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Button/button.css',
+        path: '/Scripts/aurelia/resources/elements/draggable/draggable.html',
       },
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.TextEditor/TextEditor.css',
+        path: '/app/enterprise-dist/viewmodels/signIn.js',
       },
     ],
+    [
+      {
+        path: '/app/enterprise-dist/views/signIn.html',
+      },
+      {
+        path: '/app/enterprise-dist/framework/styles/fonts/Roboto-Regular.ttf',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/Popover--ProgressIndicator/ProgressIndicator.html',
+      },
+    ],
+  ],
+  '02': [
     [
       {
         path: '/app/enterprise-dist/viewmodels/shell.js',
@@ -424,26 +416,7 @@ export const copyEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/components/accordion/accordion.component.html',
-      },
-      {
-        path: '/app/enterprise-dist/components/accordion/accordion.component.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Checkbox/Checkbox.css',
-      },
-      {
-        path: '/app/enterprise-dist/pages/home-page/home-page.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/overlay/overlay.component.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/toast/toast.component.html',
+        path: '/app/enterprise-dist/views/shell.html',
       },
     ],
     [
@@ -471,6 +444,62 @@ export const copyEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
+        path: '/app/enterprise-dist/framework/common.blocks/leftGlobalMobileNav/leftGlobalMobileNav.html',
+      },
+      {
+        path: '/app/enterprise-dist/components/overlay/overlay.component.css',
+      },
+      {
+        path: '/app/enterprise-dist/components/toast/toast.component.css',
+      },
+      {
+        path: '/app/enterprise-dist/components/accordion/accordion.component.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/overlay/overlay.component.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/toast/toast.component.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/accordion/accordion.interfaces.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/accordion/accordion.component.html',
+      },
+      {
+        path: '/app/enterprise-dist/components/accordion/accordion.component.css',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Checkbox/Checkbox.css',
+      },
+      {
+        path: '/app/enterprise-dist/pages/home-page/home-page.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/pages/home-page/home-page.html',
+      },
+      {
+        path: '/app/enterprise-dist/pages/home-page/home-page.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/MenuButton/MenuButton.html',
+      },
+    ],
+    [
+      {
         path: '/app/enterprise-dist/framework/common.blocks/ButtonContentTemplate/ButtonContentTemplate.html',
       },
       {
@@ -482,7 +511,20 @@ export const copyEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/ButtonGadget/ButtonGadget.html',
+        path: '/app/enterprise-dist/framework/windows/home/home.html',
+      },
+      {
+        path: '/app/enterprise-dist/framework/styles/fonts/InterVariable.woff2',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/siteHeader/siteHeader.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/leftGlobalNav/leftGlobalNav.html',
       },
     ],
     [
@@ -503,61 +545,27 @@ export const copyEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/MenuButton/MenuButton.html',
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/ButtonGadget/ButtonGadget.html',
       },
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/leftGlobalMobileNav/leftGlobalMobileNav.html',
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Button/button.css',
       },
       {
-        path: '/app/enterprise-dist/components/overlay/overlay.component.css',
-      },
-      {
-        path: '/app/enterprise-dist/components/toast/toast.component.css',
-      },
-      {
-        path: '/app/enterprise-dist/components/accordion/accordion.component.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/leftGlobalNav/leftGlobalNav.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/siteHeader/siteHeader.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/windows/home/home.html',
-      },
-      {
-        path: '/app/enterprise-dist/framework/styles/fonts/InterVariable.woff2',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/pages/home-page/home-page.html',
-      },
-      {
-        path: '/app/enterprise-dist/pages/home-page/home-page.css',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/shell.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/accordion/accordion.interfaces.js',
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.TextEditor/TextEditor.css',
       },
     ],
   ],
   '03': [
+    [
+      {
+        path: '/app/enterprise-dist/pages/list-page/list-page.js',
+      },
+      {
+        path: '/app/enterprise-dist/pages/base-page/base-page.js',
+      },
+    ],
     [
       {
         path: '/app/enterprise-dist/viewmodels/genericList.js',
@@ -727,63 +735,16 @@ export const copyEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DateRange/DateRange.css',
+        path: '/app/enterprise-dist/pages/list-page/list-page.html',
       },
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.ComboBox/ComboBox.css',
+        path: '/app/enterprise-dist/components/window-message/window-message.component.js',
       },
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DatePicker/DatePicker.css',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/pages/list-page/list-page.js',
+        path: '/app/enterprise-dist/pages/base-page/base-page.css',
       },
       {
-        path: '/app/enterprise-dist/pages/base-page/base-page.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/viewmodels/genericSearch.js',
-      },
-      {
-        path: '/app/enterprise-dist/services/genericSearchServerAccess.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/floating/tooltip/tooltip.component.html',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/USIDataGridMenu/USIDataGridMenu.css',
-      },
-      {
-        path: '/app/enterprise-dist/components/floating/tooltip/tooltip.component.css',
-      },
-      {
-        path: '/app/enterprise-dist/icons/local/reading-pane-button-active.svg',
-      },
-      {
-        path: '/app/enterprise-dist/icons/local/reading-pane-button-active-hover.svg',
-      },
-      {
-        path: '/app/enterprise-dist/icons/local/reading-pane-button-inactive.svg',
-      },
-      {
-        path: '/app/enterprise-dist/icons/local/reading-pane-button-inactive-hover.svg',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/modal/modal.component.html',
-      },
-      {
-        path: '/app/enterprise-dist/framework/Common.Blocks/MenuButton/MenuButton.js',
-      },
-      {
-        path: '/app/enterprise-dist/components/modal/modal.component.css',
+        path: '/app/enterprise-dist/pages/list-page/list-page.css',
       },
     ],
     [
@@ -814,28 +775,59 @@ export const copyEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
+        path: '/app/enterprise-dist/views/genericList.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/views/genericPageSearch.html',
+      },
+      {
+        path: '/app/enterprise-dist/viewstyles/navbarSpillover.css',
+      },
+      {
+        path: '/app/enterprise-dist/viewstyles/genericPageSearch.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/views/genericPageNavToolbar.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/USIDataGridMenu/USIDataGridMenu.html',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/DataGrid/dataGridFooter.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/floating/tooltip/tooltip.component.html',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/USIDataGridMenu/USIDataGridMenu.css',
+      },
+      {
+        path: '/app/enterprise-dist/components/floating/tooltip/tooltip.component.css',
+      },
+      {
+        path: '/app/enterprise-dist/icons/local/reading-pane-button-active.svg',
+      },
+      {
+        path: '/app/enterprise-dist/icons/local/reading-pane-button-active-hover.svg',
+      },
+      {
+        path: '/app/enterprise-dist/icons/local/reading-pane-button-inactive.svg',
+      },
+      {
+        path: '/app/enterprise-dist/icons/local/reading-pane-button-inactive-hover.svg',
+      },
+    ],
+    [
+      {
         path: '/app/enterprise-dist/controls00/layoutControls/editLayoutContainer/editLayoutContainer.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/controls00/layoutControls/sectionContainer/sectionContainer.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/Common.Blocks/ButtonContentTemplate/ButtonContentTemplate.html',
-      },
-      {
-        path: '/app/enterprise-dist/framework/Common.Blocks/MenuButton/MenuButton.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/Common.Blocks/FlexLayout.Button/Button.css',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/Common.Blocks/MenuButton/MenuButton.html',
       },
     ],
     [
@@ -851,45 +843,53 @@ export const copyEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/USIDataGridMenu/USIDataGridMenu.html',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/DataGrid/dataGridFooter.css',
+        path: '/app/enterprise-dist/controls00/layoutControls/sectionContainer/sectionContainer.html',
       },
     ],
     [
       {
-        path: '/app/enterprise-dist/pages/list-page/list-page.html',
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DateRange/DateRange.css',
       },
       {
-        path: '/app/enterprise-dist/components/window-message/window-message.component.js',
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.ComboBox/ComboBox.css',
       },
       {
-        path: '/app/enterprise-dist/pages/base-page/base-page.css',
-      },
-      {
-        path: '/app/enterprise-dist/pages/list-page/list-page.css',
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DatePicker/DatePicker.css',
       },
     ],
     [
       {
-        path: '/app/enterprise-dist/views/genericList.html',
+        path: '/app/enterprise-dist/viewmodels/genericSearch.js',
+      },
+      {
+        path: '/app/enterprise-dist/services/genericSearchServerAccess.js',
       },
     ],
     [
       {
-        path: '/app/enterprise-dist/views/genericPageNavToolbar.html',
+        path: '/app/enterprise-dist/components/modal/modal.component.html',
+      },
+      {
+        path: '/app/enterprise-dist/framework/Common.Blocks/MenuButton/MenuButton.js',
+      },
+      {
+        path: '/app/enterprise-dist/components/modal/modal.component.css',
       },
     ],
     [
       {
-        path: '/app/enterprise-dist/views/genericPageSearch.html',
+        path: '/app/enterprise-dist/framework/Common.Blocks/MenuButton/MenuButton.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/Common.Blocks/ButtonContentTemplate/ButtonContentTemplate.html',
       },
       {
-        path: '/app/enterprise-dist/viewstyles/navbarSpillover.css',
+        path: '/app/enterprise-dist/framework/Common.Blocks/MenuButton/MenuButton.css',
       },
       {
-        path: '/app/enterprise-dist/viewstyles/genericPageSearch.css',
+        path: '/app/enterprise-dist/framework/Common.Blocks/FlexLayout.Button/Button.css',
       },
     ],
   ],
@@ -918,17 +918,17 @@ export const copyEventStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/components/menu/menu-container.html',
-      },
-    ],
-    [
-      {
         path: '/app/enterprise-dist/components/menu/menu-option.html',
       },
     ],
     [
       {
         path: '/app/enterprise-dist/components/menu/menu-option-label.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/menu/menu-container.html',
       },
     ],
     [
@@ -940,12 +940,147 @@ export const copyEventStatic: { [step: string]: StaticRequest[][] } = {
   '06': [
     [
       {
-        path: '/app/enterprise-dist/backOffice/emc00/EventExternalIdClientUI.js',
+        path: '/app/enterprise-dist/framework/common.blocks/PopoverHost/PopoverHost.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DatePicker/PopupPicker/PopupPicker.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/CalendarPicker.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/Month/Month.html',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/CalendarHeader/fit-or.js',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/Day/Day.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/CalendarHeader/CalendarHeader.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/Day/Day.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/styles/fonts/Roboto-Medium.ttf',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/Year/Year.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/Decade/Decade.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/pages/edit-page/edit-page.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/pages/edit-page/edit-page.html',
+      },
+      {
+        path: '/app/enterprise-dist/components/detail-page-header/detail-page-header.component.js',
+      },
+      {
+        path: '/app/enterprise-dist/components/risk-analysis/risk-analysis.component.js',
+      },
+      {
+        path: '/app/enterprise-dist/components/risk-analysis/risk-analysis.component.interfaces.js',
+      },
+      {
+        path: '/app/enterprise-dist/services/riskAnalysisServerAccess.js',
+      },
+      {
+        path: '/app/enterprise-dist/pages/edit-page/edit-page.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/risk-analysis/risk-analysis.component.html',
+      },
+      {
+        path: '/app/enterprise-dist/components/detail-page-header/detail-page-header.component.css',
+      },
+      {
+        path: '/app/enterprise-dist/components/risk-analysis/risk-analysis.component.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/detail-page-header/detail-page-header.component.html',
       },
     ],
     [
       {
         path: '/app/enterprise-dist/components/detail-page-header/Templates/EventsHeaderTemplate/EventsHeaderTemplate.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/Tabs/tabs.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/detail-page-header/Templates/EventsHeaderTemplate/EventsHeaderTemplate.html',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/esm00/NotesClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/ord00/BoothHoldsClientUI.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/views/USISectionMenu.html',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/emc00/BookingsClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/ord00/EventProductsAndServicesClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/emc00/FlowInventoryClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/ord00/FloorPlanClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/emc00/EventTasksConfigurationClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/esm00/ActivitiesClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/emc00/AbstractsClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/ord00/StatisticsClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/viewstyles/USISectionMenu.css',
       },
     ],
     [
@@ -972,6 +1107,11 @@ export const copyEventStatic: { [step: string]: StaticRequest[][] } = {
       },
       {
         path: '/app/enterprise-dist/backOffice/ord00/WorkOrderItemsClientUI.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/backOffice/emc00/EventExternalIdClientUI.js',
       },
     ],
     [
@@ -1097,146 +1237,6 @@ export const copyEventStatic: { [step: string]: StaticRequest[][] } = {
       },
       {
         path: '/app/node_components/hammerjs/hammer.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/pages/edit-page/edit-page.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/detail-page-header/Templates/EventsHeaderTemplate/EventsHeaderTemplate.html',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/esm00/NotesClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/ord00/BoothHoldsClientUI.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/detail-page-header/detail-page-header.component.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/risk-analysis/risk-analysis.component.html',
-      },
-      {
-        path: '/app/enterprise-dist/components/detail-page-header/detail-page-header.component.css',
-      },
-      {
-        path: '/app/enterprise-dist/components/risk-analysis/risk-analysis.component.css',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/CalendarHeader/CalendarHeader.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/CalendarPicker.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/Day/Day.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/Decade/Decade.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/Month/Month.html',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/CalendarHeader/fit-or.js',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/Day/Day.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/CalendarPicker/Year/Year.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DatePicker/PopupPicker/PopupPicker.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/PopoverHost/PopoverHost.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/Tabs/tabs.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/styles/fonts/Roboto-Medium.ttf',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/pages/edit-page/edit-page.html',
-      },
-      {
-        path: '/app/enterprise-dist/components/detail-page-header/detail-page-header.component.js',
-      },
-      {
-        path: '/app/enterprise-dist/components/risk-analysis/risk-analysis.component.js',
-      },
-      {
-        path: '/app/enterprise-dist/components/risk-analysis/risk-analysis.component.interfaces.js',
-      },
-      {
-        path: '/app/enterprise-dist/services/riskAnalysisServerAccess.js',
-      },
-      {
-        path: '/app/enterprise-dist/pages/edit-page/edit-page.css',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/USISectionMenu.html',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/emc00/BookingsClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/ord00/EventProductsAndServicesClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/emc00/FlowInventoryClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/ord00/FloorPlanClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/emc00/EventTasksConfigurationClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/esm00/ActivitiesClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/emc00/AbstractsClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/ord00/StatisticsClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/viewstyles/USISectionMenu.css',
       },
     ],
   ],

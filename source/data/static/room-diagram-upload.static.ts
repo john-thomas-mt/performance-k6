@@ -5,14 +5,6 @@ export const roomDiagramUploadStatic: { [step: string]: StaticRequest[][] } = {
   '01': [
     [
       {
-        path: '/app/enterprise-dist/framework/themes/snug.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/styles/font-face.css',
-      },
-    ],
-    [
-      {
         path: '/app/enterprise-dist/framework/windows/splash/splash.css',
       },
       {
@@ -21,23 +13,145 @@ export const roomDiagramUploadStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/Scripts/aurelia/resources/elements/draggable/draggable.html',
+        path: '/app/enterprise-dist/framework/themes/snug.css',
       },
       {
-        path: '/app/enterprise-dist/viewmodels/signIn.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/Popover--ProgressIndicator/ProgressIndicator.html',
+        path: '/app/enterprise-dist/framework/styles/font-face.css',
       },
     ],
     [
       {
-        path: '/app/enterprise-dist/views/signIn.html',
+        path: '/App/node_components/core-js-bundle/minified.js',
+      },
+    ],
+    [
+      {
+        path: '/content/images/splashscreen/momentus-logo-mark-reverse-rgb.svg',
       },
       {
-        path: '/app/enterprise-dist/framework/styles/fonts/Roboto-Regular.ttf',
+        path: '/content/images/splashscreen/Login-Momentus-BG-2-web.jpg',
+      },
+      {
+        path: '/packages/ask-momentus/web-component/latest/ask-momentus-web.js',
+      },
+      {
+        path: '/scripts/jsonh.js',
+      },
+      {
+        path: '/App/node_components/clamp-js/clamp.js',
+      },
+      {
+        path: '/scripts/usiFabric.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/config.js',
+      },
+      {
+        path: '/App/node_components/requirejs/require.js',
+      },
+      {
+        path: '/scripts/aurelia/aurelia-core.min.js',
+      },
+      {
+        path: '/app/enterprise-dist/framework/styles/fonts/Inter-Regular.ttf',
+      },
+      {
+        path: '/app/node_components/jquery-ui/dist/jquery-ui.min.js',
+      },
+      {
+        path: '/Scripts/jquery-ui-touch-punch-0.2.3.min.js',
+      },
+      {
+        path: '/Scripts/gridstack/dist/gridstack.min.js',
+      },
+      {
+        path: '/App/enterprise-dist/usi-core.js',
+      },
+      {
+        path: '/app/node_components/bootstrap-sass/assets/javascripts/bootstrap.min.js',
+      },
+      {
+        path: '/app/node_components/lodash/lodash.min.js',
+      },
+      {
+        path: '/app/node_components/jquery-ui/ui/data.js',
+      },
+      {
+        path: '/app/node_components/jquery-ui/ui/disable-selection.js',
+      },
+      {
+        path: '/app/node_components/jquery-ui/ui/focusable.js',
+      },
+      {
+        path: '/app/node_components/jquery-ui/ui/form.js',
+      },
+      {
+        path: '/app/node_components/jquery-ui/ui/ie.js',
+      },
+      {
+        path: '/app/node_components/jquery-ui/ui/keycode.js',
+      },
+      {
+        path: '/app/node_components/jquery-ui/ui/labels.js',
+      },
+      {
+        path: '/app/node_components/jquery-ui/ui/plugin.js',
+      },
+      {
+        path: '/app/node_components/jquery-ui/ui/safe-active-element.js',
+      },
+      {
+        path: '/app/node_components/jquery-ui/ui/safe-blur.js',
+      },
+      {
+        path: '/app/node_components/jquery-ui/ui/scroll-parent.js',
+      },
+      {
+        path: '/app/node_components/jquery-ui/ui/tabbable.js',
+      },
+      {
+        path: '/app/node_components/jquery-ui/ui/unique-id.js',
+      },
+      {
+        path: '/app/node_components/jquery-ui/ui/version.js',
+      },
+      {
+        path: '/app/node_components/jquery-ui/ui/widget.js',
+      },
+      {
+        path: '/app/node_components/jquery-ui/ui/widgets/mouse.js',
+      },
+      {
+        path: '/app/node_components/jquery-ui/ui/widgets/draggable.js',
+      },
+      {
+        path: '/app/node_components/jquery-ui/ui/widgets/droppable.js',
+      },
+      {
+        path: '/app/node_components/jquery-ui/ui/widgets/resizable.js',
+      },
+      {
+        path: '/app/node_components/localforage/dist/localforage.min.js',
+      },
+      {
+        path: '/app/node_components/toastr/build/toastr.min.js',
+      },
+      {
+        path: '/Scripts/moment-with-locales.min.js',
+      },
+      {
+        path: '/app/node_components/jsrsasign/lib/jsrsasign-all-min.js',
+      },
+      {
+        path: '/app/node_components/@syncfusion/ej2-base/dist/ej2-base.umd.min.js',
+      },
+      {
+        path: '/app/node_components/tether/dist/js/tether.min.js',
+      },
+      {
+        path: '/app/enterprise-dist/icons/local/index.js',
       },
     ],
     [
@@ -221,137 +335,23 @@ export const roomDiagramUploadStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/content/images/splashscreen/momentus-logo-mark-reverse-rgb.svg',
+        path: '/Scripts/aurelia/resources/elements/draggable/draggable.html',
       },
       {
-        path: '/content/images/splashscreen/Login-Momentus-BG-2-web.jpg',
-      },
-      {
-        path: '/packages/ask-momentus/web-component/latest/ask-momentus-web.js',
-      },
-      {
-        path: '/scripts/jsonh.js',
-      },
-      {
-        path: '/App/node_components/clamp-js/clamp.js',
-      },
-      {
-        path: '/scripts/usiFabric.js',
+        path: '/app/enterprise-dist/viewmodels/signIn.js',
       },
     ],
     [
       {
-        path: '/App/node_components/core-js-bundle/minified.js',
+        path: '/app/enterprise-dist/views/signIn.html',
+      },
+      {
+        path: '/app/enterprise-dist/framework/styles/fonts/Roboto-Regular.ttf',
       },
     ],
     [
       {
-        path: '/app/enterprise-dist/config.js',
-      },
-      {
-        path: '/App/node_components/requirejs/require.js',
-      },
-      {
-        path: '/scripts/aurelia/aurelia-core.min.js',
-      },
-      {
-        path: '/app/enterprise-dist/framework/styles/fonts/Inter-Regular.ttf',
-      },
-      {
-        path: '/app/node_components/jquery-ui/dist/jquery-ui.min.js',
-      },
-      {
-        path: '/Scripts/jquery-ui-touch-punch-0.2.3.min.js',
-      },
-      {
-        path: '/Scripts/gridstack/dist/gridstack.min.js',
-      },
-      {
-        path: '/App/enterprise-dist/usi-core.js',
-      },
-      {
-        path: '/app/node_components/bootstrap-sass/assets/javascripts/bootstrap.min.js',
-      },
-      {
-        path: '/app/node_components/lodash/lodash.min.js',
-      },
-      {
-        path: '/app/node_components/jquery-ui/ui/data.js',
-      },
-      {
-        path: '/app/node_components/jquery-ui/ui/disable-selection.js',
-      },
-      {
-        path: '/app/node_components/jquery-ui/ui/focusable.js',
-      },
-      {
-        path: '/app/node_components/jquery-ui/ui/form.js',
-      },
-      {
-        path: '/app/node_components/jquery-ui/ui/ie.js',
-      },
-      {
-        path: '/app/node_components/jquery-ui/ui/keycode.js',
-      },
-      {
-        path: '/app/node_components/jquery-ui/ui/labels.js',
-      },
-      {
-        path: '/app/node_components/jquery-ui/ui/plugin.js',
-      },
-      {
-        path: '/app/node_components/jquery-ui/ui/safe-active-element.js',
-      },
-      {
-        path: '/app/node_components/jquery-ui/ui/safe-blur.js',
-      },
-      {
-        path: '/app/node_components/jquery-ui/ui/scroll-parent.js',
-      },
-      {
-        path: '/app/node_components/jquery-ui/ui/tabbable.js',
-      },
-      {
-        path: '/app/node_components/jquery-ui/ui/unique-id.js',
-      },
-      {
-        path: '/app/node_components/jquery-ui/ui/version.js',
-      },
-      {
-        path: '/app/node_components/jquery-ui/ui/widget.js',
-      },
-      {
-        path: '/app/node_components/jquery-ui/ui/widgets/mouse.js',
-      },
-      {
-        path: '/app/node_components/jquery-ui/ui/widgets/draggable.js',
-      },
-      {
-        path: '/app/node_components/jquery-ui/ui/widgets/droppable.js',
-      },
-      {
-        path: '/app/node_components/jquery-ui/ui/widgets/resizable.js',
-      },
-      {
-        path: '/app/node_components/localforage/dist/localforage.min.js',
-      },
-      {
-        path: '/app/node_components/toastr/build/toastr.min.js',
-      },
-      {
-        path: '/Scripts/moment-with-locales.min.js',
-      },
-      {
-        path: '/app/node_components/jsrsasign/lib/jsrsasign-all-min.js',
-      },
-      {
-        path: '/app/node_components/@syncfusion/ej2-base/dist/ej2-base.umd.min.js',
-      },
-      {
-        path: '/app/node_components/tether/dist/js/tether.min.js',
-      },
-      {
-        path: '/app/enterprise-dist/icons/local/index.js',
+        path: '/app/enterprise-dist/framework/common.blocks/Popover--ProgressIndicator/ProgressIndicator.html',
       },
     ],
   ],
@@ -411,80 +411,7 @@ export const roomDiagramUploadStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.TextEditor/TextEditor.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/DataGrid/dataGridFooter.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/USIDataGridMenu/USIDataGridMenu.css',
-      },
-    ],
-    [
-      {
-        path: '/Scripts/wijmo/controls/wijmo.olap.min.js',
-      },
-      {
-        path: '/Scripts/wijmo/controls/wijmo.grid.xlsx.min.js',
-      },
-      {
-        path: '/Scripts/wijmo/controls/xlsx-jszip-loader.js',
-      },
-      {
-        path: '/app/enterprise-dist/framework/styles/fonts/Roboto-Medium.ttf',
-      },
-      {
-        path: '/app/node_components/jszip/dist/jszip.min.js',
-      },
-      {
-        path: '/Scripts/wijmo/controls/wijmo.xlsx.min.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/accordion/accordion.component.html',
-      },
-      {
-        path: '/app/enterprise-dist/components/accordion/accordion.component.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Checkbox/Checkbox.css',
-      },
-      {
-        path: '/app/enterprise-dist/pages/home-page/home-page.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/floating/tooltip/tooltip.component.html',
-      },
-      {
-        path: '/app/enterprise-dist/components/floating/tooltip/tooltip.component.css',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/esm00/AccountsClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/icons/local/reading-pane-button-active.svg',
-      },
-      {
-        path: '/app/enterprise-dist/icons/local/reading-pane-button-active-hover.svg',
-      },
-      {
-        path: '/app/enterprise-dist/icons/local/reading-pane-button-inactive.svg',
-      },
-      {
-        path: '/app/enterprise-dist/icons/local/reading-pane-button-inactive-hover.svg',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/overlay/overlay.component.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/components/toast/toast.component.html',
+        path: '/app/enterprise-dist/views/shell.html',
       },
     ],
     [
@@ -512,67 +439,12 @@ export const roomDiagramUploadStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/ButtonContentTemplate/ButtonContentTemplate.html',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/MenuButton/MenuButton.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Button/Button.css',
+        path: '/app/enterprise-dist/components/overlay/overlay.component.html',
       },
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/ButtonGadget/ButtonGadget.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/Gadget.html',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/Tabs/tabs.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/leftGlobalNav/leftGlobalNav.css',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/KPIGaugeGadget/KPIGaugeGadget.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/PivotGadget/PivotGadget.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/TextGadget/TextGadget.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/ViewGadget/ViewGadget.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.KPIGauge/KPIGauge.html',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Button/button.css',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/MenuButton/MenuButton.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/USIDataGridMenu/USIDataGridMenu.html',
+        path: '/app/enterprise-dist/components/toast/toast.component.html',
       },
     ],
     [
@@ -594,20 +466,16 @@ export const roomDiagramUploadStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/leftGlobalNav/leftGlobalNav.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/siteHeader/siteHeader.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/windows/home/home.html',
+        path: '/app/enterprise-dist/components/accordion/accordion.component.html',
       },
       {
-        path: '/app/enterprise-dist/framework/styles/fonts/InterVariable.woff2',
+        path: '/app/enterprise-dist/components/accordion/accordion.component.css',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Checkbox/Checkbox.css',
+      },
+      {
+        path: '/app/enterprise-dist/pages/home-page/home-page.js',
       },
     ],
     [
@@ -620,7 +488,119 @@ export const roomDiagramUploadStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/views/shell.html',
+        path: '/app/enterprise-dist/framework/common.blocks/MenuButton/MenuButton.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/ButtonContentTemplate/ButtonContentTemplate.html',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/MenuButton/MenuButton.css',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Button/Button.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/windows/home/home.html',
+      },
+      {
+        path: '/app/enterprise-dist/framework/styles/fonts/InterVariable.woff2',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/leftGlobalNav/leftGlobalNav.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/siteHeader/siteHeader.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/Gadget.html',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/Tabs/tabs.css',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/leftGlobalNav/leftGlobalNav.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/ViewGadget/ViewGadget.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/TextGadget/TextGadget.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/ButtonGadget/ButtonGadget.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/KPIGaugeGadget/KPIGaugeGadget.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Gadget/PivotGadget/PivotGadget.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/USIDataGridMenu/USIDataGridMenu.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.KPIGauge/KPIGauge.html',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Button/button.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.TextEditor/TextEditor.css',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/DataGrid/dataGridFooter.css',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/USIDataGridMenu/USIDataGridMenu.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/components/floating/tooltip/tooltip.component.html',
+      },
+      {
+        path: '/app/enterprise-dist/components/floating/tooltip/tooltip.component.css',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/esm00/AccountsClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/icons/local/reading-pane-button-active.svg',
+      },
+      {
+        path: '/app/enterprise-dist/icons/local/reading-pane-button-active-hover.svg',
+      },
+      {
+        path: '/app/enterprise-dist/icons/local/reading-pane-button-inactive.svg',
+      },
+      {
+        path: '/app/enterprise-dist/icons/local/reading-pane-button-inactive-hover.svg',
       },
     ],
     [
@@ -662,6 +642,26 @@ export const roomDiagramUploadStatic: { [step: string]: StaticRequest[][] } = {
       },
       {
         path: '/app/node_components/hammerjs/hammer.js',
+      },
+    ],
+    [
+      {
+        path: '/Scripts/wijmo/controls/wijmo.olap.min.js',
+      },
+      {
+        path: '/Scripts/wijmo/controls/wijmo.grid.xlsx.min.js',
+      },
+      {
+        path: '/Scripts/wijmo/controls/xlsx-jszip-loader.js',
+      },
+      {
+        path: '/app/enterprise-dist/framework/styles/fonts/Roboto-Medium.ttf',
+      },
+      {
+        path: '/app/node_components/jszip/dist/jszip.min.js',
+      },
+      {
+        path: '/Scripts/wijmo/controls/wijmo.xlsx.min.js',
       },
     ],
   ],
@@ -841,10 +841,19 @@ export const roomDiagramUploadStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Label/Label.css',
+        path: '/app/enterprise-dist/pages/list-page/list-page.html',
       },
       {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.HyperLink/HyperLink.css',
+        path: '/app/enterprise-dist/components/window-message/window-message.component.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/emc00/EventsClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/pages/base-page/base-page.css',
+      },
+      {
+        path: '/app/enterprise-dist/pages/list-page/list-page.css',
       },
     ],
     [
@@ -863,48 +872,7 @@ export const roomDiagramUploadStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/controls00/layoutControls/sectionContainer/sectionContainer.html',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DateRange/DateRange.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.ComboBox/ComboBox.css',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DatePicker/DatePicker.css',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.HyperLink/HyperLink.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/pages/list-page/list-page.html',
-      },
-      {
-        path: '/app/enterprise-dist/components/window-message/window-message.component.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/emc00/EventsClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/pages/base-page/base-page.css',
-      },
-      {
-        path: '/app/enterprise-dist/pages/list-page/list-page.css',
-      },
-    ],
-    [
-      {
         path: '/app/enterprise-dist/views/genericList.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/genericPageNavToolbar.html',
       },
     ],
     [
@@ -916,6 +884,38 @@ export const roomDiagramUploadStatic: { [step: string]: StaticRequest[][] } = {
       },
       {
         path: '/app/enterprise-dist/viewstyles/genericPageSearch.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/views/genericPageNavToolbar.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.HyperLink/HyperLink.html',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.Label/Label.css',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.HyperLink/HyperLink.css',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/controls00/layoutControls/sectionContainer/sectionContainer.html',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DateRange/DateRange.css',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.ComboBox/ComboBox.css',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/FlexLayout.DatePicker/DatePicker.css',
       },
     ],
   ],
@@ -941,6 +941,11 @@ export const roomDiagramUploadStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
+        path: '/app/enterprise-dist/framework/Common.Blocks/MenuButton/MenuButton.html',
+      },
+    ],
+    [
+      {
         path: '/app/enterprise-dist/framework/Common.Blocks/ButtonContentTemplate/ButtonContentTemplate.html',
       },
       {
@@ -952,12 +957,7 @@ export const roomDiagramUploadStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/framework/Common.Blocks/MenuButton/MenuButton.html',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/views/genericPageFooter.html',
+        path: '/app/enterprise-dist/views/genericSearch.html',
       },
     ],
     [
@@ -970,7 +970,7 @@ export const roomDiagramUploadStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/views/genericSearch.html',
+        path: '/app/enterprise-dist/views/genericPageFooter.html',
       },
     ],
     [
@@ -982,57 +982,7 @@ export const roomDiagramUploadStatic: { [step: string]: StaticRequest[][] } = {
   '05': [
     [
       {
-        path: '/app/enterprise-dist/BackOffice/ord00/ordersClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/models/DrawingElementMap.js',
-      },
-      {
-        path: '/app/enterprise-dist/models/OrdersCardInfo.js',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/mobile/serviceOrderMobileDetail.js',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/mobile/registrationOrderMobileDetail.js',
-      },
-    ],
-    [
-      {
-        path: '/app/enterprise-dist/BackOffice/ord00/RegistrantClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/models/RegistrantsCardInfo.js',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/mobile/orderRegistrantMobileDetail.js',
-      },
-      {
-        path: '/app/enterprise-dist/backOffice/emc00/functionsUtil.js',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/mobile/eventFunctionMobileDetail.js',
-      },
-      {
-        path: '/app/enterprise-dist/models/EventFunctionCardInfo.js',
-      },
-      {
-        path: '/app/enterprise-dist/BackOffice/ord00/OrdersClientUI.js',
-      },
-      {
-        path: '/app/enterprise-dist/framework/common.blocks/mobile/opportunityMobileDetail.js',
-      },
-      {
-        path: '/app/enterprise-dist/models/OpportunitiesCardInfo.js',
-      },
-      {
-        path: '/app/enterprise-dist/models/OrderItemsCardInfo.js',
-      },
-      {
-        path: '/app/enterprise-dist/models/RegSeatingAssignmentRetrieveData.js',
-      },
-      {
-        path: '/app/enterprise-dist/models/RegistrantForSeatCreation.js',
+        path: '/app/enterprise-dist/views/genericDetail.html',
       },
     ],
     [
@@ -1170,7 +1120,57 @@ export const roomDiagramUploadStatic: { [step: string]: StaticRequest[][] } = {
     ],
     [
       {
-        path: '/app/enterprise-dist/views/genericDetail.html',
+        path: '/app/enterprise-dist/BackOffice/ord00/RegistrantClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/models/RegistrantsCardInfo.js',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/mobile/orderRegistrantMobileDetail.js',
+      },
+      {
+        path: '/app/enterprise-dist/backOffice/emc00/functionsUtil.js',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/mobile/eventFunctionMobileDetail.js',
+      },
+      {
+        path: '/app/enterprise-dist/models/EventFunctionCardInfo.js',
+      },
+      {
+        path: '/app/enterprise-dist/BackOffice/ord00/OrdersClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/mobile/opportunityMobileDetail.js',
+      },
+      {
+        path: '/app/enterprise-dist/models/OpportunitiesCardInfo.js',
+      },
+      {
+        path: '/app/enterprise-dist/models/OrderItemsCardInfo.js',
+      },
+      {
+        path: '/app/enterprise-dist/models/RegSeatingAssignmentRetrieveData.js',
+      },
+      {
+        path: '/app/enterprise-dist/models/RegistrantForSeatCreation.js',
+      },
+    ],
+    [
+      {
+        path: '/app/enterprise-dist/BackOffice/ord00/ordersClientUI.js',
+      },
+      {
+        path: '/app/enterprise-dist/models/DrawingElementMap.js',
+      },
+      {
+        path: '/app/enterprise-dist/models/OrdersCardInfo.js',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/mobile/serviceOrderMobileDetail.js',
+      },
+      {
+        path: '/app/enterprise-dist/framework/common.blocks/mobile/registrationOrderMobileDetail.js',
       },
     ],
   ],

@@ -15,13 +15,13 @@ export const copyServiceOrdersTransport: { [step: string]: ChromeRequest[][] } =
     [
       {
         method: 'GET',
-        path: '/Content/css/splash_bundle?v=',
+        path: '/Content/css?v=${C_css_version}',
       },
     ],
     [
       {
         method: 'GET',
-        path: '/Content/css?v=${C_css_version}',
+        path: '/Content/css/splash_bundle?v=',
       },
     ],
     [
