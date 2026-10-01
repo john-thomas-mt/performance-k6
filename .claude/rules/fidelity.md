@@ -42,6 +42,9 @@ faithful on the current app, and each of these is load-bearing (skipping one pro
 - **group each tier's requests by NeoLoad page** — one `<http-page>` per recorded request file, emitted as an
   array-of-pages per step (`{ [step]: Request[][] }`) — so the replay fires one `http.batch` per page rather
   than one batch per tier, preserving NeoLoad's sequential-pages-of-parallel-bursts execution model.
+- **emit pages in recorded order**: the step container's `<weighted-embedded-action>` list, not the
+  alphabetical directory listing (file names sort by URL, so a listing reorders most steps' pages). Every
+  `<http-action>` a page bundles is walked, not just the first.
 - **exclude requests scripted as correlated wrappers** — the spine, plus reads promoted to gated wrappers
   (the app-shell bootstrap → `fetch_bundle_versions`, SignalR `negotiate` → `signalr_negotiate`) so they are
   not double-fired, and **nothing else** — an excluded request no wrapper sends fires at no tier, silently.

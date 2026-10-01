@@ -5,6 +5,7 @@
    Usage: node .claude/scripts/gen-fidelity-lists.cjs "<path to VU tree>" <chrome-out.ts> <static-out.ts> <transport-out.ts> */
 const fs = require('fs');
 const path = require('path');
+const { embeddedUids, attr, openTag, tierPath, tierBody } = require('./neoload-tree.cjs');
 
 const [vuRoot, chromeOut, staticOut, transportOut] = process.argv.slice(2);
 if (!vuRoot || !chromeOut || !staticOut || !transportOut) {
@@ -139,8 +140,21 @@ for (const [i, step] of stepDirs.entries()) {
   const stepNo = (step.match(STEP_NO) || [])[1] || (anyNumbered ? '' : String(i + 1).padStart(2, '0'));
   if (!stepNo) continue;
   const dir = path.join(ROOT, step);
-  for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.xml'))) {
-    const xml = fs.readFileSync(path.join(dir, f), 'utf8');
+  // walk the pages in recorded order (the step container's <weighted-embedded-action> list), not the
+  // alphabetical directory listing, so the replay fires them in the sequence the recording made them
+  const pageXml = new Map(
+    fs
+      .readdirSync(dir)
+      .filter((x) => x.endsWith('.xml'))
+      .map((f) => {
+        const xml = fs.readFileSync(path.join(dir, f), 'utf8');
+        return [attr(openTag(xml, 'http-page'), 'uid') || f, xml];
+      }),
+  );
+  const containerFile = path.join(ROOT, `${step}.xml`);
+  const recorded = fs.existsSync(containerFile) ? embeddedUids(fs.readFileSync(containerFile, 'utf8')) : [];
+  const ordered = [...recorded.filter((u) => pageXml.has(u)), ...[...pageXml.keys()].filter((u) => !recorded.includes(u))];
+  for (const xml of ordered.map((u) => pageXml.get(u))) {
     // NeoLoad bundles a page's whole resource burst as multiple <http-action> elements in one file — walk
     // every action, not just the first, or the bundled embedded resources are silently dropped from the tiers.
     const actions = xml.match(/<http-action\b[\s\S]*?<\/http-action>/g) || [];
@@ -155,12 +169,10 @@ for (const [i, step] of stepDirs.entries()) {
       // would re-introduce a request NeoLoad dropped (and these bundled assets 404 on the current build)
       if ((action.match(/\benabled="([^"]+)"/) || [])[1] === 'false') continue;
       const method = (action.match(/method="([^"]+)"/) || [])[1] || 'GET';
-      const rawPath = (action.match(/path="([^"]+)"/) || [])[1] || '';
-      if (!rawPath) continue;
-      const bare = rawPath
-        .replace(/^\/\$\{[^}]+\}/, '')
-        .replace(/^\/[^/]*(?=\/(api|app)\/)/, '') // strip version segment
-        .replace(/\/{2,}/g, '/'); // collapse empty path segments (e.g. a blank theme token → themes//snug.css)
+      // version segment stripped, empty segments collapsed (a blank theme token → themes//snug.css), and the
+      // query recovered from NeoLoad <parameter> elements with ${...} tokens kept for runtime substitution
+      const { bare, url, params } = tierPath(action);
+      if (!bare) continue;
       if (SPINE.some((s) => bare.startsWith(s))) {
         excluded.push({ stepNo, bare, why: 'global SPINE' });
         continue;
@@ -173,20 +185,8 @@ for (const [i, step] of stepDirs.entries()) {
         continue;
       }
 
-      // recover the query string from NeoLoad <parameter> elements, keeping ${...} tokens for runtime substitution
-      const params = [...action.matchAll(/<parameter\b([^>]*)>/g)]
-        .map((p) => {
-          const k = (p[1].match(/\bname="([^"]*)"/) || [])[1];
-          const v = (p[1].match(/\bvalue="([^"]*)"/) || [])[1];
-          return k != null ? `${k}=${v ?? ''}` : null;
-        })
-        .filter(Boolean);
-      const url = params.length ? `${bare}?${params.join('&')}` : bare;
-
-      // NeoLoad stores large bodies Base64-encoded; decode so the real JSON (with ${...} tokens) is emitted
-      const m = action.match(/<textPostContent>\s*<!\[CDATA\[([\s\S]*?)\]\]>/);
-      let body = m ? m[1] : undefined;
-      if (body && body.startsWith('Encoded(Base64):')) body = Buffer.from(body.slice(16), 'base64').toString('utf8');
+      // NeoLoad stores large bodies Base64-encoded; decoded so the real JSON (with ${...} tokens) is emitted
+      const body = tierBody(action);
       const strippedBody = (body || '').replace(/\s/g, '');
       const scriptedRequest = (JOURNEY_SPINE_REQUESTS[journey] || []).find(
         (r) =>
