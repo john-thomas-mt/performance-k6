@@ -65,6 +65,9 @@ const parseDef = (xml, file) => {
     starting: attr(head, 'starting'),
     inc: attr(head, 'inc'),
     max: attr(head, 'max'),
+    // NeoLoad's own attribute spelling (variable-random-string max-lenght / min-lenght)
+    minLength: attr(head, 'min-lenght') ?? attr(head, 'min-length'),
+    maxLength: attr(head, 'max-lenght') ?? attr(head, 'max-length'),
     values: (xml.match(/<values><!\[CDATA\[([\s\S]*?)\]\]><\/values>/) || [])[1],
     description: ((xml.match(/<description>([\s\S]*?)<\/description>/) || [])[1] || '').trim(),
   };
@@ -226,6 +229,8 @@ const resolveDef = (def, root) => {
   if (def.tag === 'variable-currentdate') return { ...base, kind: 'generated', detail: `current date, pattern "${def.pattern}"` };
   if (def.tag === 'variable-counter')
     return { ...base, kind: 'generated', detail: `counter from ${def.starting} inc ${def.inc} max ${def.max}` };
+  if (def.tag === 'variable-random-string')
+    return { ...base, kind: 'generated', detail: `random string, ${def.minLength ?? '?'}–${def.maxLength ?? '?'} chars` };
   if (def.tag === 'variable-password') return { ...base, kind: 'generated', detail: 'password (opaque)' };
   return { ...base, kind: 'other', detail: def.tag };
 };
@@ -255,14 +260,14 @@ const refsInTree = (treeDir) => {
       }
       if (!/\.(xml|js)$/i.test(e.name)) continue;
       const text = fs.readFileSync(p, 'utf8');
-      for (const m of text.matchAll(/\$\{(P_[A-Za-z0-9_]+)(?:\.([A-Za-z0-9_]+))?\}/g)) add(m[1], m[2]);
-      for (const m of text.matchAll(/getValue\s*\(\s*['"](P_[A-Za-z0-9_]+)['"]/g)) add(m[1], null);
+      for (const m of text.matchAll(/\$\{([Pp]_[A-Za-z0-9_]+)(?:\.([A-Za-z0-9_]+))?\}/g)) add(m[1], m[2]);
+      for (const m of text.matchAll(/getValue\s*\(\s*['"]([Pp]_[A-Za-z0-9_]+)['"]/g)) add(m[1], null);
     }
   };
   walk(treeDir);
   const vuXml = `${treeDir.replace(/[\\/]+$/, '')}.xml`;
   if (fs.existsSync(vuXml)) {
-    for (const m of fs.readFileSync(vuXml, 'utf8').matchAll(/\$\{(P_[A-Za-z0-9_]+)(?:\.([A-Za-z0-9_]+))?\}/g)) add(m[1], m[2]);
+    for (const m of fs.readFileSync(vuXml, 'utf8').matchAll(/\$\{([Pp]_[A-Za-z0-9_]+)(?:\.([A-Za-z0-9_]+))?\}/g)) add(m[1], m[2]);
   }
   return refs;
 };
