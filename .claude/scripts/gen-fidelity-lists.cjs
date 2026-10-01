@@ -51,6 +51,9 @@ const JOURNEY_SPINE = {
   'payment-receipt-report': {
     '/api/v1/Reports/10/204/RunReport': ['01'],
   },
+  'badge-report': {
+    '/api/v1/Reports/10/6044/RunReport': ['01'],
+  },
   'book-event': {
     '/api/USIDataGridServer/GetGridData2': ['08', '10'],
     '/api/GenericDetailServer/GetInitialData2': ['06'],

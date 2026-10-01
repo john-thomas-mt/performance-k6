@@ -7,3 +7,4 @@ export * from '../../flows/room-diagram-upload.flow.ts';
 export * from '../../flows/lead-account.flow.ts';
 export * from '../../flows/contact-service-order.flow.ts';
 export * from '../../flows/payment-receipt-report.flow.ts';
+export * from '../../flows/badge-report.flow.ts';

@@ -1,3 +1,4 @@
+export * from '../types/badges.type.ts';
 export * from '../types/common.type.ts';
 export * from '../types/contacts.type.ts';
 export * from '../types/config.type.ts';
