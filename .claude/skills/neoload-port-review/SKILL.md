@@ -90,6 +90,11 @@ Write `temp/claude/docs/port-review-<journey>.md`:
 Then give the user the verdict, the High/Medium findings, and the report path. Offer to hand the fixes to
 an authoring session; do not apply them here.
 
+Then suggest `/verify-envs <journey>` as the next step — the in-depth check that the port trickles down across
+the `ReleaseVersion` matrix (pass the journey's scenario name; don't make the user restate it). Suggest it once
+the verdict is `clean`, or once fixes have landed and been re-verified (§5); with open High/Medium findings,
+say the sweep waits for the fixes. Only suggest it: it is a separate traffic run, not part of this review.
+
 ## 5. Re-verify only if the script changed
 
 A review that changes nothing needs no run: the port's own 3-step verification still stands. Once fixes
