@@ -1,6 +1,6 @@
 ---
 name: neoload-to-k6
-description: Convert an existing NeoLoad virtual-user script into a k6 journey — parse the on-disk NeoLoad tree, distill the transaction spine, correlate from NeoLoad's own extractors, script into source/ wrappers + a flow, then verify with the 3-step progressive run. Use when the user wants to port/migrate/convert a NeoLoad script (.nlp project, a `team/vus/<name>` folder) to k6.
+description: Convert an existing NeoLoad virtual-user script into a k6 journey — parse the on-disk NeoLoad tree, distill the transaction spine, correlate from NeoLoad's own extractors, script into source/ wrappers + a flow with its fidelity tiers, then verify with the 3-step progressive run at full fidelity. Use when the user wants to port/migrate/convert a NeoLoad script (.nlp project, a `team/vus/<name>` folder) to k6.
 ---
 
 # NeoLoad → k6 — convert a recorded VU into a k6 journey
@@ -16,7 +16,7 @@ One continuous pass: read the NeoLoad script as the **source of truth** (the tra
 1. Locate the NeoLoad VU. A decoded on-disk project has `team/vus/<VU name>/` (a folder) plus a sibling `<VU name>.xml` (the VU definition). Filenames are URL-encoded: `#2F`=`/`, `#2E`=`.`, `@` prefixes a word. `#2826#2E2#29` = `(26.2)`.
 2. Confirm the target flow and scope with the user — a recorded VU can be 100+ requests; agree on which operations to port.
 3. **Target `main` on PERF** — port against the unreleased, highest-priority env so the port matches the newest schema and trickles down to released envs. A bare `npm run setup` writes exactly this (site `PERF`, env `main` are the defaults). Read `source/config/env.config.ts` for the target env, and check `temp/setup.json`/`temp/secret.json` exist (the run prerequisites).
-4. **Get approval once, upfront, for the 3-step verification run sequence** — that is the only traffic this skill sends (parsing the tree sends none). This journey may **write** (each `Save2` mutates data); the DB snapshot reset owns cleanup, so journeys stay pure (no `teardown()`).
+4. **Get approval once, upfront, for the 3-step verification run sequence (always at `-e FIDELITY=full`, see §5)** — that is the only traffic this skill sends (parsing the tree sends none). This journey may **write** (each `Save2` mutates data); the DB snapshot reset owns cleanup, so journeys stay pure (no `teardown()`).
 5. **Recon the k6 repo (delegated).** Dispatch `k6-authoring-analyst` for an *authoring kit* — reusable wrappers/endpoints, the closest existing journey template, the right `login_*` entry, the `SetupData` slice, and the barrel + `smoke.spec.ts` wiring points. It writes the full kit to `temp/claude/docs/recon-kit.md` and returns a short index; work from the index and `grep temp/claude/docs/recon-kit.md` for specifics, so the repo-side reuse picture stays out of the main context (the NeoLoad tree, §1, is distilled by `neoload-digest.cjs` — the analyst doesn't have it). Require the kit to be **self-sufficient to author from** — so demand, not just `file:line` pointers:
    - the **exact signature** of every wrapper to reuse or mirror (name + param list + return shape);
    - the **full payload-arrow skeleton** of the closest builder — its positional envelope, its `TransportTable` column list, and exactly which cells are parameterized vs captured constants;
@@ -74,7 +74,7 @@ A NeoLoad recording captures **everything the browser did**. Keep only the funct
 - **The `<variable-extractor>` blocks tell you which reads are load-bearing.** A read whose `C_…` extract is consumed by a downstream request stays. (A 100-call recording is often ~10–15 functional calls.)
 - **A read that *consumes* a per-iteration value is functional flow too**, even when nothing consumes what it returns. If its `consume ←` line carries a `C_…` token or a jsAction output (the event key the user just picked, a stamp minted by the step before), it can't be a fixed replay. Keep it as a wrapper by default, especially a heavy one (multi-KB grid/detail responses). "Nothing reads its extract" proves it isn't needed for **correctness**; it says nothing about **load**. Downgrading such a read to chrome is a deliberate, reported choice, not the default.
 - **Reads between writes can be load-bearing, not chrome** — e.g. a detail re-read that refreshes an optimistic-concurrency token (see §4), or the dialog/drawer a save prompt opens before the answering save (see §5). Don't drop a read just because it looks like a repaint.
-- **Dropped ≠ gone — but only if the generator emits it.** What you drop here (static assets + UI chrome) replays in the **optional additive fidelity tiers** (`-e FIDELITY=ui|full`), a pass *after* the spine is green (§4a, `rules/fidelity.md`). The generator keeps scripted requests out of those tiers, so a downgraded read on a path it excludes fires at **no** tier. §4a's exclusion report and the §6 coverage gate are where you confirm every dropped request actually landed in a tier.
+- **Dropped ≠ gone — but only if the generator emits it.** What you drop here (static assets + UI chrome) replays in the **fidelity tiers**. Every port scripts them (§4a, `rules/fidelity.md`) and every ladder run uses `-e FIDELITY=full` (§5). The generator keeps scripted requests out of those tiers, so a downgraded read on a path it excludes fires at **no** tier. §4a's exclusion report and the §6 coverage gate are where you confirm every dropped request actually landed in a tier.
 
 ## 3. Correlate — translate NeoLoad's extractors, don't re-derive
 
@@ -87,6 +87,9 @@ NeoLoad already solved correlation; translate it. Classify each dynamic value (s
 | `${P_…}` `<variable-file>` / multi-row `<variable-list>` column | a **data pool** of existing records | a generated `source/data/pools/<name>.data.ts`, selected with `pick_pool_value` — **every row, not the first few** (§4) |
 | `${P_…}` whose rows share a generated prefix | rows its paired data-script VU created | discover at runtime via the seed marker; no pool module (§4) |
 | `${P_…}` credential pool | user | the encrypted `source/data/creds/users.data.ts`, picked with `pick_user` |
+| `${P_…}` `<variable-password>` (e.g. `P_API_UserId`/`P_API_Key`/`P_API_Secret`) | public-API user creds | the encrypted `source/data/creds/api.data.ts`, decrypted in `setup()` with `decrypt_api_credentials` and signed per iteration with `mint_api_jwt` |
+
+**A `<variable-password>` value can't be read from the project.** Its `password-value` in `team/variables/*.xml` is encrypted with NeoLoad's built-in key, and NeoLoad isn't installed here, so the plaintext must come from the user. Ask for it **by NeoLoad variable name** (`P_API_Secret`), not by the account it belongs to, and say up front that `temp/secret.json` does **not** hold it: its `key` is only the passphrase that encrypts the repo's creds modules. A recorded JWT's payload exposes the user ID and key in plaintext, so only the secret needs supplying. Before minting, check the supplied secret against the recorded JWT: re-sign the recorded `header.payload` with it and compare the signature. A mismatch means the value is wrong, unless the creds were rotated since the recording.
 | client-generated (uuid, nonce, timestamp) | made up by the browser | regenerate per request (`crypto.randomUUID()`, `Date.now()`) |
 
 **Watch for NeoLoad smells — a recorded value that looks correlated but isn't.** A server-allocated id (e.g. an upload `FileKey`) can be left **hardcoded** in one request even though a later request correlates it, because the server round-trips the stale value within the recording session. On a fresh k6 run that stale id is wrong. Find the value's true runtime source (the response that first mints it) and correlate from there.
@@ -108,19 +111,24 @@ NeoLoad already solved correlation; translate it. Classify each dynamic value (s
 - **Data isolation is stricter for record-modifying journeys.** An add-only journey tolerates two iterations sharing a seeded row; a header-modifying journey does not — the concurrency check turns a shared row into a failure. Give each iteration a **globally-unique** row (`exec.scenario.iterationInTest % pool.length`), not the `(__VU-1+__ITER)` formula (which collides across VU/iter pairs). Don't infer isolation from the recording: NeoLoad's data-script files are `global` scope with `CYCLE_VALUES`, which per the docs *shares rows across VUs and recycles them once exhausted* — only NeoLoad's `Unique` scope reserved a row per VU — so the port must impose uniqueness in k6, not trust the ported policy.
 - Pick the VU's user with `pick_user` and register the journey in `smoke.spec.ts` (scenario + `exec` wrapper + `<journey>Thresholds`), per the tests rule.
 
-## 4a. Fidelity tiers — optional, additive (only if the user wants lean-vs-full)
+## 4a. Fidelity tiers — mandatory, every port
 
-Beyond the spine, the recording's UI-chrome and static requests replay as env-gated tiers so a run can
-compare lean vs. browser-realistic load. Do this only after the spine (§4) is green, and only if the user
-asks for it.
+Beyond the spine, the recording's UI-chrome and static requests replay as env-gated tiers, so a run
+reproduces the browser's full load. **This is not optional and not a question for the user:** every port
+generates the tiers, wires them into the flow, and is verified at `-e FIDELITY=full` (§5). Script the spine
+(§4) first, then the tiers, then run the ladder.
 
+- **Always run the generator, even when the digest reports `chrome 0 · static/telemetry 0`.** Its output and
+  its `excluded as scripted` report are the evidence that nothing was missed. Wire the flow to the generated
+  modules and the `include_ui` / `include_static` gates even if a tier comes out empty, so the journey picks
+  up a re-recording without being rewired.
 - Generate the lists from the tree: `node .claude/scripts/gen-fidelity-lists.cjs "<VU tree>" source/data/chrome/<journey>.chrome.ts source/data/static/<journey>.static.ts source/data/transport/<journey>.transport.ts` (do-not-hand-edit; regenerate on re-record).
 - Before generating, tell the generator which recorded requests the journey scripts, so the tiers neither double-fire them nor drop them. It has three exclusion levels, so pick the narrowest that fits:
   - **`SPINE` (global)** — only paths every journey always scripts: writes, uploads (`GenericServer/CacheFiles` — a captured upload body is a huge base64 blob), sign-in/out, and correlation sources. **Never a read path.** A read on a shared path (`GetGridData2`, `GenericDetailServer/GetInitialData2`, `WindowServer/GetWindowInfo`) is a wrapper in some steps and UI paint in others. A global entry once dropped every unscripted occurrence, in every journey, from every tier.
   - **`JOURNEY_SPINE` (per journey, per step)** — a path the journey scripts in a given step, when that step records **only** the requests the wrapper reproduces.
   - **`JOURNEY_SPINE_REQUESTS` (per request)** — one request among several on the same path in a step. Match it by body prefix (the object id leading a `GetObjectColumns` body), query substring (`astrWindowID=…`), or `max` when the step records identical requests and the wrapper reproduces only some.
 - **Read the generator's `excluded as scripted` report after every run.** It lists each request kept out of the tiers, by step, path and level. Every line must match a wrapper call in that step of the flow; an exclusion with no wrapper behind it means the request fires at no tier. A path+step entry that excludes 3 requests where the flow scripts 1 is the classic case: narrow it to `JOURNEY_SPINE_REQUESTS` and regenerate.
-- A chrome request whose body **echoes a full selected grid row** (`USIDataGridServer/GetControlInfo`, carrying `ROW*_` tokens) can't be resolved by per-token subs from the lean spine — the row isn't a spine output. When the journey needs 1:1 parity, reproduce it as a **dedicated fidelity-gated wrapper** (see `get_service_order_control_info` / `get_event_control_info`): extend the row type (`ServiceOrderRow` / `EventRow`) and its `parse_grid_rows` mapping with the echoed columns — they come from the same grid read the spine already makes — add a table-builder that weaves those cells and a wrapper fired behind `include_ui`, and keep the endpoint in the generator's `SPINE` exclusion so the chrome tier doesn't double-fire it. If parity isn't required, just leave it in `SPINE` (excluded, not fired) and note the omission in the report (no silent caps).
+- A chrome request whose body **echoes a full selected grid row** (`USIDataGridServer/GetControlInfo`, carrying `ROW*_` tokens) can't be resolved by per-token subs from the spine — the row isn't a spine output. Full fidelity requires 1:1 parity, so always reproduce it as a **dedicated fidelity-gated wrapper** (see `get_service_order_control_info` / `get_event_control_info`): extend the row type (`ServiceOrderRow` / `EventRow`) and its `parse_grid_rows` mapping with the echoed columns — they come from the same grid read the spine already makes — add a table-builder that weaves those cells and a wrapper fired behind `include_ui`, and keep the endpoint in the generator's `SPINE` exclusion so the chrome tier doesn't double-fire it. Never leave it excluded and unfired.
 - Wire the flow to fire each step's slice behind the `include_ui` / `include_static` gates alongside that
   step's spine call, and correlate the requests' `${…}` tokens through a subs map built from the
   correlation the spine already extracts.
@@ -139,7 +147,7 @@ asks for it.
   spine dups, pruned stale endpoints), the substitute-or-skip contract, building the subs map, coarse
   tolerant tagging, think-time — live in `rules/fidelity.md`, which auto-loads when you edit the
   chrome/static/helper files. Don't re-derive them here.
-- Verify with a `-e FIDELITY=full` run (§5): `http_req_failed` must stay 0 and no request may be skipped
+- The §5 ladder runs at `-e FIDELITY=full`, so every step verifies the tiers: `http_req_failed` must stay 0 and no request may be skipped
   for an unresolved token. A chrome request that needs a response-derived value the spine doesn't produce
   gets its own gated wrapper (per the rule), not a blanked token.
 
@@ -147,13 +155,13 @@ asks for it.
 
 Pre-flight (zero traffic): `npx tsc --noEmit`, then `k6 inspect source/tests/smoke.spec.ts`.
 
-Then the same escalation as `generate-test` §4:
+Then the same escalation as `generate-test` §4, **always at full fidelity**. Every step carries `-e FIDELITY=full`. There is no other fidelity level for a port: never offer one, never ask, and a run without the flag doesn't count as a ladder pass.
 
 | Step | Command | Proves |
 |---|---|---|
-| 1 | `k6 run -e SCENARIO=<journey> source/tests/smoke.spec.ts` | runs & correlates (1 VU / 1 iter) |
-| 2 | `… -e VUS=2 -e ITERS=2 -e USER_MODE=single …` | concurrency, one shared login |
-| 3 | `… -e VUS=2 -e ITERS=2 -e USER_MODE=pool …` | per-user correlation & data isolation |
+| 1 | `k6 run -e SCENARIO=<journey> -e FIDELITY=full source/tests/smoke.spec.ts` | runs & correlates, spine + tiers (1 VU / 1 iter) |
+| 2 | `… -e FIDELITY=full -e VUS=2 -e ITERS=2 -e USER_MODE=single …` | concurrency, one shared login |
+| 3 | `… -e FIDELITY=full -e VUS=2 -e ITERS=2 -e USER_MODE=pool …` | per-user correlation & data isolation |
 
 Run each step via `k6-run-reporter` (hand it the exact command, and note the journey creates/modifies data so it checks per-VU token isolation); act on its verdict — `checks` 100%, `http_req_failed` 0, `dropped_iterations` 0, `iterations` > 0 — rather than reading the full summary. It saves each run's log under `temp/claude/reports/` for the response-body decode below.
 
@@ -171,7 +179,7 @@ Loop rules (per `generate-test`): fix, re-run; if the fix touched correlation/sh
 **Verify the journey as ported.**
 - **The last ladder pass is on the final code.** If the flow or its wrappers change after a step passed, re-run that step and the ones after it (from step 1 if the change touched correlation or shared state). A type-only edit doesn't count.
 - **Keep the pool pick as NeoLoad makes it.** If a random pool row fails, never hard-wire the pick to the row NeoLoad recorded just to get a green run: that stops the port spreading load across the pool, and the bad rows fail anyway under load. Decode the failure, report the row and its `MessageKey`, and stop.
-- **The ladder is the only traffic.** Don't offer or recommend any other run: no pool sweeps, extra iterations or retests. The only exceptions are the §4a `FIDELITY=full` run (when the user chose tiers), the targeted live fallback below, and the §6 `verify-envs` hand-off offer.
+- **The ladder is the only traffic.** Don't offer or recommend any other run: no pool sweeps, extra iterations or retests. The only exceptions are the targeted live fallback below and the §6 `verify-envs` hand-off offer. There is no separate fidelity run: the ladder itself runs at `-e FIDELITY=full`.
 
 **Targeted live fallback:** if a step fails and decoding points to drift (the recorded shape no longer matches the current app), drive just that one request with `playwright-cli` to see the current traffic — not a full re-record (expect the first `open` to hit the SPA nav timeout — poll `snapshot` rather than retrying; see `generate-test` §1).
 
