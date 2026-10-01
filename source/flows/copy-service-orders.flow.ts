@@ -21,6 +21,7 @@ import {
   think,
   sign_out,
   major_minor,
+  format_retrieve_stamp,
 } from '../utils/exports/helpers.exp.ts';
 import { copyServiceOrdersChrome, copyServiceOrdersStatic, copyServiceOrdersTransport } from '../utils/exports/data.exp.ts';
 import { config } from '../utils/exports/config.exp.ts';
@@ -106,6 +107,7 @@ export function copy_service_orders_journey(user: User, data: ServiceOrderSetup)
     C_USI_Version: data.version,
     C_EnterpriseVersion: major_minor(data.version),
     C_RefreshDependentKey: String(refreshKey),
+    P_FormattedTimestamp: format_retrieve_stamp(String(refreshKey)),
     C_Event_EVT_ID: String(anchor.evtId),
     C_Event_CUST_NBR: anchor.ordAcct,
     C_SO_ORD_ACCT_REP: anchor.salesPer,

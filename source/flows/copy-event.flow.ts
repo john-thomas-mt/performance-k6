@@ -93,6 +93,7 @@ export function copy_event_journey(user: User, data: SetupData) {
     if (found) {
       subs.C_CUST_NBR = found.acct;
       subs.C_EVT_ID = String(found.evtId);
+      subs.C_EVT_DESC = found.desc;
     }
     chrome_and_static(bearerToken, data.version, level, ['04'], subs);
   });
