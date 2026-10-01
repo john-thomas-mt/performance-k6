@@ -17,6 +17,16 @@ The entry-point layer k6 runs directly. A test spec drives one or more journeys 
 
 ## Thresholds
 - Per-endpoint `http_req_duration` SLAs live with the journey, exported from its flow as `<journey>Thresholds` (see `rules/flows.md`)
+- **Where the numbers come from.** NeoLoad has no per-transaction targets. The project has two shared profiles in `sla_profiles/`, and each step container opts into one with `slaProfileName` + `slaProfileEnabled`:
+  - `UserPath_Transactions`, for the UI journeys: average request response time > 4.0 s per run.
+  - `Report`, for the public-API report journeys: average > 20.0 s per run.
+
+  Both alert at LOW severity, and every other rule in them is disabled.
+- **Every request the lean spine sends from an opted-in step gets the profile's average**: `avg<4000` for a UI journey, `avg<20000` for a report journey. That includes the shared helpers (`SignOut` in `loginThresholds`, since the sign-out step opts in) and fallback branches.
+- Steps that opt out need no SLA. These are the launch/login steps of most VUs and every `@u*` data-script VU. `SignIn` keeps the repo's own `p(95)<2000` gate, which is not a NeoLoad SLA.
+- Tier-support tags (`UIChrome`, `StaticAsset`, `Transport`, requests fired only behind `include_ui`/`include_static`) need no SLA either; see `rules/fidelity.md`.
+- **A `p(95)` sits beside the average, never in place of it, and only when it was measured.** The commit that adds one records the run it came from (VUs, iterations, env and the measured value), the way `202dc9d` baselined `OpenCopyForm` and `SaveEventCopy`. Never write a guessed percentile: a guess either fails clean runs or hides real regressions, and nobody can tell which.
+- NeoLoad's `TOTAL_ERRORS > 5` rule is not ported per request. Errors are gated run-wide by `commonThresholds` (`http_req_failed`) and the `checks` rate, which scale with the load, unlike NeoLoad's absolute count.
 - `smoke.spec.ts` merges `commonThresholds` + `loginThresholds` + the `<journey>Thresholds` of the journey(s) it runs — all of them for the full gate, just the selected one under `-e SCENARIO`. Gating to the active journeys keeps every asserted threshold pointed at an endpoint the run actually exercises
 
 ## Execution shape

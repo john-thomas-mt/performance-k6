@@ -194,8 +194,9 @@ misread. Each should be corrected to "HTTP/2 + keep-alive on is the faithful and
 
 - Run and baseline on **HTTP/2 + keep-alive on** (k6's default). It is browser-representative, NeoLoad-faithful,
   and the tightest match to NeoLoad's per-step timings.
-- **Rebaseline SLAs against k6 in that config**, rather than porting NeoLoad's per-step numbers. Everything
-  structural (request volume, bytes, page structure, per-page concurrency, protocol) already matches; per-step
+- **Rebaseline latency against k6 in that config.** NeoLoad has no per-step numbers to port, only the shared
+  `UserPath_Transactions` / `Report` averages (4 s / 20 s). Those are ported as the `avg<` floor on every spine
+  request, and any `p(95)` is measured in k6 (`rules/tests.md`, Thresholds). Everything structural (request volume, bytes, page structure, per-page concurrency, protocol) already matches; per-step
   timing should be owned by k6.
 - Keep the keep-alive-off / HTTP/1.1 knobs only as clearly-labelled diagnostic worst-cases, if at all.
 
