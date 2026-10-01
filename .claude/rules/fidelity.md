@@ -42,9 +42,18 @@ faithful on the current app, and each of these is load-bearing (skipping one pro
 - **group each tier's requests by NeoLoad page** — one `<http-page>` per recorded request file, emitted as an
   array-of-pages per step (`{ [step]: Request[][] }`) — so the replay fires one `http.batch` per page rather
   than one batch per tier, preserving NeoLoad's sequential-pages-of-parallel-bursts execution model.
-- **exclude endpoints scripted as correlated wrappers** — the spine, plus reads promoted to gated wrappers
+- **exclude requests scripted as correlated wrappers** — the spine, plus reads promoted to gated wrappers
   (the app-shell bootstrap → `fetch_bundle_versions`, SignalR `negotiate` → `signalr_negotiate`) so they are
-  not double-fired. The generator's own exclusion lists are the authoritative set.
+  not double-fired, and **nothing else** — an excluded request no wrapper sends fires at no tier, silently.
+  The generator excludes at three levels:
+  - global `SPINE`: paths every journey always scripts — writes, uploads, sign-in/out, correlation sources;
+    never a read path;
+  - `JOURNEY_SPINE`: path + step;
+  - `JOURNEY_SPINE_REQUESTS`: one request matched by body prefix, query substring and an optional `max`.
+
+  It prints every exclusion it makes (`excluded as scripted`) for checking against the flow. The generator's
+  own lists are the authoritative set. `neoload-port-review.cjs` FLAGs any recorded `/api` request that fires
+  at no tier or is double-fired.
 - **version-gate an endpoint a later release drops** rather than deleting it — emit it with a `removedIn`
   marker and let fire time skip it once the runtime server version reaches that release (`version_at_least`),
   so it still replays on the older releases that serve it. A read whose body **echoes a full selected grid
