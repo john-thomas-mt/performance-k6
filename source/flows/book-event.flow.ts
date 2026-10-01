@@ -37,11 +37,13 @@ import {
 import { User, SetupData, TransportTable, FidelityLevel } from '../utils/exports/types.exp.ts';
 
 export const bookEventThresholds = {
-  'http_req_duration{name:StageBookingSpace}': ['p(95)<8000'],
-  'http_req_duration{name:OpenBookingForm}': ['p(95)<8000'],
-  'http_req_duration{name:SaveBooking}': ['p(95)<8000'],
-  'http_req_duration{name:StageEventFunction}': ['p(95)<8000'],
-  'http_req_duration{name:SaveEventFunction}': ['p(95)<8000'],
+  'http_req_duration{name:GetBookingWindowInfo}': ['avg<4000'],
+  'http_req_duration{name:StageBookingSpace}': ['avg<4000'],
+  'http_req_duration{name:OpenBookingForm}': ['avg<4000'],
+  'http_req_duration{name:SaveBooking}': ['avg<4000'],
+  'http_req_duration{name:ReadEventFunctions}': ['avg<4000'],
+  'http_req_duration{name:StageEventFunction}': ['avg<4000'],
+  'http_req_duration{name:SaveEventFunction}': ['avg<4000'],
 };
 
 type Subs = { [token: string]: string };

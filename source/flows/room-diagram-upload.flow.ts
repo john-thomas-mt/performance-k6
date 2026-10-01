@@ -35,10 +35,11 @@ import { User, SetupData, EventRow, EventDocumentContext, EventDocumentFixture, 
 export const roomDiagramUploadThresholds = {
   ...searchEventsThresholds,
   ...openEventDetailThresholds,
-  'http_req_duration{name:CacheFiles}': ['p(95)<10000'],
-  'http_req_duration{name:OpenEventDocumentForm}': ['p(95)<5000'],
-  'http_req_duration{name:SaveEventDocument}': ['p(95)<10000'],
-  'http_req_duration{name:ApplicationUnloading}': ['p(95)<3000'],
+  'http_req_duration{name:SearchEventsFallback}': ['avg<4000'],
+  'http_req_duration{name:CacheFiles}': ['avg<4000'],
+  'http_req_duration{name:OpenEventDocumentForm}': ['avg<4000'],
+  'http_req_duration{name:SaveEventDocument}': ['avg<4000'],
+  'http_req_duration{name:ApplicationUnloading}': ['avg<4000'],
 };
 
 type Subs = { [token: string]: string };

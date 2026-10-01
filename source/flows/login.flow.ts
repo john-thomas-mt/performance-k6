@@ -4,6 +4,7 @@ import { User } from '../utils/exports/types.exp.ts';
 
 export const loginThresholds = {
   'http_req_duration{name:SignIn}': ['p(95)<2000'],
+  'http_req_duration{name:SignOut}': ['avg<4000'],
 };
 
 export function login_to_events(

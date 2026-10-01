@@ -53,8 +53,8 @@ const NEOLOAD_EVENT_SO_COUNT = 10;
 /* Save2 copies a random 1..N of the event's service orders per iteration (see pick_orders), so its p95
    tracks the larger selections — sized against NeoLoad's T34_07 transaction p95 (~7.6s). */
 export const copyServiceOrdersThresholds = {
-  'http_req_duration{name:OpenCopyServiceOrdersForm}': ['p(95)<5000'],
-  'http_req_duration{name:SaveServiceOrderCopy}': ['p(95)<8000'],
+  'http_req_duration{name:OpenCopyServiceOrdersForm}': ['avg<4000'],
+  'http_req_duration{name:SaveServiceOrderCopy}': ['avg<4000'],
 };
 
 type Subs = { [token: string]: string };

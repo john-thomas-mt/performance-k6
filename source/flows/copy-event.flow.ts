@@ -30,8 +30,8 @@ const COPY_WINDOW_ID = 'EB2212';
 export const copyEventThresholds = {
   ...searchEventsThresholds,
   ...openEventDetailThresholds,
-  'http_req_duration{name:OpenCopyForm}': ['p(95)<2500'],
-  'http_req_duration{name:SaveEventCopy}': ['p(95)<13000'],
+  'http_req_duration{name:OpenCopyForm}': ['avg<4000', 'p(95)<2500'],
+  'http_req_duration{name:SaveEventCopy}': ['avg<4000', 'p(95)<13000'],
 };
 
 type Subs = { [token: string]: string };

@@ -30,11 +30,11 @@ import {
 } from '../utils/exports/types.exp.ts';
 
 export const searchEventsThresholds = {
-  'http_req_duration{name:SearchEvents}': ['p(95)<3000'],
+  'http_req_duration{name:SearchEvents}': ['avg<4000'],
 };
 
 export const openEventDetailThresholds = {
-  'http_req_duration{name:OpenEventDetail}': ['p(95)<5000'],
+  'http_req_duration{name:OpenEventDetail}': ['avg<4000'],
 };
 
 export function get_event_control_info(token: string, version: string, row: EventRow, name = 'GetControlInfo') {

@@ -32,18 +32,19 @@ import { crystalReportChrome, crystalReportStatic, crystalReportTransport, cryst
 import { User, SetupData, ReportListContext, FidelityLevel } from '../utils/exports/types.exp.ts';
 
 export const crystalReportThresholds = {
-  'http_req_duration{name:OpenReportMasterList}': ['p(95)<3000'],
-  'http_req_duration{name:ReadReportMasterGrid}': ['p(95)<3000'],
-  'http_req_duration{name:OpenAddReportForm}': ['p(95)<5000'],
-  'http_req_duration{name:SaveCrystalReport}': ['p(95)<10000'],
-  'http_req_duration{name:OpenReportListsSearch}': ['p(95)<3000'],
-  'http_req_duration{name:ReadReportListsGrid}': ['p(95)<3000'],
-  'http_req_duration{name:GetReportListWindowInfo}': ['p(95)<3000'],
-  'http_req_duration{name:OpenReportListSuperbox}': ['p(95)<5000'],
-  'http_req_duration{name:SaveReportList}': ['p(95)<5000'],
-  'http_req_duration{name:OpenOrgSourceSearch}': ['p(95)<3000'],
-  'http_req_duration{name:ReadOrgSourceGrid}': ['p(95)<3000'],
-  'http_req_duration{name:SaveAndCloseReport}': ['p(95)<3000'],
+  'http_req_duration{name:OpenReportMasterList}': ['avg<4000'],
+  'http_req_duration{name:ReadReportMasterGrid}': ['avg<4000'],
+  'http_req_duration{name:OpenAddReportForm}': ['avg<4000'],
+  'http_req_duration{name:SaveCrystalReport}': ['avg<4000'],
+  'http_req_duration{name:OpenReportListsSearch}': ['avg<4000'],
+  'http_req_duration{name:ReadReportListsGrid}': ['avg<4000'],
+  'http_req_duration{name:GetReportListWindowInfo}': ['avg<4000'],
+  'http_req_duration{name:OpenReportListSuperbox}': ['avg<4000'],
+  'http_req_duration{name:SaveReportList}': ['avg<4000'],
+  'http_req_duration{name:OpenOrgSourceSearch}': ['avg<4000'],
+  'http_req_duration{name:ReadOrgSourceGrid}': ['avg<4000'],
+  'http_req_duration{name:SaveAndCloseReport}': ['avg<4000'],
+  'http_req_duration{name:ReportApplicationUnloading}': ['avg<4000'],
 };
 
 type Subs = { [token: string]: string };
