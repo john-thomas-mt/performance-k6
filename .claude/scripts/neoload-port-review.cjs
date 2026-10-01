@@ -1,7 +1,8 @@
 // Cross-check a finished NeoLoad → k6 port against its recording — the evidence half of the
 // neoload-port-review skill. Zero traffic: it reads the NeoLoad tree, the project's variables/ and
 // populations, and the k6 source, and prints one compact report of OK / FLAG / INFO lines per area
-// (steps, spine coverage, correlation, token-literal leaks, variables/pools, seed, SLA, wiring). The
+// (steps, spine coverage and lean-path order, fidelity tiers, correlation, token-literal leaks and transport
+// tables column by column, variables/pools, seed, SLA, wiring). The
 // reviewer judges only the FLAG lines — it never re-derives what this already checked.
 //
 // Usage:
@@ -27,11 +28,12 @@ if (!treeArg || !flowArg || !fs.existsSync(flowArg)) {
 const resolveVu = (projectRoot) => {
   const flow = fs.readFileSync(flowArg, 'utf8');
   // the step name can run to several segments and differ from the VU uid (T003_ViewContact_ServiceOrders_01 →
-  // uid "T03_ViewContact_ServiceOrder (26.3)"), so match on the number plus the name's leading segment
-  const m = flow.match(/'T0*(\d+)_([A-Za-z_]+?)_\d+_[^']+'/);
+  // uid "T03_ViewContact_ServiceOrder (26.3)"; single-step T006_Badge_Report → uid "T06_BadgeReport (26.3)"),
+  // so match on the number plus the name's leading segment
+  const m = flow.match(/'T0*(\d+)_([A-Za-z]+)[A-Za-z0-9_]*'/);
   if (!m) return null;
   const vus = path.join(projectRoot, 'team', 'vus');
-  const uidRe = new RegExp(`uid="T0*${m[1]}_(${m[2].split('_')[0]}[^"]*?) \\(([\\d.]+)\\)"`, 'i');
+  const uidRe = new RegExp(`uid="T0*${m[1]}_(${m[2]}[^"]*?) \\(([\\d.]+)\\)"`, 'i');
   const candidates = fs
     .readdirSync(vus)
     .filter((f) => f.endsWith('.xml'))
@@ -103,34 +105,83 @@ const index = new Map();
 const srcFiles = ['source/apis', 'source/flows', 'source/utils/helpers', 'source/data/payloads'].flatMap(listTs);
 for (const file of srcFiles) {
   const text = read(file);
-  for (const m of text.matchAll(/(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(/g)) {
+  // line-anchored, so a comment's "the function Save2 (window EM9685)" is not a declaration
+  for (const m of text.matchAll(/^[ \t]*(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(/gm)) {
     let i = m.index + m[0].length;
     for (let depth = 1; depth && i < text.length; i++) depth += text[i] === '(' ? 1 : text[i] === ')' ? -1 : 0;
     const open = text.indexOf('{', i);
-    index.set(m[1], { file, body: bodyFrom(text, open), line: text.slice(0, m.index).split('\n').length });
+    const line = (at) => text.slice(0, at).split('\n').length;
+    index.set(m[1], { file, body: bodyFrom(text, open), line: line(m.index), bodyLine: line(open) });
   }
-  for (const m of text.matchAll(/export const (\w+)(?:\s*:\s*[^=]+)?\s*=\s*/g)) {
+  // top-level consts, exported or not: a builder often keeps its table in a module-local const (eventCopyTable)
+  for (const m of text.matchAll(/^(?:export )?const (\w+)(?:\s*:\s*[^=]+)?\s*=\s*/gm)) {
     if (index.has(m[1])) continue;
     const rest = text.slice(m.index + m[0].length);
     const end = rest.search(/\n(?:export |const |function )/);
-    index.set(m[1], { file, body: end < 0 ? rest : rest.slice(0, end), line: text.slice(0, m.index).split('\n').length });
+    const line = text.slice(0, m.index).split('\n').length;
+    index.set(m[1], {
+      file,
+      body: end < 0 ? rest : rest.slice(0, end),
+      line,
+      bodyLine: text.slice(0, m.index + m[0].length).split('\n').length,
+    });
   }
 }
-const ENDPOINT = /['"`](?:\$\{[^}]+\}\/api\/|\/?api\/)?([A-Z][A-Za-z0-9]+\/[A-Z][A-Za-z0-9_]+)(?=['"`?])/g;
+// the method segment can be lowercase (USIMultiSelectSuperBoxPageServer/save)
+const ENDPOINT = /['"`](?:\$\{[^}]+\}\/api\/|\/?api\/)?([A-Z][A-Za-z0-9]+\/[A-Za-z][A-Za-z0-9_]+)(?=['"`?])/g;
 // the public REST API (/api/v1/Reports/10/204/RunReport) has more than two segments; key it the way the NeoLoad side does
 const PUBLIC_API_ENDPOINT = /\/api\/(v\d+(?:\/[A-Za-z0-9_]+)+)(?=['"`?])/g;
 // every call site counts, so a wrapper called twice (or two wrappers sharing one post helper) reaches its
 // endpoint twice; `stack` guards recursion only, `seen` collects every function reached for the later sections
-const reach = (text, seen = new Set(), stack = new Set()) => {
+// `xf` rewrites the text at every level (stripGuarded gives the lean path)
+const reach = (text, seen = new Set(), stack = new Set(), xf = (t) => t) => {
+  text = xf(text);
   const endpoints = [...text.matchAll(ENDPOINT), ...text.matchAll(PUBLIC_API_ENDPOINT)].map((m) => m[1]);
   if (stack.size > 5) return { endpoints, seen };
   for (const m of text.matchAll(/\b([a-z_][A-Za-z0-9_]*)\s*\(/g)) {
     const fn = m[1];
     if (stack.has(fn) || !index.has(fn)) continue;
     seen.add(fn);
-    endpoints.push(...reach(index.get(fn).body, seen, new Set([...stack, fn])).endpoints);
+    endpoints.push(...reach(index.get(fn).body, seen, new Set([...stack, fn]), xf).endpoints);
   }
   return { endpoints, seen };
+};
+// the end of the statement starting at i: a { … } block, or up to the `;` at depth 0
+const statementEnd = (text, i) => {
+  while (/\s/.test(text[i])) i++;
+  if (text[i] === '{') return i + bodyFrom(text, i).length;
+  for (let depth = 0; i < text.length; i++) {
+    if ('([{'.includes(text[i])) depth++;
+    else if (')]}'.includes(text[i])) depth--;
+    else if (text[i] === ';' && depth === 0) return i + 1;
+  }
+  return i;
+};
+// drop what a fidelity guard gates (`if (include_ui(level)) stmt;` / `if (include_static(level)) { … }`), leaving
+// the lean path: the requests a -e FIDELITY=lean run sends
+const GUARD = /\bif\s*\(\s*include_(?:ui|static)\s*\(/g;
+const stripGuarded = (text) => {
+  let out = '';
+  let last = 0;
+  for (const m of text.matchAll(GUARD)) {
+    if (m.index < last) continue;
+    let i = m.index + m[0].length;
+    for (let depth = 2; depth && i < text.length; i++) depth += text[i] === '(' ? 1 : text[i] === ')' ? -1 : 0;
+    out += text.slice(last, m.index);
+    last = statementEnd(text, i);
+  }
+  return out + text.slice(last);
+};
+// endpoints in call order, following wrappers depth-first: the sequence a run sends them in
+const reachSeq = (text, stack = new Set(), xf = (t) => t) => {
+  text = xf(text);
+  const hits = [
+    ...[...text.matchAll(ENDPOINT), ...text.matchAll(PUBLIC_API_ENDPOINT)].map((m) => ({ i: m.index, ep: m[1] })),
+    ...[...text.matchAll(/\b([a-z_][A-Za-z0-9_]*)\s*\(/g)]
+      .filter((m) => index.has(m[1]) && !stack.has(m[1]) && stack.size <= 5)
+      .map((m) => ({ i: m.index, fn: m[1] })),
+  ].sort((a, b) => a.i - b.i);
+  return hits.flatMap((h) => (h.ep ? [h.ep] : reachSeq(index.get(h.fn).body, new Set([...stack, h.fn]), xf)));
 };
 const count = (arr) => arr.reduce((m, x) => m.set(x, (m.get(x) || 0) + 1), new Map());
 
@@ -172,18 +223,26 @@ if (fs.existsSync(chromeFile)) {
   });
 }
 const allReached = new Set();
+const stepSeen = new Map();
+let recordedTierRequests = 0;
 for (const s of stepPos) {
   const nl = count(s.requests.filter((r) => r.cls === 'SPINE').map((r) => r.endpoint));
   const chrome = count(s.requests.filter((r) => r.cls === 'CHROME').map((r) => r.endpoint));
   const drops = s.requests.filter((r) => r.cls === 'DROP').length;
+  recordedTierRequests += [...chrome.values()].reduce((a, b) => a + b, 0) + drops;
   let k6 = new Map();
+  let lean = new Map();
+  let leanSeq = [];
   if (s.pos >= 0) {
     const lineStart = flowText.lastIndexOf('\n', s.pos) + 1;
     const next = ordered.find((o) => o.pos > s.pos);
     const slice = flowText.slice(lineStart, next ? flowText.lastIndexOf('\n', next.pos) + 1 : flowText.length);
     const r = reach(slice);
     r.seen.forEach((f) => allReached.add(f));
+    stepSeen.set(s.name, r.seen);
     k6 = count(r.endpoints);
+    lean = count(reach(slice, new Set(), new Set(), stripGuarded).endpoints);
+    leanSeq = reachSeq(slice, new Set(), stripGuarded);
   }
   console.log(
     `  [${s.name}]  spine ${[...nl.values()].reduce((a, b) => a + b, 0)} · chrome ${[...chrome.values()].reduce((a, b) => a + b, 0)} · static/telemetry ${drops}`,
@@ -192,7 +251,12 @@ for (const s of stepPos) {
   for (const [ep, n] of nl) {
     const got = k6.get(ep) || 0;
     const viaUi = Math.max(0, Math.min(tier.get(ep) || 0, n - got));
-    if (got === n) ok(`${ep} ×${n}`);
+    const leanGot = lean.get(ep) || 0;
+    if (got === n && leanGot < n)
+      flag(
+        `${ep} ×${n}  lean ×${leanGot}: ${n - leanGot} reached only behind include_ui/include_static, so a -e FIDELITY=lean run skips a recorded spine request`,
+      );
+    else if (got === n) ok(`${ep} ×${n}`);
     else if (got > n)
       info(`${ep} ×${n}  k6 reaches ${got} call sites — confirm the extras are conditional (fallback/retry), not double-fired`);
     else if (got + viaUi === n)
@@ -203,6 +267,27 @@ for (const s of stepPos) {
     if (nl.has(ep)) continue;
     if (chrome.has(ep)) info(`${ep} ×${n}  classed CHROME but reproduced — confirm it is load-bearing or deliberate`);
     else flag(`${ep} ×${n}  in k6, not recorded in this step`);
+  }
+  // the lean spine in call order against the recorded order, when both send the same requests (a fallback or a
+  // count mismatch is reported above instead)
+  // Requests in one page fire in parallel, so only the page order counts: the n-th k6 call to an endpoint is the
+  // n-th recorded one, and its page may not come before the previous call's page
+  const spineRecs = s.requests.filter((r) => r.cls === 'SPINE');
+  const recSeq = spineRecs.map((r) => r.endpoint);
+  const k6Seq = leanSeq.filter((ep) => nl.has(ep));
+  if ([...recSeq].sort().join() === [...k6Seq].sort().join()) {
+    const pageNo = new Map(s.pages.map((p, i) => [p.uid, i]));
+    const seen = new Map();
+    const pages = k6Seq.map((ep) => {
+      const nth = seen.get(ep) || 0;
+      seen.set(ep, nth + 1);
+      return pageNo.get(spineRecs.filter((r) => r.endpoint === ep)[nth].uid);
+    });
+    const at = pages.findIndex((p, i) => i && p < pages[i - 1]);
+    if (at > 0)
+      flag(
+        `spine order differs from the recording: k6 sends ${k6Seq[at - 1]} → ${k6Seq[at]}, the recording sends ${k6Seq[at]} on an earlier page`,
+      );
   }
   const chromeOnly = [...chrome.keys()].filter((ep) => !k6.has(ep));
   if (chromeOnly.length) info(`dropped as chrome: ${chromeOnly.join(', ')}`);
@@ -226,14 +311,149 @@ for (const s of stepPos) {
   for (const n of s.nonHttp) if (!/think/i.test(n.file)) info(`non-HTTP action in step: ${n.root} (${n.file})`);
 }
 reach(flowText).seen.forEach((f) => allReached.add(f));
+const reachedText = [flowText, ...[...allReached].map((f) => index.get(f).body)].join('\n');
+const JS_TRANSLATIONS = {
+  P_jwtToken: ['mint_api_jwt() (auth.helper.ts)', /\bmint_api_jwt\(/],
+};
+const jsTranslated = (name) => {
+  const t = JS_TRANSLATIONS[name];
+  return t ? [t[0], t[1].test(reachedText)] : [null, false];
+};
+const jsSets = new Map();
+// a jsAction that composes the name (setValue(varName + suffix) over a { 'C_CUST_NBR': 'EV200_CUST_NBR', … } map)
+// sets <key>_1…<key>_n; the map's keys are the bases
+const jsDynamic = new Map();
 const scripts = path.join(treeDir, '%resources%', 'scripts');
 if (fs.existsSync(scripts)) {
   for (const f of fs.readdirSync(scripts)) {
     const js = read(path.join(scripts, f));
-    const sets = [...js.matchAll(/setValue\s*\(\s*['"]([^'"]+)['"]/g)].map((m) => m[1]);
+    const sets = [...new Set([...js.matchAll(/setValue\s*\(\s*['"]([^'"]+)['"]/g)].map((m) => m[1]))];
+    const bases = /setValue\s*\(\s*[A-Za-z_]/.test(js) ? [...js.matchAll(/['"]([CP]_[A-Za-z0-9_]+)['"]\s*:/g)].map((m) => m[1]) : [];
     const fns = [...js.matchAll(/function\s+(\w+)/g)].map((m) => m[1]);
-    info(`jsAction ${f}: functions [${fns.join(', ')}] sets [${sets.join(', ')}] — confirm translated`);
+    sets.forEach((v) => jsSets.set(v, f));
+    bases.forEach((b) => jsDynamic.set(b, f));
+    const done = sets.length > 0 && sets.every((v) => jsTranslated(v)[1]);
+    const composed = bases.length ? ` + composed [${bases.map((b) => `${b}_<n>`).join(', ')}]` : '';
+    (done ? ok : info)(
+      `jsAction ${f}: functions [${fns.join(', ')}] sets [${sets.join(', ')}]${composed} — ${done ? `translated (${sets.map((v) => jsTranslated(v)[0]).join(', ')})` : 'confirm translated'}`,
+    );
   }
+}
+
+// ---- 2b. fidelity tiers, page by page -----------------------------------------------------------
+// NeoLoad fires a step's pages in sequence and each page's actions in parallel; the generator emits one array
+// per page per tier so the fire helpers send one http.batch per page. Check every generated page against the
+// recording: it holds requests from exactly one recorded page, pages come in recorded order, and every enabled
+// non-api request a page recorded lands in a tier (api requests are covered per endpoint in section 2).
+section('2b. FIDELITY TIERS  (page by page: one batch per recorded page, recorded order, every request placed)');
+const tierFile = (dir, ext) => path.join(dir, path.basename(flowArg).replace(/\.flow\.ts$/, ext));
+const tierFiles = {
+  chrome: tierFile('source/data/chrome', '.chrome.ts'),
+  static: tierFile('source/data/static', '.static.ts'),
+  transport: tierFile('source/data/transport', '.transport.ts'),
+};
+const loadTier = (f) => {
+  const text = read(f);
+  const start = text.indexOf('=', text.indexOf('export const'));
+  return new Function(
+    `return (${text
+      .slice(start + 1)
+      .trim()
+      .replace(/;\s*$/, '')});`,
+  )();
+};
+const listIn = (name) =>
+  [...((generatorText.match(new RegExp(`const ${name} = \\[([^\\]]*)\\]`)) || [])[1] || '').matchAll(/'([^']+)'/g)].map((m) => m[1]);
+const GLOBAL_SPINE = listIn('SPINE');
+const firesTiers = /\bfire_(?:ui_chrome|static_assets|transport)\s*\(/.test(flowText);
+if (!Object.values(tierFiles).every((f) => fs.existsSync(f))) {
+  // tiers are mandatory for every port: a recording with chrome/static requests and no tier set means a
+  // -e FIDELITY=ui/full run sends only the spine
+  (recordedTierRequests ? flag : info)(
+    `no complete tier set for this journey (${Object.values(tierFiles).map(rel).join(', ')})${recordedTierRequests ? ` though the recording has ${recordedTierRequests} chrome/static/telemetry requests — generate them with gen-fidelity-lists.cjs` : ' — skipped'}`,
+  );
+  if (recordedTierRequests && !firesTiers) flag('the flow calls none of fire_ui_chrome / fire_static_assets / fire_transport');
+} else {
+  if (!firesTiers) flag('tier files exist but the flow calls none of fire_ui_chrome / fire_static_assets / fire_transport');
+  const tiers = Object.fromEntries(Object.entries(tierFiles).map(([t, f]) => [t, loadTier(f)]));
+  // a pool variable carries its version (${P_26_2_CopyServiceOrders.eventName}); a tier generated from another
+  // version's VU of the same journey differs only in that prefix, so match on the unversioned name
+  const unver = (s) => s.replace(/\$\{P_\d+_\d+_/g, '${P_v_');
+  const vuVer = (vuUid.match(/\((\d+)\.(\d+)\)/) || []).slice(1).join('_');
+  const tierVers = new Set(Object.values(tierFiles).flatMap((f) => [...read(f).matchAll(/\$\{P_(\d+_\d+)_/g)].map((m) => m[1])));
+  const otherVers = [...tierVers].filter((v) => v !== vuVer);
+  if (otherVers.length)
+    info(
+      `tier files reference version ${otherVers.join(', ')} variables (\${P_${otherVers[0]}_…}) while this VU is ${vuVer}: generated from that version's VU; prefixes ignored for the page match`,
+    );
+  const recKey = (tier, a) =>
+    unver(tier === 'static' ? a.tier.bare : `${a.method} ${a.tier.url} ${a.method !== 'GET' && a.body !== undefined ? a.body : ''}`);
+  const genKey = (tier, r) => unver(tier === 'static' ? r.path : `${r.method} ${r.path} ${r.body ?? ''}`);
+  const label = (p) => (p.name || p.file).replace(/^\/[^/]+\//, '/');
+  const numbered = tree.steps.some((s) => /_(\d+)(?:_|$)/.test(s.dir));
+  let pagesChecked = 0;
+  tree.steps.forEach((s, i) => {
+    const stepNo = (s.dir.match(/_(\d+)(?:_|$)/) || [])[1] || (numbered ? null : String(i + 1).padStart(2, '0'));
+    if (!stepNo) return;
+    const rec = s.pages.map((p) => ({ ...p, actions: p.actions.filter((a) => a.enabled) }));
+    const used = rec.map((p) => p.actions.map(() => false));
+    const take = (k, tier, keys, commit) => {
+      const picked = [];
+      for (const key of keys) {
+        const idx = rec[k].actions.findIndex((a, j) => !used[k][j] && !picked.includes(j) && recKey(tier, a) === key);
+        if (idx < 0) return false;
+        picked.push(idx);
+      }
+      if (commit) picked.forEach((j) => (used[k][j] = true));
+      return true;
+    };
+    const counts = [];
+    let bad = 0;
+    for (const tier of Object.keys(tiers)) {
+      const gen = tiers[tier][stepNo] || [];
+      counts.push(`${tier} ${gen.length}`);
+      let prev = 0;
+      const breaks = [];
+      gen.forEach((page, j) => {
+        const keys = page.map((r) => genKey(tier, r));
+        let k = rec.findIndex((_, x) => x >= prev && take(x, tier, keys, false));
+        if (k < 0) {
+          k = rec.findIndex((_, x) => take(x, tier, keys, false));
+          if (k >= 0) breaks.push(`page ${j + 1} (${label(rec[k])}) fires after ${label(rec[prev - 1])}`);
+        }
+        if (k < 0) {
+          bad++;
+          flag(`[${stepNo}] ${tier} page ${j + 1} (${page.length} requests, first ${page[0].path}) matches no single recorded page`);
+          return;
+        }
+        take(k, tier, keys, true);
+        prev = k + 1;
+      });
+      pagesChecked += gen.length;
+      bad += breaks.length ? 1 : 0;
+      if (breaks.length) flag(`[${stepNo}] ${tier}: ${breaks.length} of ${gen.length} pages out of recorded order — first: ${breaks[0]}`);
+    }
+    const unplaced = [];
+    rec.forEach((p, k) =>
+      p.actions.forEach((a, j) => {
+        const bare = a.tier.bare;
+        if (used[k][j] || bare.startsWith('/api/')) return;
+        if ([...GLOBAL_SPINE, ...DEAD].some((x) => bare.startsWith(x))) return;
+        if (bare.endsWith('app85.cshtml') && !a.tier.params.length) return;
+        unplaced.push(`${bare} (${label(p)})`);
+      }),
+    );
+    if (unplaced.length)
+      flag(`[${stepNo}] ${unplaced.length} recorded non-api request(s) fire at no tier — first: ${unplaced.slice(0, 3).join(', ')}`);
+    const sequential = rec.filter((p, k) => p.sequential && used[k].filter(Boolean).length > 1);
+    if (sequential.length)
+      flag(
+        `[${stepNo}] ${sequential.length} page(s) set playRequestsSequentially but replayed as one parallel batch — first: ${label(sequential[0])}`,
+      );
+    if (!bad && !unplaced.length && !sequential.length)
+      ok(`[${stepNo}] ${rec.length} recorded pages → ${counts.join(' · ')} tier pages; every non-api request placed`);
+  });
+  info(`${pagesChecked} generated tier pages checked against the recording (order breaks and unmatched pages FLAG above)`);
 }
 
 // ---- 3. correlation -----------------------------------------------------------------------------
@@ -258,20 +478,72 @@ if (unconsumed.length)
   info(`${unconsumed.length} extract(s) no later request consumes (safe to drop unless a jsAction reads them): ${unconsumed.join(', ')}`);
 const consumedC = new Set(spineReqs.flatMap((r) => [...tokenText(r).matchAll(/\$\{(C_[A-Za-z0-9_]+)/g)].map((m) => m[1])));
 for (const c of consumedC) {
-  if (extracted.has(c) || extracted.has(c.replace(/_\d+$/, ''))) continue;
-  if (c.endsWith('_')) info(`${c}… is a dynamically composed variable name — confirm its k6 source by hand`);
+  const base = c.replace(/_\d+$/, '');
+  if (extracted.has(c) || extracted.has(base)) continue;
+  if (base !== c && jsDynamic.has(base)) {
+    const inK6 = new RegExp(`\\b${c}\\b`).test(reachedText);
+    (inK6 ? ok : flag)(
+      `${c} set by jsAction ${jsDynamic.get(base)} (composed name ${base}_<n>)${inK6 ? ' → the flow sets it' : ': nothing in k6 sets it'}`,
+    );
+  } else if (c.endsWith('_')) info(`${c}… is a dynamically composed variable name — confirm its k6 source by hand`);
   else flag(`${c} consumed but extracted nowhere in this VU (jsAction or init-container?)`);
 }
 
 // ---- 4. token-literal leaks ---------------------------------------------------------------------
 section('4. TOKEN-LITERAL LEAKS  (a recorded ${…} value still hardcoded in the k6 files the flow reaches)');
-const scope = new Set([path.resolve(flowArg)]);
-for (const fn of allReached) scope.add(path.resolve(index.get(fn).file));
-const scopedText = [...scope].map((f) => ({ f, lines: read(f).split('\n') }));
-const identifiers = new Set(scopedText.flatMap(({ lines }) => lines.join('\n').match(/\b\w+\b/g) || []));
-for (const [name, e] of index)
-  if (identifiers.has(name) && /payloads/.test(e.file) && !scope.has(path.resolve(e.file)))
-    scopedText.push({ f: path.resolve(e.file), lines: read(e.file).split('\n') });
+// scan what the journey itself sends: the flow file plus the bodies of the functions its journey reaches, and the
+// payload consts those bodies name. A whole wrapper or builder file would drag in code only other journeys or the
+// seed run (a shared events.api.ts imports copy-event's savePayload)
+const journeyEntry = journeyFn && index.get(journeyFn);
+const journeyReached = journeyEntry ? reach(journeyEntry.body).seen : new Set(allReached);
+const scopedText = [{ f: path.resolve(flowArg), lines: read(flowArg).split('\n'), offset: 0 }];
+const unitNames = new Set();
+const addUnit = (name) => {
+  const e = index.get(name);
+  if (!e || unitNames.has(name) || path.resolve(e.file) === path.resolve(flowArg)) return;
+  unitNames.add(name);
+  scopedText.push({ f: path.resolve(e.file), lines: e.body.split('\n'), offset: e.bodyLine - 1, name });
+};
+journeyReached.forEach(addUnit);
+const unitText = scopedText.map((u) => u.lines.join('\n')).join('\n');
+for (const [name, e] of index) if (/payloads/.test(e.file) && new RegExp(`\\b${name}\\b`).test(unitText)) addUnit(name);
+const isComment = (l) => /^\s*(\/\/|\/\*|\*)/.test(l);
+// the TransportDataColumns + TransportDataRows tables in a recorded body template, first row keyed by ColumnID
+const nlTables = (tpl) => {
+  const body = tpl.startsWith('Encoded(Base64):') ? Buffer.from(tpl.slice(16), 'base64').toString('utf8') : tpl;
+  let j;
+  try {
+    j = JSON.parse(body.replace(/([:[,]\s*)(\$\{[^}]+\})(?=\s*[,}\]])/g, '$1"$2"'));
+  } catch {
+    return [];
+  }
+  const out = [];
+  const walk = (v) => {
+    if (Array.isArray(v)) return v.forEach(walk);
+    if (!v || typeof v !== 'object') return;
+    if (Array.isArray(v.TransportDataColumns) && Array.isArray(v.TransportDataRows) && v.TransportDataRows.length)
+      out.push({
+        names: new Map(v.TransportDataColumns.map((c) => [String(c.ColumnID), c.ColumnName])),
+        row: v.TransportDataRows[0].Values || {},
+      });
+    Object.values(v).forEach(walk);
+  };
+  walk(j);
+  return out;
+};
+// an extracted value the extracting request's own template already sends as a plain literal is the recorder's
+// typed input, echoed back by the server (HandleDependentFields2 sends "1": "Performance" and C_LeadFirstName reads
+// Values.1 from its response; CreateNewRows sends {"Key": "EV700_ALT_FUNC_DESC", "Value": "Planning - alt 1"}).
+// The template, not the resolved recording: a value NeoLoad generates (DemoFile_${…}.rpt) is never a literal there.
+const decoded = (tpl) => (tpl.startsWith('Encoded(Base64):') ? Buffer.from(tpl.slice(16), 'base64').toString('utf8') : tpl);
+const echoed = (token, value) =>
+  spineReqs.some((r) => {
+    const e = r.extractors.find((x) => x.name === token);
+    if (!e || !r.template) return false;
+    const col = ((e.jsonpath || '').match(/\.(\d+)$/) || [])[1];
+    if (col !== undefined && nlTables(r.template).some((t) => String(t.row[col]) === value)) return true;
+    return decoded(r.template).includes(`"${value}"`);
+  });
 let aligned = 0;
 let unaligned = [];
 let leaks = 0;
@@ -293,13 +565,21 @@ for (const r of spineReqs.filter((x) => x.cls === 'SPINE' && x.template && x.tem
     const numeric = /^\d+$/.test(value);
     if (value.length < (numeric ? 3 : 4) || /^(true|false|null)$/.test(value) || checked.has(value)) continue;
     checked.add(value);
-    const bounded = new RegExp(`(^|[^\\w.])${value}([^\\w.]|$)`);
+    // a bare number matches any width or count (Width: 100), so a numeric value counts only as a quoted literal
+    const quoted = new RegExp(`['"\`]${value}['"\`]`);
     const shown = /password|credential/i.test(token) ? '(masked)' : `"${value.slice(0, 40)}"`;
-    for (const { f, lines } of scopedText) {
-      const hit = lines.findIndex((l) => (numeric ? bounded.test(l) : l.includes(value)));
+    for (const { f, lines, offset } of scopedText) {
+      const hit = lines.findIndex((l) => !isComment(l) && (numeric ? quoted.test(l) : l.includes(value)));
       if (hit < 0) continue;
+      const where = `${rel(f)}:${offset + hit + 1}`;
+      if (echoed(token, value)) {
+        info(
+          `\${${token}} recorded ${shown} hardcoded at ${where}: the request that extracts it sent the same value (typed input echoed back)`,
+        );
+        continue;
+      }
       leaks++;
-      flag(`\${${token}} recorded ${shown} hardcoded at ${rel(f)}:${hit + 1}`);
+      flag(`\${${token}} recorded ${shown} hardcoded at ${where}`);
     }
   }
 }
@@ -310,22 +590,145 @@ const LITERALS = [
   [/\b\d+\|[A-Za-z0-9+/=]{16,}/, 'bearer-token'],
 ];
 let literals = 0;
-for (const { f, lines } of handWritten)
+for (const { f, lines, offset } of handWritten)
   lines.forEach((l, i) => {
     for (const [re, what] of LITERALS)
       if (re.test(l)) {
         literals++;
-        flag(`${what} literal at ${rel(f)}:${i + 1}`);
+        flag(`${what} literal at ${rel(f)}:${offset + i + 1}`);
       }
   });
-if (!literals) ok(`no GUID or bearer-token literal in the ${handWritten.length} hand-written k6 files`);
+if (!literals) ok(`no GUID or bearer-token literal in the ${handWritten.length} hand-written k6 units the journey reaches`);
 if (unaligned.length) info(`could not align ${unaligned.length} templated bodies to their recording: ${unaligned.join(', ')}`);
+
+// 4b. transport tables column by column. A Save2 / HandleDependentFields2 body is a TransportDataColumns +
+// TransportDataRows table, often too large or reshaped for the token alignment above, so compare the recorded
+// first row to the k6 builder's by ColumnName: a column NeoLoad fills from a token that k6 sends as a literal, or a
+// literal option (Y/N, *ALL, a code) that differs from the recording.
+const defs = loadDefs(root);
+const constantVar = (name) => {
+  const def = defs.get(name);
+  if (!def) return false;
+  const r = resolveDef(def, root);
+  return r.kind === 'constant' || (r.kind === 'pool' && !r.error && r.rows.length <= 1);
+};
+const blockFrom = (text, start) => {
+  const close = { '{': '}', '[': ']' }[text[start]];
+  let depth = 0;
+  for (let i = start; i < text.length; i++) {
+    const c = text[i];
+    if (c === "'" || c === '"' || c === '`') {
+      for (i++; i < text.length && text[i] !== c; i++) if (text[i] === '\\') i++;
+    } else if (c === text[start]) depth++;
+    else if (c === close && --depth === 0) return text.slice(start, i + 1);
+  }
+  return text.slice(start);
+};
+const k6Tables = [];
+for (const { f, lines, offset, name: unit } of scopedText.filter((u) => /[\\/]payloads[\\/]/.test(u.f))) {
+  const text = lines.join('\n');
+  for (const m of text.matchAll(/TransportDataColumns\s*:\s*\[/g)) {
+    const colsText = blockFrom(text, m.index + m[0].length - 1);
+    const names = new Map();
+    for (const entry of colsText.match(/\{[^{}]*\}/g) || []) {
+      const name = (entry.match(/ColumnName:\s*'([^']*)'/) || [])[1];
+      const id = (entry.match(/ColumnID:\s*(\d+)/) || [])[1];
+      if (name && id) names.set(id, name);
+    }
+    const rowsAt = text.indexOf('Values', m.index + colsText.length);
+    const brace = rowsAt < 0 ? -1 : text.indexOf('{', rowsAt);
+    if (brace < 0) continue;
+    const valuesText = blockFrom(text, brace);
+    const startLine = offset + text.slice(0, brace).split('\n').length;
+    const byName = new Map();
+    valuesText.split('\n').forEach((l, i) => {
+      const v = l.match(/^\s*'(\d+)'\s*:\s*(.*?),?\s*$/);
+      if (v && names.has(v[1])) byName.set(names.get(v[1]), { expr: v[2], line: startLine + i });
+    });
+    if (byName.size) k6Tables.push({ f, byName, unit });
+  }
+}
+const literalOf = (expr) => {
+  const s = expr.match(/^'((?:\\.|[^'\\])*)'$/);
+  if (s) return { v: s[1].replace(/\\(.)/g, '$1') };
+  if (/^-?\d+(\.\d+)?$|^null$|^true$|^false$/.test(expr)) return { v: expr === 'null' ? null : expr };
+  return null;
+};
+// the builders a step's wrappers post to each endpoint: a wrapper of the step that names an endpoint, and every
+// function or const its body names, transitively (save wrapper → savePayload → eventCopyTable). A recorded request
+// is compared only with the builders of a wrapper that posts the same endpoint, never a sibling call's builder
+const unitEndpoints = new Map();
+const endpointsOfUnits = (step) => {
+  if (unitEndpoints.has(step)) return unitEndpoints.get(step);
+  const map = new Map();
+  for (const fn of stepSeen.get(step) || []) {
+    const eps = [...index.get(fn).body.matchAll(ENDPOINT)].map((m) => m[1]);
+    if (!eps.length) continue;
+    const stack = [fn];
+    const seen = new Set();
+    while (stack.length) {
+      const u = stack.pop();
+      if (seen.has(u) || !index.has(u)) continue;
+      seen.add(u);
+      if (!map.has(u)) map.set(u, new Set());
+      eps.forEach((ep) => map.get(u).add(ep));
+      stack.push(...new Set(index.get(u).body.match(/\b\w+\b/g) || []));
+    }
+  }
+  unitEndpoints.set(step, map);
+  return map;
+};
+const reportedTables = new Set();
+let tablesCompared = 0;
+for (const r of spineReqs.filter((x) => x.cls === 'SPINE' && x.template)) {
+  for (const t of nlTables(r.template)) {
+    const nlNames = [...t.names.values()];
+    if (nlNames.length < 5) continue;
+    const compare = (table) => {
+      const fromToken = [];
+      const differs = [];
+      for (const [id, name] of t.names) {
+        const k = table.byName.get(name);
+        if (!k || !(id in t.row)) continue;
+        const nl = t.row[id];
+        const lit = literalOf(k.expr);
+        const tokens = typeof nl === 'string' ? [...nl.matchAll(/\$\{([^}.]+)/g)].map((x) => x[1]) : [];
+        if (tokens.length) {
+          const varying = tokens.filter((tk) => !/^P_Performance_/.test(tk) && !constantVar(tk));
+          const echo = tokens.length === 1 && nl === `\${${tokens[0]}}` && lit && echoed(tokens[0], lit.v);
+          if (varying.length && !echo && lit && lit.v !== null && lit.v !== '')
+            fromToken.push(`${name} ${nl.slice(0, 50)} → '${lit.v}' (:${k.line})`);
+        } else if (lit && String(nl ?? null) !== String(lit.v ?? null)) differs.push(`${name} '${nl}' → '${lit.v}' (:${k.line})`);
+      }
+      return { fromToken, differs };
+    };
+    // the builder table sharing the most column names; between builders of one table shape (an HDF2 and the Save2
+    // that follows it), the one closest to this recording
+    const units = endpointsOfUnits(r.step);
+    const best = k6Tables
+      .filter((k) => units.get(k.unit)?.has(r.endpoint))
+      .map((k) => ({ k, hit: nlNames.filter((n) => k.byName.has(n)).length }))
+      .filter((c) => c.hit >= nlNames.length * 0.8)
+      .map((c) => ({ ...c, ...compare(c.k) }))
+      .sort((a, b) => b.hit - a.hit || a.fromToken.length + a.differs.length - (b.fromToken.length + b.differs.length))[0];
+    if (!best) continue;
+    const { fromToken, differs } = best;
+    const key = `${rel(best.k.f)} ${fromToken.join()} ${differs.join()}`;
+    if (reportedTables.has(key)) continue;
+    reportedTables.add(key);
+    tablesCompared++;
+    const at = `${r.endpoint} [${r.step.replace(/^T\d+_[A-Za-z]+_/, '')}] vs ${rel(best.k.f)}`;
+    if (fromToken.length)
+      flag(`${at}: ${fromToken.length} column(s) NeoLoad fills from a token, k6 sends a literal — ${fromToken.slice(0, 4).join('; ')}`);
+    if (differs.length) flag(`${at}: ${differs.length} literal column(s) differ from the recording — ${differs.slice(0, 6).join('; ')}`);
+    if (!fromToken.length && !differs.length) ok(`${at}: first row matches by column name (${best.hit} columns)`);
+  }
+}
+if (!tablesCompared) info('no recorded transport table matched a k6 builder table by column name');
 
 // ---- 5. variables / data pools ------------------------------------------------------------------
 section('5. VARIABLES  (every ${P_…} the VU and its <VU>.xml reference, against variables/ and the k6 port)');
-const defs = loadDefs(root);
 const refs = refsInTree(treeDir);
-const reachedText = [flowText, ...[...allReached].map((f) => index.get(f).body)].join('\n');
 const poolModules = listTs('source/data/pools').map((f) => {
   const text = read(f);
   const listStart = text.indexOf('=');
@@ -333,20 +736,43 @@ const poolModules = listTs('source/data/pools').map((f) => {
     f,
     pool: (text.match(/NeoLoad (P_[A-Za-z0-9_]+) pool/) || [])[1],
     exportName: (text.match(/export const (\w+)/) || [])[1],
+    list: text.slice(listStart),
     values: [...text.slice(listStart).matchAll(/'((?:\\.|[^'\\])*)'|"((?:\\.|[^"\\])*)"/g)].map((m) =>
       (m[1] ?? m[2]).replace(/\\(.)/g, '$1'),
     ),
   };
 });
+// object-row pools ({ organization: '10', badgeType: '2', … }) are read per column; a flat string list as-is
+const columnValues = (mod, col) => {
+  const key = col.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(`(?:^|[\\s{,])['"]?${key}['"]?\\s*:\\s*(?:'((?:\\\\.|[^'\\\\])*)'|"((?:\\\\.|[^"\\\\])*)")`, 'gm');
+  const keyed = [...mod.list.matchAll(re)].map((m) => (m[1] ?? m[2]).replace(/\\(.)/g, '$1'));
+  return keyed.length ? keyed : null;
+};
 const usedFiles = new Set();
+// a seed-prefixed pool the journey discovers at runtime (a discover_* the flow defines, called from smoke setup())
+// is replaced by the seed, not ported row for row
+const smokeText = fs.existsSync('source/tests/smoke.spec.ts') ? read('source/tests/smoke.spec.ts') : '';
+const discovery = [...new Set([...smokeText.matchAll(/\b(discover_\w+)\(/g)].map((m) => m[1]))].filter((fn) =>
+  new RegExp(`function ${fn}\\s*\\(`).test(flowText),
+);
 const seedPrefixed = [];
-const translation = (name, r) => {
+const API_CREDENTIAL_FIELDS = { P_API_UserId: 'userId', P_API_Key: 'key', P_API_Secret: 'secret' };
+const translation = (name, r, tag) => {
   const has = (re) => re.test(reachedText);
   if (/thinkTime/i.test(name)) return ['think()', has(/\bthink\(/)];
   if (/Pacing/i.test(name)) {
     const neo = fs.existsSync('source/tests/neoload.spec.ts') ? read('source/tests/neoload.spec.ts') : '';
     const def = (neo.match(/PACING\s*=\s*Number\([^)]*\)\s*\|\|\s*(\d+)/) || [])[1];
-    return [`pace(PACING) in neoload.spec.ts (default ${def ?? '?'}s)`, journeyFn ? neo.includes(journeyFn) : false];
+    return [`pace(PACING) in neoload.spec.ts (default ${def ?? '?'}s)`, journeyFn ? neo.includes(journeyFn) : false, 'load-spec'];
+  }
+  if (tag === 'variable-password' && API_CREDENTIAL_FIELDS[name]) {
+    const field = API_CREDENTIAL_FIELDS[name];
+    const creds = fs.existsSync('source/data/creds/api.data.ts') ? read('source/data/creds/api.data.ts') : '';
+    return [
+      `source/data/creds/api.data.ts ${field} (encrypted, decrypted in setup())`,
+      new RegExp(`\\b${field}\\s*:`).test(creds) && has(/\bapiCredentials\b/),
+    ];
   }
   if (r.tag === 'variable-counter' || /Iteration/i.test(name)) return ['iterationInTest / __ITER', has(/iterationInTest|__ITER/)];
   if (r.tag === 'variable-currentdate' || /Epoch|Timestamp|Date/i.test(name))
@@ -355,23 +781,46 @@ const translation = (name, r) => {
     const min = String(r.detail).match(/random (\d+)/)?.[1];
     return [`Math.random within ${r.detail.replace('random ', '')}`, has(/Math\.random/) && (!min || reachedText.includes(min))];
   }
+  if (tag === 'variable-random-string')
+    return ['a per-iteration random string (Math.random / randomUUID / a run token)', has(/Math\.random|randomUUID|runToken|random_\w*\(/)];
   if (/Host|Site|Server|Version/i.test(name) || r.kind === 'lookup') return ['env.config.ts (baseUrl / version)', true];
   return [null, false];
 };
 for (const name of [...refs.keys()].sort()) {
   const def = defs.get(name);
   if (!def) {
-    flag(`${name}: no definition in team/variables (VU-local or jsAction-set?) — confirm its k6 source`);
+    const js = jsSets.get(name);
+    const [how, seen] = jsTranslated(name);
+    // the flow regenerates it when its subs map sets that key from a computed value (not a quoted literal)
+    const subsKey = new RegExp(
+      `\\bsubs\\.${name}\\s*=(?!=)|\\bsubs\\[['"]${name}['"]\\]\\s*=(?!=)|['"]?\\b${name}['"]?\\s*:\\s*(?!['"\\d-]|null\\b|true\\b|false\\b)`,
+    ).test(reachedText);
+    const spineUse = [
+      ...new Set(spineReqs.filter((r) => r.cls === 'SPINE' && tokenText(r).includes(`\${${name}}`)).map((r) => r.endpoint)),
+    ];
+    if (extracted.has(name)) info(`${name}: a <variable-extractor>, not a variable (see 3. CORRELATION)`);
+    else if (js && seen) ok(`${name} [set by jsAction ${js}] → ${how}`);
+    else if (js && subsKey && !spineUse.length) ok(`${name} [set by jsAction ${js}] → computed subs-map key (only the tiers consume it)`);
+    else if (js && subsKey)
+      info(
+        `${name} [set by jsAction ${js}] → computed subs-map key; the spine also consumes it (${spineUse.join(', ')}) — confirm the builder takes the same value`,
+      );
+    else if (js)
+      flag(
+        `${name}: set by jsAction ${js}${how ? ` → ${how}: no evidence in the flow or the code it reaches` : ' — no known k6 translation, confirm by hand'}`,
+      );
+    else flag(`${name}: no definition in team/variables and no jsAction sets it (VU-local?) — confirm its k6 source`);
     continue;
   }
   const r = resolveDef(def, root);
   if (def.filename) usedFiles.add(path.resolve(root, def.filename));
   if (r.kind === 'pool' && !r.error && r.rows.length <= 1) r.kind = 'lookup';
   if (r.kind !== 'pool') {
-    const [how, seen] = translation(name, r);
+    const [how, seen, where] = translation(name, r, def.tag);
     const line = `${name} [${def.tag}] ${r.detail ?? ''} → ${how ?? '?'}`;
     if (!how) flag(`${line}: no known k6 translation — confirm by hand`);
     else if (seen) ok(line);
+    else if (where === 'load-spec') info(`${line}: ${journeyFn} is not registered there yet, so pacing applies once it is (see 8. WIRING)`);
     else flag(`${line}: no evidence in the flow or the code it reaches`);
     continue;
   }
@@ -384,6 +833,7 @@ for (const name of [...refs.keys()].sort()) {
   const values = poolValues(r, col);
   const pre = commonPrefix(values);
   if (pre.length >= 8) seedPrefixed.push(`${name} (prefix "${pre}")`);
+  const seedPool = pre.length >= 8 && discovery.length > 0;
   if (/UserCredentials/i.test(name)) {
     const users = [...read('source/data/creds/users.data.ts').matchAll(/username:\s*'([^']+)'/g)].map((m) => m[1]);
     const ucol = r.columns.find((c) => /user/i.test(c.name));
@@ -401,18 +851,31 @@ for (const name of [...refs.keys()].sort()) {
       `${name}: pool module was generated from ${mod.pool} (another version's file) — the row check below compares against this VU's file`,
     );
   if (!mod) {
-    flag(`${name}.${col}: ${values.length} rows, no source/data/pools module generated from it`);
+    (seedPool ? info : flag)(
+      `${name}.${col}: ${values.length} rows, no source/data/pools module${seedPool ? `: seed-prefixed ("${pre}") and discovered at runtime by ${discovery.join(', ')} (see 6. SEED)` : ' generated from it'}`,
+    );
   } else {
-    const same = mod.values.length === values.length && mod.values.every((v, i) => v === values[i]);
-    const missing = values.filter((v) => !mod.values.includes(v)).length;
-    const extra = mod.values.filter((v) => !values.includes(v)).length;
-    if (same) ok(`${name}.${col}: ${values.length}/${values.length} rows, same order → ${rel(mod.f)} (${mod.exportName})`);
-    else {
-      const noted = (read(mod.f).match(/^\/\*[\s\S]*?\*\//) || [''])[0].split('\n').length > 3;
-      flag(
-        `${name}.${col}: NeoLoad ${values.length} rows vs ${mod.values.length} in ${rel(mod.f)} (missing ${missing}, extra ${extra}${!missing && !extra ? ', order differs' : ''})${noted ? ' — its header documents a deviation; judge it' : ''}`,
+    const keyed = columnValues(mod, col) !== null;
+    const checkCols = keyed ? cols.filter((c) => columnValues(mod, c) !== null) : [col];
+    const noted = (read(mod.f).match(/^\/\*[\s\S]*?\*\//) || [''])[0].split('\n').length > 3;
+    const diffs = checkCols
+      .map((c) => {
+        const want = c === col ? values : poolValues(r, c);
+        const got = keyed ? columnValues(mod, c) : mod.values;
+        const same = got.length === want.length && got.every((v, i) => v === want[i]);
+        return same
+          ? null
+          : { c, want, got, missing: want.filter((v) => !got.includes(v)).length, extra: got.filter((v) => !want.includes(v)).length };
+      })
+      .filter(Boolean);
+    if (!diffs.length)
+      ok(
+        `${name}.${checkCols.length > 1 ? `[${checkCols.join(', ')}]` : col}: ${values.length}/${values.length} rows, same order → ${rel(mod.f)} (${mod.exportName})`,
       );
-    }
+    for (const d of diffs)
+      flag(
+        `${name}.${d.c}: NeoLoad ${d.want.length} rows vs ${d.got.length} in ${rel(mod.f)} (missing ${d.missing}, extra ${d.extra}${!d.missing && !d.extra ? ', order differs' : ''})${noted ? ' — its header documents a deviation; judge it' : ''}`,
+      );
     const picked = new RegExp(`pick_pool_value\\(\\s*${mod.exportName}\\b`).test(reachedText);
     (picked ? ok : flag)(`${mod.exportName} ${picked ? 'is' : 'is not'} selected with pick_pool_value in the flow`);
   }
@@ -429,7 +892,9 @@ for (const name of [...refs.keys()].sort()) {
         return { d, state: !fs.existsSync(f) ? 'missing' : md5(read(f)) === md5(src) ? 'same' : 'DIFFERS' };
       });
     const summary = variants.map((x) => `${x.d.replace('version_', '')}:${x.state}`).join(' ');
-    (variants.some((x) => x.state === 'DIFFERS') ? flag : info)(`${name} across versions → ${summary}`);
+    (variants.some((x) => x.state === 'DIFFERS') && !seedPool ? flag : info)(
+      `${name} across versions → ${summary}${seedPool ? ' (rows discovered at runtime, not ported)' : ''}`,
+    );
   }
 }
 const versionDirs = new Set([...usedFiles].map((f) => path.dirname(f)));
@@ -540,13 +1005,105 @@ const otherThr = new Set(
     .filter((f) => path.resolve(f) !== path.resolve(flowArg))
     .flatMap((f) => [...read(f).matchAll(/\{name:([^}]+)\}/g)].map((m) => m[1])),
 );
-const tags = new Set();
-for (const fn of allReached) for (const m of index.get(fn).body.matchAll(/\bname\s*[=:]\s*'([A-Z]\w+)'/g)) tags.add(m[1]);
-for (const [fn, e] of index)
-  if (allReached.has(fn))
-    for (const m of (read(e.file).match(new RegExp(`function ${fn}\\([^)]*\\bname\\s*=\\s*'([A-Z]\\w+)'`)) || []).slice(1)) tags.add(m);
-// a tag passed as a call's last argument, single-line or prettier's multi-line form with its trailing comma
-for (const m of flowText.matchAll(/,\s*'([A-Z][A-Za-z0-9]+)'\s*,?\s*\)/g)) tags.add(m[1]);
+// a request's tag is `tags: { name: 'X' }` in a body, or the literal a call site passes in a wrapper's `name`/`tag`
+// parameter (that parameter's default when the call passes none). Resolving it per call site keeps a column map's
+// `name:` key, a window id in another argument position, or a default every caller overrides out of the set
+// `generics` counts <…> as nesting, for a parameter list (ReturnType<typeof post_contact>), never call arguments
+const splitArgs = (s, generics = false) => {
+  const out = [];
+  let depth = 0;
+  let cur = '';
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (c === "'" || c === '"' || c === '`') {
+      let j = i + 1;
+      for (; j < s.length && s[j] !== c; j++) if (s[j] === '\\') j++;
+      cur += s.slice(i, j + 1);
+      i = j;
+      continue;
+    }
+    if ('([{'.includes(c) || (generics && c === '<')) depth++;
+    else if (')]}'.includes(c) || (generics && c === '>' && s[i - 1] !== '=')) depth--;
+    if (c === ',' && depth === 0) {
+      out.push(cur.trim());
+      cur = '';
+    } else cur += c;
+  }
+  if (cur.trim()) out.push(cur.trim());
+  return out;
+};
+const parenFrom = (text, open) => {
+  let depth = 0;
+  for (let i = open; i < text.length; i++) {
+    const c = text[i];
+    if (c === "'" || c === '"' || c === '`') {
+      for (i++; i < text.length && text[i] !== c; i++) if (text[i] === '\\') i++;
+    } else if (c === '(') depth++;
+    else if (c === ')' && --depth === 0) return text.slice(open + 1, i);
+  }
+  return text.slice(open + 1);
+};
+const params = new Map();
+const paramsOf = (fn) => {
+  if (!params.has(fn)) {
+    const text = read(index.get(fn).file);
+    const m = text.match(new RegExp(`function ${fn}\\s*\\(`));
+    params.set(
+      fn,
+      m
+        ? splitArgs(parenFrom(text, m.index + m[0].length - 1), true).map((p) => ({
+            name: (p.match(/^\s*(?:\.\.\.)?(\w+)/) || [])[1],
+            def: (p.match(/=\s*'([^']*)'\s*$/) || [])[1],
+          }))
+        : [],
+    );
+  }
+  return params.get(fn);
+};
+// a `name`/`tag` parameter is a request tag only if the function sends it as one: `tags: { name }` in its body, or
+// passed on to such a parameter (set_cell's `name` only labels a log line)
+const tagParam = new Map();
+const tagParamAt = (fn, depth = 0) => {
+  if (tagParam.has(fn)) return tagParam.get(fn);
+  tagParam.set(fn, -1);
+  const ps = paramsOf(fn);
+  const at = ps.findIndex((p) => p.name === 'name' || p.name === 'tag');
+  if (at < 0 || depth > 5) return -1;
+  const id = ps[at].name;
+  const body = index.get(fn).body;
+  let sends = new RegExp(`\\btags\\s*:\\s*\\{[^}]*\\b(?:name\\s*:\\s*${id}|${id})\\b`).test(body);
+  for (const m of body.matchAll(/\b([a-z_][A-Za-z0-9_]*)\s*\(/g)) {
+    if (sends) break;
+    if (!index.has(m[1]) || m[1] === fn) continue;
+    const callee = tagParamAt(m[1], depth + 1);
+    sends = callee >= 0 && splitArgs(parenFrom(body, m.index + m[0].length - 1))[callee] === id;
+  }
+  tagParam.set(fn, sends ? at : -1);
+  return tagParam.get(fn);
+};
+const tagsIn = (text, xf, stack = new Set(), out = new Set()) => {
+  text = xf(text);
+  for (const m of text.matchAll(/\btags\s*:\s*\{[^}]*?\bname\s*:\s*'([A-Z]\w*)'/g)) out.add(m[1]);
+  if (stack.size > 5) return out;
+  for (const m of text.matchAll(/\b([a-z_][A-Za-z0-9_]*)\s*\(/g)) {
+    const fn = m[1];
+    if (!index.has(fn) || stack.has(fn) || /function\s+$/.test(text.slice(Math.max(0, m.index - 12), m.index))) continue;
+    const ps = paramsOf(fn);
+    const at = tagParamAt(fn);
+    if (at >= 0) {
+      const arg = splitArgs(parenFrom(text, m.index + m[0].length - 1))[at];
+      const lit = arg && arg.match(/^'([A-Z]\w*)'$/);
+      if (lit) out.add(lit[1]);
+      else if (!arg && ps[at].def) out.add(ps[at].def);
+    }
+    tagsIn(index.get(fn).body, xf, new Set([...stack, fn]), out);
+  }
+  return out;
+};
+const journeyText = journeyEntry ? journeyEntry.body : flowText;
+const journeyTags = tagsIn(journeyText, (t) => t);
+const leanTags = tagsIn(journeyText, stripGuarded);
+const allTags = tagsIn(flowText, (t) => t);
 if (!thrName) flag('no exported *Thresholds object in the flow');
 else {
   const helperTags = new Set(
@@ -554,15 +1111,34 @@ else {
       .filter((e) => path.normalize(e.file).split(path.sep).includes('helpers'))
       .flatMap((e) => [...read(e.file).matchAll(/\bname\s*[=:]\s*'([A-Z]\w+)'/g)].map((m) => m[1])),
   );
-  for (const t of tags) {
-    if (thr.has(t) || otherThr.has(t)) continue;
+  // shared SLA maps spread into the journey's (...searchEventsThresholds from events.api.ts)
+  const spread = new Map();
+  for (const m of thrBlock.matchAll(/\.\.\.(\w+)/g)) {
+    const e = index.get(m[1]);
+    if (!e) continue;
+    for (const x of e.body.matchAll(/\{name:([^}]+)\}'\s*:\s*\[([^\]]*)\]/g))
+      spread.set(x[1], { v: x[2], from: `${m[1]} (${rel(e.file)})` });
+  }
+  const covered = (t) => thr.has(t) || spread.has(t) || otherThr.has(t);
+  for (const t of journeyTags) {
+    if (covered(t)) continue;
     if (helperTags.has(t)) info(`request tag ${t} (shared helper) has no threshold — matches the other journeys unless the SLA needs it`);
+    else if (!leanTags.has(t))
+      info(`request tag ${t} fires only behind include_ui/include_static (tier support): no threshold, per rules/fidelity.md`);
     else flag(`request tag ${t} has no threshold in ${thrName}`);
   }
+  for (const t of allTags)
+    if (!journeyTags.has(t) && !covered(t))
+      info(`request tag ${t} is reached only outside ${journeyFn} (setup / discovery): no threshold needed`);
   for (const [t, v] of thr) {
-    if (!tags.has(t)) flag(`${thrName} has '${t}', which no reached request is tagged with`);
+    if (!allTags.has(t)) flag(`${thrName} has '${t}', which no reached request is tagged with`);
     else if (avgLimitMs != null && !v.includes(`avg<${avgLimitMs}`)) flag(`${t}: ${v.trim()} — SLA says avg<${avgLimitMs}`);
+    else if (/\bp\(\d+(?:\.\d+)?\)/.test(v))
+      info(`${t}: ${v.trim()} — the percentile is not a NeoLoad SLA; keep it only if its commit records the measured run (rules/tests.md)`);
   }
+  for (const [t, s] of spread)
+    if (journeyTags.has(t) && avgLimitMs != null && !s.v.includes(`avg<${avgLimitMs}`))
+      info(`${t}: ${s.v.trim()} from the shared ${s.from} — SLA says avg<${avgLimitMs}; changing it affects every journey that spreads it`);
   if (avgLimitMs != null && [...thr.values()].every((v) => v.includes(`avg<${avgLimitMs}`)))
     ok(`${thr.size} thresholds, all avg<${avgLimitMs} per the SLA`);
 }

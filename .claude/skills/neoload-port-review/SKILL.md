@@ -22,11 +22,30 @@ node .claude/scripts/neoload-port-review.cjs "C:/momentus-projects/performance" 
 ```
 
 Given the NeoLoad project root, it picks the VU from the flow's step prefix and the version its pools were
-generated from (pass the VU tree dir instead to override). It prints OK / FLAG / INFO lines across eight
-areas — steps ↔ groups, spine coverage per step, correlation, token-literal leaks, variables (pools
-row-for-row, cross-version files, credentials, generated/constant translations), seed pairing, SLA ↔
-thresholds, wiring. **Everything it prints OK is verified — don't re-check it.** Your job is the FLAGs, the
-INFOs that ask for confirmation, and the judgment checks in §3.
+generated from (pass the VU tree dir instead to override). It prints OK / FLAG / INFO lines across these
+areas:
+- **steps ↔ groups**
+- **spine coverage per step:** every enabled request in every page, not just each page's first. A spine request the
+  flow only reaches behind `include_ui`/`include_static` FLAGs, because a lean run skips it. The lean spine's page
+  order is compared with the recording; requests within one page fire in parallel, so their order isn't checked.
+- **fidelity tiers page by page (2b):** a missing tier set FLAGs whenever the recording has chrome or static
+  requests. Each generated page must hold requests from one recorded page, pages come in recorded order, every
+  recorded non-api request is placed, and no sequential page is replayed as a parallel batch. Version-prefixed
+  pool names are ignored for the match.
+- **correlation**, including jsActions that compose variable names (`C_CUST_NBR_1`)
+- **token-literal leaks:** scanned in what the journey itself reaches. Typed input the extracting request already
+  sends prints as INFO.
+- **transport tables (4b):** each recorded Save2/HDF2 first row is compared by `ColumnName` to the builder of the
+  wrapper that posts the same endpoint.
+- **variables:** pools row-for-row per column, cross-version files, credentials, jsAction-set variables (a
+  computed subs-map key counts) and generated/constant translations, `p_` included.
+- **seed pairing**
+- **SLA ↔ thresholds:** tags are resolved per call site, and shared `...xThresholds` spreads are followed. Tags
+  fired only behind a fidelity guard or only outside the journey (setup discovery) print as INFO.
+- **wiring**
+
+**Everything it prints OK is verified — don't re-check it.** Your job is the FLAGs, the INFOs that ask for
+confirmation, and the judgment checks in §3.
 
 ## 2. Judge each FLAG — targeted evidence only
 
@@ -47,6 +66,15 @@ How to read the common FLAGs:
 | `in k6, not recorded in this step` | the call moved to the wrong group (timings mis-attributed) | it's a shared helper fired at a step boundary |
 | `recorded ×n (chrome), fired ×m — … fire at no tier` | a generator exclusion (global `SPINE`, a too-wide `JOURNEY_SPINE` path+step) swallowed a request no wrapper sends — fix the exclusion and regenerate | the endpoint is on the generator's `DEAD` list or a version gate (cite it) |
 | `lean ×n + ui tier ×m — double-fired` | a wrapper reproduces a request the tier also emits — add a `JOURNEY_SPINE`/`JOURNEY_SPINE_REQUESTS` exclusion and regenerate | the wrapper call is conditional (a fallback/retry branch) and the tier copy is the recorded one |
+| `[NN] <tier>: n of m pages out of recorded order` | the tier file was generated before the generator walked pages in recorded order. Regenerate it | never acceptable. Recorded page order is what the replay reproduces |
+| `[NN] <tier> page n … matches no single recorded page` | the tier merges requests from two pages, or was generated from a different VU/version than the one reviewed | the reviewed VU is not the one the tier was generated from. Rerun against that VU and cite it |
+| `[NN] n recorded non-api request(s) fire at no tier` | a generator exclusion swallowed a static/transport request no wrapper sends. Fix it and regenerate | the request is scripted by a wrapper the exclusion list doesn't name. Cite the wrapper |
+| `[NN] page(s) set playRequestsSequentially but replayed as one parallel batch` | always real: the page needs its requests fired one after another | none |
+| `no complete tier set … though the recording has n chrome/static/telemetry requests` | always real: tiers are mandatory, so a `-e FIDELITY=ui/full` run sends only the spine | none |
+| `×n lean ×m: … reached only behind include_ui/include_static` | the recording fires it unconditionally and a later write uses what it returns (an id, a key) | a UI read the lean spine replaces with pool data, and no spine body needs its output. Cite where the value comes from instead |
+| `spine order differs from the recording` | a refresh read moved ahead of the write it follows, or a call moved across a page boundary. The timings and server state differ | k6 needs the reversed order to correlate (a stamp read before a save). Cite the dependency |
+| `… n column(s) NeoLoad fills from a token, k6 sends a literal` | the token is per-iteration or per-record (dates, names, keys, a pool value) | the token resolves to a value that is constant across runs. Cite its definition |
+| `… n literal column(s) differ from the recording` | an option that changes what the server does (copy flags, scope, status, phase) | a captured timestamp or display string the server ignores. Say which |
 | `k6 reaches n call sites` (INFO) | two unconditional calls where the recording has one | the extra call sites are a fallback/retry branch |
 | token-literal leak | the value is server-minted or per-record (ids, keys, stamps, names that must be unique) | it's the recorder's typed input the server only echoes back, identical every run |
 | GUID / bearer-token literal | a session token, API key or record GUID pasted into a flow, wrapper or type file | a fixed schema or app id the server expects on every call — cite where it's constant |
@@ -55,7 +83,8 @@ How to read the common FLAGs:
 | pool across versions `DIFFERS` | the journey runs on a version whose rows are not the ported ones | rows are env-independent or discovered at runtime |
 | generated variable, no evidence | the flow never regenerates it (a captured timestamp/counter replayed) | translated under another name — cite where |
 | seed expected | no `source/seeds/` pass and no `setup()` discovery for the rows the journey reads | an existing seed + marker covers it — cite both |
-| SLA / threshold mismatch | a spine request has no threshold, or its limit contradicts the NeoLoad SLA | the repo's convention for shared helper tags |
+| SLA / threshold mismatch | a lean-spine request from an opted-in step lacks the profile's `avg<`, or a `p(95)` replaces it | the step has `slaProfileEnabled="false"` (launch/login in most VUs). Cite the step |
+| `p(95)` beside the average (INFO) | no commit records the measured run behind it | the commit that added it gives the run and the measured value (e.g. `202dc9d`) |
 
 ## 3. Judgment checks the script can't make
 
@@ -79,16 +108,32 @@ Read the **hand-written** files only: the flow, the journey's `source/apis/*.api
 
 Write `temp/claude/docs/port-review-<journey>.md`:
 
-1. **Verdict** — `clean`, `minor findings` or `needs fixes`, with the VU + version reviewed.
-2. **Findings**, most severe first. Each: severity (**High** = wrong load or breaks under concurrency /
-   on another env · **Medium** = diverges from the recording · **Low** = convention), the NeoLoad evidence
-   (file / token / recorded value — mask credentials), the k6 `file:line`, and the suggested fix.
-3. **Accepted deviations** — FLAGs judged acceptable, one line of reason each, so a later review doesn't
-   re-open them.
-4. **Verified clean** — one line per area the script passed.
+1. **Verdict** — `clean`, `minor findings` or `needs fixes`, with the VU + version reviewed and the FLAG
+   tally by verdict (e.g. `6 FLAGs: 0 real · 1 accepted · 5 false positive`).
+2. **FLAG triage** — one table row per FLAG the script printed, in output order, nothing else in it:
 
-Then give the user the verdict, the High/Medium findings, and the report path. Offer to hand the fixes to
-an authoring session; do not apply them here.
+   | # | FLAG | Verdict | Reason |
+   |---|---|---|---|
+   | 1 | `P_API_Key` no k6 translation | False positive | translated in `api.data.ts` (`key`), decrypted in `setup()` |
+
+   Verdict is exactly one of:
+   - **Real**: the port is wrong. Give it a severity in Findings.
+   - **Accepted**: a genuine difference from the recording, kept on purpose. Say why it's safe.
+   - **False positive**: the port is correct and the script couldn't see it. Note the script gap in
+     §6 of the report so the script can be taught it, and keep the reason to the evidence.
+3. **Findings**: only the **Real** rows plus any judgment-check (§3) issues, most severe first. Each row has a
+   severity (**High** = wrong load or breaks under concurrency / on another env · **Medium** = diverges from
+   the recording · **Low** = convention), the NeoLoad evidence (file / token / recorded value, with credentials
+   masked), the k6 `file:line`, and the suggested fix. Use a table with `# | Severity | Issue | Evidence | Fix` columns, or write `None.`
+4. **Other observations**: things you noticed outside the FLAG list that are worth knowing but need no fix,
+   one line each. Leave the section out when there are none. Don't pad it with facts that merely restate an OK.
+5. **Verified clean**: one line per area the script passed.
+6. **Script gaps**: one line per False positive naming what `neoload-port-review.cjs` would need to
+   recognise it. Leave the section out when there are none.
+
+Then give the user the verdict line, the FLAG triage table (keep the Reason column to one short clause),
+any Findings, and the report path. Don't restate the OK areas or the observations in chat. Offer to hand
+the fixes to an authoring session; do not apply them here.
 
 Then suggest `/verify-envs <journey>` as the next step — the in-depth check that the port trickles down across
 the `ReleaseVersion` matrix (pass the journey's scenario name; don't make the user restate it). Suggest it once
