@@ -17,6 +17,7 @@ const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
 const { findProjectRoot, loadDefs, refsInTree, poolReport } = require('./neoload-vars.cjs');
+const { attr, openTag, parsePage, pageOrder } = require('./neoload-tree.cjs');
 
 const treeDir = process.argv[2];
 if (!treeDir) {
@@ -97,35 +98,49 @@ const readStepFolders = () => {
     .sort((a, b) => Number(a.no) - Number(b.no));
 };
 
-const parseRequest = (xmlPath) => {
-  const xml = fs.readFileSync(xmlPath, 'utf8');
-  const method = (xml.match(/<http-action[^>]*\bmethod="([^"]+)"/) || [])[1];
-  if (!method) return null;
-  const p = (xml.match(/\bpath="([^"]+)"/) || [])[1] || '?';
-  const hasBody = /<textPostContent>/.test(xml);
-  const zip = (xml.match(/recorded-artifacts\/([a-f0-9-]+\.zip)/) || [])[1];
-  const extractors = [...xml.matchAll(/<variable-extractor\b[\s\S]*?(?=<variable-extractor|<\/http-action|<assertions|<header)/g)]
-    .map((m) => {
-      const block = m[0];
-      return {
-        name: (block.match(/\bname="([^"]+)"/) || [])[1],
-        jsonpath: (block.match(/\bjsonpath="([^"]+)"/) || [])[1],
-        regExp: (block.match(/\bregExp="([^"]+)"/) || [])[1],
-      };
-    })
-    .filter((e) => e.name);
+// One request of a page, read from its own <http-action> block: a page file bundles the main request plus its
+// embedded resources, and any of them can be a spine call, so every enabled action is digested, not just the first.
+const parseRequest = (a) => {
+  const action = a.block;
+  const hasBody = a.template !== null;
   // tokens the request's own body and query consume (not its headers, which carry the same session tokens on
   // every call): a read that consumes a per-iteration C_… value can't be a fixed replay, so it is functional
   // flow even when no later write consumes what it extracts
-  const action = (xml.match(/<http-action\b[\s\S]*?<\/http-action>/) || [xml])[0];
-  const cdata = action.match(/<textPostContent>\s*<!\[CDATA\[([\s\S]*?)\]\]>/);
-  let body = cdata ? cdata[1] : '';
+  let body = a.template || '';
   if (body.startsWith('Encoded(Base64):')) body = Buffer.from(body.slice(16), 'base64').toString('utf8');
   const query = [...action.matchAll(/<parameter\b[^>]*\bvalue="([^"]*)"/g)].map((m) => m[1]).join(' ');
   const consumes = [...new Set([...`${body} ${query}`.matchAll(/\$\{([^}]+)\}/g)].map((m) => m[1]))].filter(
     (t) => !/^P_Performance_/.test(t),
   );
-  return { method, path: barePath(p), hasBody, zip, extractors, consumes };
+  return {
+    method: a.method,
+    path: barePath(a.rawPath),
+    hasBody,
+    zip: a.zip,
+    reqFile: a.reqFile,
+    extractors: a.extractors,
+    consumes,
+  };
+};
+
+// A step's enabled requests in recorded order: pages by the step container's <weighted-embedded-action> list
+// (a directory listing is alphabetical by URL), then each page's actions in its <embedded-action> order.
+const stepRequests = (s) => {
+  const stepDir = path.join(actionsDir, s.name);
+  const byPage = new Map();
+  for (const f of fs.readdirSync(stepDir).filter((n) => n.endsWith('.xml'))) {
+    const xml = fs.readFileSync(path.join(stepDir, f), 'utf8');
+    const page = parsePage(xml);
+    const blocks = new Map(
+      (xml.match(/<http-action\b[\s\S]*?<\/http-action>/g) || []).map((b) => [attr(openTag(b, 'http-action'), 'uid'), b]),
+    );
+    page.actions.forEach((a) => (a.block = blocks.get(a.actionUid) || ''));
+    byPage.set(page.uid, page);
+  }
+  const stepXml = path.join(actionsDir, `${s.name}.xml`);
+  const ordered = fs.existsSync(stepXml) ? pageOrder(fs.readFileSync(stepXml, 'utf8'), byPage) : [];
+  const pages = [...ordered, ...[...byPage.values()].filter((p) => !ordered.includes(p))];
+  return pages.flatMap((p) => p.actions.filter((a) => a.enabled)).map(parseRequest);
 };
 
 // ---- body dissection (mirrors .claude/scripts/inspect-capture.cjs, condensed) ----
@@ -178,7 +193,7 @@ const dissect = (body) => {
   return out.join('\n');
 };
 
-const extractBody = (zipName) => {
+const extractBody = (zipName, reqFile) => {
   const zipPath = path.join(artifactsDir, zipName);
   if (!fs.existsSync(zipPath)) return { err: `zip not found: ${zipName}` };
   let tmp;
@@ -190,9 +205,10 @@ const extractBody = (zipName) => {
   }
   const reqDir = path.join(tmp, 'recorded-requests');
   if (!fs.existsSync(reqDir)) return { err: `no recorded-requests in ${zipName}` };
-  const reqFile = fs.readdirSync(reqDir).find((f) => f.endsWith('.txt'));
-  if (!reqFile) return { err: `no req file in ${zipName}` };
-  const raw = fs.readFileSync(path.join(reqDir, reqFile), 'utf8');
+  const own = reqFile && path.basename(reqFile);
+  const file = own && fs.existsSync(path.join(reqDir, own)) ? own : fs.readdirSync(reqDir).find((f) => f.endsWith('.txt'));
+  if (!file) return { err: `no req file in ${zipName}` };
+  const raw = fs.readFileSync(path.join(reqDir, file), 'utf8');
   const i = raw.search(/\r?\n\r?\n/);
   return { body: i >= 0 ? raw.slice(i).trim() : '' };
 };
@@ -227,11 +243,7 @@ const correlation = [];
 const dissectQueue = [];
 let dropped = 0;
 for (const s of steps) {
-  const stepDir = path.join(actionsDir, s.name);
-  const files = fs.readdirSync(stepDir).filter((f) => f.endsWith('.xml'));
-  for (const f of files) {
-    const r = parseRequest(path.join(stepDir, f));
-    if (!r) continue;
+  for (const r of stepRequests(s)) {
     const cls = classify(r.method, r.path);
     if (cls === 'DROP' || cls === 'CHROME') {
       dropped++;
@@ -273,6 +285,6 @@ console.log('\nWRITE / FORM-OPEN BODIES  (resolved real values from recorded-art
 if (!dissectQueue.length) console.log('  (none)');
 for (const r of dissectQueue) {
   console.log(`\n  --- [${r.step}] ${r.method} ${r.path}  (zip ${r.zip.slice(0, 8)}) ---`);
-  const { body, err } = extractBody(r.zip);
+  const { body, err } = extractBody(r.zip, r.reqFile);
   console.log(err ? `    ${err}` : dissect(body));
 }
