@@ -105,7 +105,18 @@ const parseRequest = (xmlPath) => {
       };
     })
     .filter((e) => e.name);
-  return { method, path: barePath(p), hasBody, zip, extractors };
+  // tokens the request's own body and query consume (not its headers, which carry the same session tokens on
+  // every call): a read that consumes a per-iteration C_… value can't be a fixed replay, so it is functional
+  // flow even when no later write consumes what it extracts
+  const action = (xml.match(/<http-action\b[\s\S]*?<\/http-action>/) || [xml])[0];
+  const cdata = action.match(/<textPostContent>\s*<!\[CDATA\[([\s\S]*?)\]\]>/);
+  let body = cdata ? cdata[1] : '';
+  if (body.startsWith('Encoded(Base64):')) body = Buffer.from(body.slice(16), 'base64').toString('utf8');
+  const query = [...action.matchAll(/<parameter\b[^>]*\bvalue="([^"]*)"/g)].map((m) => m[1]).join(' ');
+  const consumes = [...new Set([...`${body} ${query}`.matchAll(/\$\{([^}]+)\}/g)].map((m) => m[1]))].filter(
+    (t) => !/^P_Performance_/.test(t),
+  );
+  return { method, path: barePath(p), hasBody, zip, extractors, consumes };
 };
 
 // ---- body dissection (mirrors .claude/scripts/inspect-capture.cjs, condensed) ----
@@ -218,7 +229,10 @@ for (const s of steps) {
       continue;
     }
     const ex = r.extractors.map((e) => e.name).join(', ');
-    console.log(`  [${s.no}] ${r.method} ${r.path}${r.hasBody ? '  [BODY]' : ''}${ex ? `\n         extract → ${ex}` : ''}`);
+    const used = r.consumes.join(', ');
+    console.log(
+      `  [${s.no}] ${r.method} ${r.path}${r.hasBody ? '  [BODY]' : ''}${used ? `\n         consume ← ${used}` : ''}${ex ? `\n         extract → ${ex}` : ''}`,
+    );
     r.extractors.forEach((e) => correlation.push({ step: s.no, ...e }));
     if (r.hasBody && r.zip && DISSECT.test(r.path)) dissectQueue.push({ step: s.no, ...r });
   }
