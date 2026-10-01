@@ -77,13 +77,22 @@ const classify = (method, p) => {
   return 'SPINE';
 };
 
+// step number from the folder name: `_NN_` mid-name (@t30_@crystal@report_02_@login) or `_NN` at the end
+// (@t28_@gadgets_@load_03); a VU whose steps carry no number at all (the single-step report VUs,
+// @t005_@payment@receipt_@report) numbers them by position. Mirrored in gen-fidelity-lists.cjs.
+const STEP_NO = /_(\d+)(?:_|$)/;
+const step_no = (name, i, all) =>
+  (name.match(STEP_NO) || [])[1] || (all.some((n) => STEP_NO.test(n)) ? '' : String(i + 1).padStart(2, '0'));
+
 const readStepFolders = () => {
   if (!fs.existsSync(actionsDir)) return [];
   return fs
     .readdirSync(actionsDir, { withFileTypes: true })
     .filter((e) => e.isDirectory())
     .map((e) => e.name)
-    .map((name) => ({ name, no: (name.match(/_(\d+)_/) || [])[1] || '' }))
+    .filter((name) => /^@t\d+/.test(name) || STEP_NO.test(name))
+    .sort()
+    .map((name, i, all) => ({ name, no: step_no(name, i, all) }))
     .filter((s) => s.no)
     .sort((a, b) => Number(a.no) - Number(b.no));
 };

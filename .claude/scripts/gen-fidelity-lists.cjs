@@ -48,6 +48,9 @@ const SPINE = [
 // (e.g. crystal-report re-opens the report-master list at step 10 via a wrapper, but its grid read there is
 // pure chrome — so GenericListServer is excluded at 10, USIDataGridServer is not).
 const JOURNEY_SPINE = {
+  'payment-receipt-report': {
+    '/api/v1/Reports/10/204/RunReport': ['01'],
+  },
   'book-event': {
     '/api/USIDataGridServer/GetGridData2': ['08', '10'],
     '/api/GenericDetailServer/GetInitialData2': ['06'],
@@ -123,8 +126,14 @@ const transport = {};
 const excluded = [];
 const requestMatches = new Map();
 
-for (const step of stepDirs) {
-  const stepNo = (step.match(/_(\d+)_/) || [])[1];
+// step number from the folder name: `_NN_` mid-name (@t30_@crystal@report_02_@login) or `_NN` at the end
+// (@t28_@gadgets_@load_03); a VU whose steps carry no number at all (the single-step report VUs,
+// @t005_@payment@receipt_@report) numbers them by position. Mirrored in neoload-digest.cjs.
+const STEP_NO = /_(\d+)(?:_|$)/;
+const anyNumbered = stepDirs.some((d) => STEP_NO.test(d));
+
+for (const [i, step] of stepDirs.entries()) {
+  const stepNo = (step.match(STEP_NO) || [])[1] || (anyNumbered ? '' : String(i + 1).padStart(2, '0'));
   if (!stepNo) continue;
   const dir = path.join(ROOT, step);
   for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.xml'))) {
