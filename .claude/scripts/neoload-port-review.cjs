@@ -543,7 +543,8 @@ for (const fn of allReached) for (const m of index.get(fn).body.matchAll(/\bname
 for (const [fn, e] of index)
   if (allReached.has(fn))
     for (const m of (read(e.file).match(new RegExp(`function ${fn}\\([^)]*\\bname\\s*=\\s*'([A-Z]\\w+)'`)) || []).slice(1)) tags.add(m);
-for (const m of flowText.matchAll(/,\s*'([A-Z][A-Za-z0-9]+)'\s*\)/g)) tags.add(m[1]);
+// a tag passed as a call's last argument, single-line or prettier's multi-line form with its trailing comma
+for (const m of flowText.matchAll(/,\s*'([A-Z][A-Za-z0-9]+)'\s*,?\s*\)/g)) tags.add(m[1]);
 if (!thrName) flag('no exported *Thresholds object in the flow');
 else {
   const helperTags = new Set(
