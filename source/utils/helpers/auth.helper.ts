@@ -1,7 +1,9 @@
 import http from 'k6/http';
 import { check, fail, JSONObject, JSONValue } from 'k6';
 import encoding from 'k6/encoding';
+import { hmac } from 'k6/crypto';
 import { config } from '../exports/config.exp.ts';
+import { ApiCredentials } from '../exports/types.exp.ts';
 import { build_headers } from './headers.helper.ts';
 import { body_text } from './response.helper.ts';
 function post_sign_in(username: string, password: string, version: string) {
@@ -56,6 +58,17 @@ export function sign_out(token: string, version: string, name = 'SignOut') {
     tags: { name },
   });
   check(res, { [`${name}: status is 200 or 201`]: (r) => r.status === 200 || r.status === 201 });
+}
+
+export function mint_api_jwt(credentials: ApiCredentials) {
+  const now = Math.floor(Date.now() / 1000);
+  const header = encoding.b64encode(JSON.stringify({ alg: 'HS256', typ: 'JWT' }), 'rawurl');
+  const payload = encoding.b64encode(
+    JSON.stringify({ iss: credentials.userId, key: credentials.key, exp: now + 300, iat: now.toString(), sub: '' }),
+    'rawurl',
+  );
+  const signingInput = `${header}.${payload}`;
+  return `${signingInput}.${hmac('sha256', credentials.secret, signingInput, 'base64rawurl')}`;
 }
 
 export function tenant_id_from_jwt(salesAiJwt: string) {

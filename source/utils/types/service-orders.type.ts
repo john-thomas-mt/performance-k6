@@ -1,4 +1,4 @@
-import { SetupData, User } from './common.type.ts';
+import { ApiSetup, SetupData, User } from './common.type.ts';
 
 export type ServiceOrderRow = {
   orderNbr: string;
@@ -50,9 +50,10 @@ export type ServiceOrderSetup = SetupData & {
   soPool: ServiceOrderRow[];
 };
 
-export type SmokeSetup = ServiceOrderSetup & {
-  users: User[];
-};
+export type SmokeSetup = ServiceOrderSetup &
+  ApiSetup & {
+    users: User[];
+  };
 
 export type ServiceOrderSeedSetup = {
   version: string;

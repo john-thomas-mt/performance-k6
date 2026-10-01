@@ -1,5 +1,5 @@
 import { b64decode } from 'k6/encoding';
-import { User } from '../exports/types.exp.ts';
+import { ApiCredentials, User } from '../exports/types.exp.ts';
 
 function string_to_array_buffer(str: string) {
   const buf = new ArrayBuffer(str.length * 2);
@@ -17,17 +17,30 @@ async function derive_key(passphrase: string) {
   return crypto.subtle.importKey('raw', digest, 'AES-GCM', false, ['decrypt']);
 }
 
+async function decrypt_value(key: CryptoKey, encrypted: string) {
+  const bytes = b64decode(encrypted);
+  const iv = bytes.slice(0, 12);
+  const ciphertext = bytes.slice(12);
+  const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+  return array_buffer_to_string(plaintext);
+}
+
 export async function decrypt_users(credentials: User[], passphrase: string) {
   const key = await derive_key(passphrase);
 
   const users: User[] = [];
   for (const { username, password } of credentials) {
-    const bytes = b64decode(password);
-    const iv = bytes.slice(0, 12);
-    const ciphertext = bytes.slice(12);
-    const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
-    users.push({ username, password: array_buffer_to_string(plaintext) });
+    users.push({ username, password: await decrypt_value(key, password) });
   }
 
   return users;
+}
+
+export async function decrypt_api_credentials(credentials: ApiCredentials, passphrase: string) {
+  const key = await derive_key(passphrase);
+  return {
+    userId: credentials.userId,
+    key: await decrypt_value(key, credentials.key),
+    secret: await decrypt_value(key, credentials.secret),
+  };
 }

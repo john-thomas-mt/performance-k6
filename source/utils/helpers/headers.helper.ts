@@ -7,6 +7,15 @@ export function sales_ai_headers(salesAiJwt: string, contentType?: string) {
   return headers;
 }
 
+export function public_api_headers(apiJwt: string) {
+  return {
+    'authorization': `Bearer ${apiJwt}`,
+    'accept': '*/*',
+    'accept-encoding': 'gzip, deflate, br',
+    'content-type': 'application/json',
+  };
+}
+
 export function build_headers(token: string | null, version: string) {
   // __VU/__ITER are undefined outside a VU iteration (e.g. setup()/teardown()), so guard them.
   const vu = typeof __VU !== 'undefined' ? __VU : 0;

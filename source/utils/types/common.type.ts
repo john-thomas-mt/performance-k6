@@ -7,6 +7,16 @@ export type SetupData = {
   version: string;
 };
 
+export type ApiCredentials = {
+  userId: string;
+  key: string;
+  secret: string;
+};
+
+export type ApiSetup = SetupData & {
+  apiCredentials: ApiCredentials;
+};
+
 export type SessionTokens = {
   bearerToken: string | null;
   encUserId: string | null;
