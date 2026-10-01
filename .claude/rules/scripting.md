@@ -13,7 +13,7 @@ each folder's own rule file (`rules/apis.md`, `rules/flows.md`, `rules/helpers.m
 ## Requests
 - Every `http.*` call carries `tags: { name: 'PascalCaseName' }` — this drives per-endpoint thresholds (`http_req_duration{name:...}`)
 - If a wrapper is reused in different scenario contexts, accept the tag name as a parameter with a default (see `get_opportunities(jwt, name = 'GetOpportunities')`) so metrics stay separately tagged
-- Headers are never inlined: use `build_headers(token, version)` for the Momentus core API and `sales_ai_headers(jwt)` for the sales-ai API (both from `source/utils/helpers/headers.helper.ts`)
+- Headers are never inlined: use `build_headers(token, version)` for the Momentus core API, `public_api_headers(apiJwt)` for the Momentus public REST API (`/api/v1/…`, JWT from `mint_api_jwt`), and `sales_ai_headers(jwt)` for the sales-ai API (all from `source/utils/helpers/headers.helper.ts`)
 - URLs are built from `config` values — never hardcode hosts or versions in a wrapper; the sales-ai `tenantId` is correlated from the session JWT (see Correlation), not `config`
 
 ## Correlation — never hardcode dynamic values

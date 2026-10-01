@@ -107,6 +107,11 @@ Anything passed to `http.file()` goes here, never in the request-body folders:
   node -e "const c=require('crypto').webcrypto,fs=require('fs');(async()=>{const pass=JSON.parse(fs.readFileSync('temp/secret.json')).key;const users=JSON.parse(process.argv[1]);const u16=s=>Buffer.from(s,'utf16le');const key=await c.subtle.importKey('raw',await c.subtle.digest('SHA-256',u16(pass)),'AES-GCM',false,['encrypt']);const out=[];for(const[n,p]of Object.entries(users)){const iv=c.getRandomValues(new Uint8Array(12));const ct=Buffer.from(await c.subtle.encrypt({name:'AES-GCM',iv},key,u16(p)));out.push({username:n,password:Buffer.concat([Buffer.from(iv),ct]).toString('base64')});}console.log(JSON.stringify(out,null,2));})()" '{"username":"plaintext-password"}'
   ```
 
+## Public-API credentials — `source/data/creds/api.data.ts`
+- `publicApiCredentials: ApiCredentials` (`{ userId, key, secret }`) for journeys that call the Momentus public REST API (`/api/v1/…`) instead of signing in: `userId` plaintext, `key` and `secret` encrypted with the same scheme and `temp/secret.json` passphrase as the user pool. They come from the NeoLoad `P_API_UserId` / `P_API_Key` / `P_API_Secret` password variables, whose values the user supplies (NeoLoad-encrypted, not readable from the project).
+- `setup()` decrypts them with `decrypt_api_credentials(publicApiCredentials, config.cryptoKey)`, gated to the scenarios that need them. The flow mints a fresh HS256 JWT per iteration with `mint_api_jwt(data.apiCredentials)` and sends it via `public_api_headers(jwt)`.
+- Mint the ciphertexts with the user-pool snippet above (one entry per value) and paste only the encrypted strings.
+
 ## Loading rules
 - Request-body builders and pools are imported as TS modules — no `open()`.
 - The user pool ships as `userCredentials` (encrypted) in `users.data.ts` and is decrypted in `setup()` (see User pool), keyed by `config.cryptoKey`.
