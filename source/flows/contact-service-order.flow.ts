@@ -11,7 +11,10 @@ import {
   save_recent_service_order_event,
   refresh_service_order_event_fields,
   refresh_service_order_function_fields,
+  read_service_order_items_grid,
   save_contact_service_order,
+  open_order_upsell_drawer,
+  confirm_contact_service_order,
   signalr_negotiate,
 } from '../utils/exports/apis.exp.ts';
 import {
@@ -36,21 +39,27 @@ import {
 import { ContactRow, FidelityLevel, ServiceOrderForm, SetupData, User } from '../utils/exports/types.exp.ts';
 
 const CONTACT_OBJECT_ID = 286;
+const CONTACT_VIEW_OBJECT_ID = 1659;
 const SERVICE_ORDER_OBJECT_ID = 456;
+const ORDER_UPSELL_OBJECT_ID = 2556;
 
 export const contactServiceOrderThresholds = {
   'http_req_duration{name:GetContactObjectColumns}': ['avg<4000'],
   'http_req_duration{name:OpenContactsList}': ['avg<4000'],
   'http_req_duration{name:ReadContactsGrid}': ['avg<4000'],
   'http_req_duration{name:OpenContactDetail}': ['avg<4000'],
+  'http_req_duration{name:GetContactViewObjectColumns}': ['avg<4000'],
   'http_req_duration{name:OpenContactServiceOrdersList}': ['avg<4000'],
   'http_req_duration{name:GetServiceOrderObjectColumns}': ['avg<4000'],
   'http_req_duration{name:OpenServiceOrderForm}': ['avg<4000'],
   'http_req_duration{name:SearchServiceOrderEvent}': ['avg<4000'],
   'http_req_duration{name:SaveRecentServiceOrderEvent}': ['avg<4000'],
   'http_req_duration{name:HandleServiceOrderEventFields}': ['avg<4000'],
+  'http_req_duration{name:ReadServiceOrderItemsGrid}': ['avg<4000'],
   'http_req_duration{name:HandleServiceOrderFunctionFields}': ['avg<4000'],
   'http_req_duration{name:SaveContactServiceOrder}': ['avg<4000'],
+  'http_req_duration{name:GetOrderUpsellObjectColumns}': ['avg<4000'],
+  'http_req_duration{name:OpenOrderUpsellDrawer}': ['avg<4000'],
   'http_req_duration{name:SaveContactServiceOrderConfirm}': ['avg<4000'],
 };
 
@@ -125,11 +134,19 @@ export function contact_service_order_journey(user: User, data: SetupData) {
   });
   if (!contact) fail('contacts grid returned no rows');
   const picked: ContactRow = contact;
-  Object.assign(subs, contact_subs(picked), { C_ViewContact_Timestamp1: contactStamp });
+  Object.assign(subs, contact_subs(picked));
   think();
 
   group('T003_ViewContact_ServiceOrders_04_ViewContact', () => {
     open_contact_detail(bearerToken, data.version, picked, contactStamp);
+    if (include_ui(level)) {
+      subs.C_ViewContact_Timestamp1 = get_contact_column_stamp(
+        bearerToken,
+        data.version,
+        CONTACT_VIEW_OBJECT_ID,
+        'GetContactViewObjectColumns',
+      );
+    }
     chrome_and_static(bearerToken, data.version, level, '04', subs);
   });
   think();
@@ -164,6 +181,7 @@ export function contact_service_order_journey(user: User, data: SetupData) {
     orderAcct = header.orderAcct;
     startText = format_retrieve_stamp(header.start);
     endText = format_retrieve_stamp(header.end);
+    const itemCount = read_service_order_items_grid(bearerToken, data.version, '0', startText, endText, eventKey, 0);
     const functionDates = refresh_service_order_function_fields(
       bearerToken,
       data.version,
@@ -174,6 +192,7 @@ export function contact_service_order_journey(user: User, data: SetupData) {
       orderAcct,
       orderDate,
     );
+    read_service_order_items_grid(bearerToken, data.version, '1', startText, endText, eventKey, itemCount);
     Object.assign(subs, {
       C_EventKey: eventKey,
       C_ORD_ACCT: orderAcct,
@@ -187,7 +206,13 @@ export function contact_service_order_journey(user: User, data: SetupData) {
   think();
 
   group('T003_ViewContact_ServiceOrders_08_EnterDetailsClickSave', () => {
-    const orderNbr = save_contact_service_order(bearerToken, data.version, startText, endText, eventKey, orderAcct);
+    const saved = save_contact_service_order(bearerToken, data.version, startText, endText, eventKey, orderAcct);
+    let orderNbr = saved.orderNbr;
+    if (saved.upsell) {
+      const upsellStamp = get_contact_column_stamp(bearerToken, data.version, ORDER_UPSELL_OBJECT_ID, 'GetOrderUpsellObjectColumns');
+      open_order_upsell_drawer(bearerToken, data.version, saved.upsell, upsellStamp);
+      orderNbr = confirm_contact_service_order(bearerToken, data.version, startText, endText, eventKey, orderAcct, saved.upsell);
+    }
     console.log(`[VU ${__VU}] Created service order ${orderNbr} on event ${eventKey} for ${orderAcct}`);
     chrome_and_static(bearerToken, data.version, level, '08', subs);
   });

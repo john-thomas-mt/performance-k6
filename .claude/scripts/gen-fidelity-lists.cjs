@@ -19,16 +19,18 @@ const chromeVar = `${camel(chromeOut, '.chrome.ts')}Chrome`;
 const staticVar = `${camel(staticOut, '.static.ts')}Static`;
 const transportVar = `${camel(transportOut, '.transport.ts')}Transport`;
 
-// spine endpoints scripted as correlated wrappers — never emit as chrome (would double-fire)
+// global spine: paths every journey scripts as a correlated wrapper wherever the recording has them — writes,
+// uploads, sign-in/out and the correlation sources the tiers consume — so they are never emitted as chrome.
+// Reads stay off this list: a read on a shared path (grid, detail open, window info) is a wrapper in some
+// steps and pure UI paint in others, so a global exclusion silently drops every unscripted occurrence from
+// every tier (it once hid recorded GetGridData2 / GetInitialData2 / GetWindowInfo reads in all journeys).
+// Exclude a read per journey and step in JOURNEY_SPINE, or per request in JOURNEY_SPINE_REQUESTS.
 const SPINE = [
   '/api/USIDataGridServer/CreateNewRowsWithDefaultValues',
-  '/api/USIDataGridServer/GetGridData2',
   '/api/GenericDetailServer/Save2',
   '/api/USIDataGridServer/Save2',
-  '/api/GenericDetailServer/GetInitialData2',
   '/api/GenericServer/CacheFiles',
   '/api/GenericServer/ApplicationUnloading',
-  '/api/WindowServer/GetWindowInfo',
   '/api/GenericServer/SignIn',
   // promoted to a gated correlated wrapper (produces the search-result key the chrome batch consumes)
   '/api/USISearchComboServer/GetDynamicSearchResults',
@@ -46,19 +48,56 @@ const SPINE = [
 // (e.g. crystal-report re-opens the report-master list at step 10 via a wrapper, but its grid read there is
 // pure chrome — so GenericListServer is excluded at 10, USIDataGridServer is not).
 const JOURNEY_SPINE = {
+  'book-event': {
+    '/api/USIDataGridServer/GetGridData2': ['08', '10'],
+    '/api/GenericDetailServer/GetInitialData2': ['06'],
+  },
+  'copy-event': {
+    '/api/USIDataGridServer/GetGridData2': ['04'],
+    '/api/GenericDetailServer/GetInitialData2': ['05', '06'],
+    '/api/WindowServer/GetWindowInfo': ['05'],
+  },
+  'copy-service-orders': {
+    '/api/USIDataGridServer/GetGridData2': ['04', '07'],
+    '/api/GenericDetailServer/GetInitialData2': ['06'],
+  },
   'crystal-report': {
     '/api/GenericListServer/GetInitialData2': ['03', '10'],
     '/api/USIDataGridServer/GetInitialData2': ['03', '07', '09'],
     '/api/GenericSearchServer/GetInitialData2': ['07', '09'],
     '/api/USIMultiSelectSuperBoxPageServer/GetInitialData': ['08'],
     '/api/USIMultiSelectSuperBoxPageServer/save': ['08'],
+    '/api/GenericDetailServer/GetInitialData2': ['04'],
+    '/api/WindowServer/GetWindowInfo': ['08'],
+  },
+  'lead-account': {
+    '/api/GenericDetailServer/GetInitialData2': ['04', '05', '06'],
+  },
+  'room-diagram-upload': {
+    '/api/USIDataGridServer/GetGridData2': ['04'],
+    '/api/GenericDetailServer/GetInitialData2': ['05', '08'],
   },
   'contact-service-order': {
-    '/api/ObjectColumnCacheServer/GetObjectColumns': ['03', '06'],
+    '/api/ObjectColumnCacheServer/GetObjectColumns': ['03'],
     '/api/GenericListServer/GetInitialData2': ['03', '05'],
     '/api/USISearchComboServer/SaveRecentlyUsed': ['07'],
     '/api/GenericDetailServer/HandleDependentFields2': ['07'],
+    '/api/USIDataGridServer/GetGridData2': ['03', '07'],
+    '/api/GenericDetailServer/GetInitialData2': ['04', '06', '08'],
   },
+};
+// per-journey, per-request spine: individual requests scripted as wrappers on a path whose other requests in
+// the same step stay chrome (contact-service-order step 04 fires 15 GetObjectColumns, only the object-1659 one
+// is a wrapper), so a path+step exclusion would drop too much. Matched on step and path, plus an optional
+// prefix of the whitespace-stripped body and/or a substring of the path+query; `max` caps how many matching
+// requests are excluded when the step records identical requests and the wrapper reproduces only some of them.
+const JOURNEY_SPINE_REQUESTS = {
+  'book-event': [{ path: '/api/WindowServer/GetWindowInfo', step: '03', query: 'astrWindowID=EB8776', max: 1 }],
+  'contact-service-order': [
+    { path: '/api/ObjectColumnCacheServer/GetObjectColumns', step: '04', body: '[1659,' },
+    { path: '/api/ObjectColumnCacheServer/GetObjectColumns', step: '06', body: '[456,' },
+    { path: '/api/ObjectColumnCacheServer/GetObjectColumns', step: '08', body: '[2556,' },
+  ],
 };
 // endpoints a later release drops but that still exist on an older *live* release — emit with a removedIn guard
 // so fire time skips them only where they're gone (version_at_least), keeping them on the releases that serve
@@ -79,6 +118,10 @@ const stepDirs = fs
 const chrome = {};
 const stat = {};
 const transport = {};
+// every request kept out of the tiers as "scripted", printed at the end so the porter can confirm each one
+// really is fired by a wrapper in that step — an exclusion with no wrapper behind it fires at no tier at all
+const excluded = [];
+const requestMatches = new Map();
 
 for (const step of stepDirs) {
   const stepNo = (step.match(/_(\d+)_/) || [])[1];
@@ -106,11 +149,17 @@ for (const step of stepDirs) {
         .replace(/^\/\$\{[^}]+\}/, '')
         .replace(/^\/[^/]*(?=\/(api|app)\/)/, '') // strip version segment
         .replace(/\/{2,}/g, '/'); // collapse empty path segments (e.g. a blank theme token → themes//snug.css)
-      if (SPINE.some((s) => bare.startsWith(s))) continue;
+      if (SPINE.some((s) => bare.startsWith(s))) {
+        excluded.push({ stepNo, bare, why: 'global SPINE' });
+        continue;
+      }
       if (DEAD.some((s) => bare.startsWith(s))) continue;
       const journeySpine = JOURNEY_SPINE[journey] || {};
       const journeyKey = Object.keys(journeySpine).find((p) => bare.startsWith(p));
-      if (journeyKey && journeySpine[journeyKey].includes(stepNo)) continue;
+      if (journeyKey && journeySpine[journeyKey].includes(stepNo)) {
+        excluded.push({ stepNo, bare, why: 'JOURNEY_SPINE' });
+        continue;
+      }
 
       // recover the query string from NeoLoad <parameter> elements, keeping ${...} tokens for runtime substitution
       const params = [...action.matchAll(/<parameter\b([^>]*)>/g)]
@@ -126,6 +175,20 @@ for (const step of stepDirs) {
       const m = action.match(/<textPostContent>\s*<!\[CDATA\[([\s\S]*?)\]\]>/);
       let body = m ? m[1] : undefined;
       if (body && body.startsWith('Encoded(Base64):')) body = Buffer.from(body.slice(16), 'base64').toString('utf8');
+      const strippedBody = (body || '').replace(/\s/g, '');
+      const scriptedRequest = (JOURNEY_SPINE_REQUESTS[journey] || []).find(
+        (r) =>
+          r.step === stepNo &&
+          bare.startsWith(r.path) &&
+          (!r.body || strippedBody.startsWith(r.body)) &&
+          (!r.query || url.includes(r.query)) &&
+          (r.max === undefined || (requestMatches.get(r) || 0) < r.max),
+      );
+      if (scriptedRequest) {
+        requestMatches.set(scriptedRequest, (requestMatches.get(scriptedRequest) || 0) + 1);
+        excluded.push({ stepNo, bare: url, why: 'JOURNEY_SPINE_REQUESTS' });
+        continue;
+      }
 
       if (bare.includes('/app/') || STATIC_EXT.test(bare)) {
         pageStat.push({ path: bare });
@@ -178,3 +241,5 @@ console.log(`static: ${reqCount(stat)} requests in ${pageCount(stat)} pages acro
 console.log(
   `transport: ${reqCount(transport)} requests in ${pageCount(transport)} pages across ${Object.keys(transport).length} steps -> ${transportOut}`,
 );
+console.log(`excluded as scripted (${excluded.length}) — each must be fired by a wrapper in its step, or it fires at no tier:`);
+for (const e of excluded) console.log(`  ${e.stepNo}  ${e.bare.slice(0, 110)}  [${e.why}]`);

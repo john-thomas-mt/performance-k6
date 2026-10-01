@@ -26,14 +26,16 @@ if (!treeArg || !flowArg || !fs.existsSync(flowArg)) {
 // uid "T01_AccountCreation (x.y)"), preferring the version its pool modules were generated from.
 const resolveVu = (projectRoot) => {
   const flow = fs.readFileSync(flowArg, 'utf8');
-  const m = flow.match(/'T0*(\d+)_([A-Za-z]+)_\d+_\w+'/);
+  // the step name can run to several segments and differ from the VU uid (T003_ViewContact_ServiceOrders_01 →
+  // uid "T03_ViewContact_ServiceOrder (26.3)"), so match on the number plus the name's leading segment
+  const m = flow.match(/'T0*(\d+)_([A-Za-z_]+?)_\d+_[^']+'/);
   if (!m) return null;
   const vus = path.join(projectRoot, 'team', 'vus');
-  const uidRe = new RegExp(`uid="T0*${m[1]}_${m[2]} \\(([\\d.]+)\\)"`);
+  const uidRe = new RegExp(`uid="T0*${m[1]}_(${m[2].split('_')[0]}[^"]*?) \\(([\\d.]+)\\)"`, 'i');
   const candidates = fs
     .readdirSync(vus)
     .filter((f) => f.endsWith('.xml'))
-    .map((f) => ({ f, v: (fs.readFileSync(path.join(vus, f), 'utf8').slice(0, 600).match(uidRe) || [])[1] }))
+    .map((f) => ({ f, v: (fs.readFileSync(path.join(vus, f), 'utf8').slice(0, 600).match(uidRe) || [])[2] }))
     .filter((c) => c.v);
   if (!candidates.length) return null;
   const pools = fs.existsSync('source/data/pools')
@@ -115,14 +117,16 @@ for (const file of srcFiles) {
   }
 }
 const ENDPOINT = /['"`](?:\$\{[^}]+\}\/api\/|\/?api\/)?([A-Z][A-Za-z0-9]+\/[A-Z][A-Za-z0-9_]+)(?=['"`?])/g;
-const reach = (text, seen = new Set(), depth = 0) => {
+// every call site counts, so a wrapper called twice (or two wrappers sharing one post helper) reaches its
+// endpoint twice; `stack` guards recursion only, `seen` collects every function reached for the later sections
+const reach = (text, seen = new Set(), stack = new Set()) => {
   const endpoints = [...text.matchAll(ENDPOINT)].map((m) => m[1]);
-  if (depth > 5) return { endpoints, seen };
+  if (stack.size > 5) return { endpoints, seen };
   for (const m of text.matchAll(/\b([a-z_][A-Za-z0-9_]*)\s*\(/g)) {
     const fn = m[1];
-    if (seen.has(fn) || !index.has(fn)) continue;
+    if (stack.has(fn) || !index.has(fn)) continue;
     seen.add(fn);
-    endpoints.push(...reach(index.get(fn).body, seen, depth + 1).endpoints);
+    endpoints.push(...reach(index.get(fn).body, seen, new Set([...stack, fn])).endpoints);
   }
   return { endpoints, seen };
 };
@@ -153,13 +157,16 @@ for (const o of tree.other) info(`non-step element in actions-container: ${o.roo
 section('2. SPINE COVERAGE  (per step: NeoLoad SPINE endpoints vs endpoints the flow reaches)');
 const ordered = [...found].sort((a, b) => a.pos - b.pos);
 const chromeFile = path.join('source/data/chrome', path.basename(flowArg).replace(/\.flow\.ts$/, '.chrome.ts'));
+const generatorText = fs.existsSync('.claude/scripts/gen-fidelity-lists.cjs') ? read('.claude/scripts/gen-fidelity-lists.cjs') : '';
+const DEAD = [...((generatorText.match(/const DEAD = \[([^\]]*)\]/) || [])[1] || '').matchAll(/'([^']+)'/g)].map((m) => m[1]);
 const uiTier = new Map();
 if (fs.existsSync(chromeFile)) {
   const text = read(chromeFile);
-  const marks = [...text.matchAll(/'(\d+)':\s*\[/g)];
+  // either quote style: the generator emits JSON (double quotes) and the pre-commit prettier pass rewrites it
+  const marks = [...text.matchAll(/^\s{2}['"](\d+)['"]:\s*\[/gm)];
   marks.forEach((m, i) => {
     const chunk = text.slice(m.index, marks[i + 1] ? marks[i + 1].index : text.length);
-    uiTier.set(m[1], count([...chunk.matchAll(/path:\s*'\/api\/([^'?]+)/g)].map((x) => x[1])));
+    uiTier.set(m[1], count([...chunk.matchAll(/['"]?path['"]?:\s*['"]\/api\/([^'"?]+)/g)].map((x) => x[1])));
   });
 }
 const allReached = new Set();
@@ -182,8 +189,10 @@ for (const s of stepPos) {
   const tier = uiTier.get((s.name.match(/_(\d+)_/) || [])[1]) || new Map();
   for (const [ep, n] of nl) {
     const got = k6.get(ep) || 0;
-    const viaUi = Math.min(tier.get(ep) || 0, n - got);
+    const viaUi = Math.max(0, Math.min(tier.get(ep) || 0, n - got));
     if (got === n) ok(`${ep} ×${n}`);
+    else if (got > n)
+      info(`${ep} ×${n}  k6 reaches ${got} call sites — confirm the extras are conditional (fallback/retry), not double-fired`);
     else if (got + viaUi === n)
       info(`${ep} ×${n}  ${got ? `lean ×${got}, ` : ''}ui fidelity tier ×${viaUi} — confirm no write consumes its result`);
     else flag(`${ep}  NeoLoad ×${n}, k6 ×${got}${viaUi ? ` (+${viaUi} ui tier)` : ''}`);
@@ -195,6 +204,23 @@ for (const s of stepPos) {
   }
   const chromeOnly = [...chrome.keys()].filter((ep) => !k6.has(ep));
   if (chromeOnly.length) info(`dropped as chrome: ${chromeOnly.join(', ')}`);
+  // tier coverage: a recorded /api request is either reached by a wrapper or emitted to the ui tier — never
+  // neither (the generator's exclusions can swallow an unscripted one) and never both (a double-fire at ui)
+  if (fs.existsSync(chromeFile)) {
+    const isApi = (ep) => /^[A-Z][A-Za-z0-9]+\/[A-Za-z]/.test(ep);
+    for (const [ep, n] of chrome) {
+      if (!isApi(ep) || DEAD.some((d) => d.endsWith(`/${ep}`))) continue;
+      const got = k6.get(ep) || 0;
+      const t = tier.get(ep) || 0;
+      if (got + t < n)
+        flag(`${ep}  recorded ×${n} (chrome), fired ×${got + t} (lean ×${got}, ui tier ×${t}) — ${n - got - t} fire at no tier`);
+    }
+    for (const [ep, n] of new Map([...nl, ...chrome].map(([ep]) => [ep, (nl.get(ep) || 0) + (chrome.get(ep) || 0)]))) {
+      const got = k6.get(ep) || 0;
+      const t = tier.get(ep) || 0;
+      if (isApi(ep) && t > 0 && got + t > n) flag(`${ep}  recorded ×${n}, lean ×${got} + ui tier ×${t} — double-fired at -e FIDELITY=ui`);
+    }
+  }
   for (const n of s.nonHttp) if (!/think/i.test(n.file)) info(`non-HTTP action in step: ${n.root} (${n.file})`);
 }
 reach(flowText).seen.forEach((f) => allReached.add(f));
@@ -517,7 +543,8 @@ for (const fn of allReached) for (const m of index.get(fn).body.matchAll(/\bname
 for (const [fn, e] of index)
   if (allReached.has(fn))
     for (const m of (read(e.file).match(new RegExp(`function ${fn}\\([^)]*\\bname\\s*=\\s*'([A-Z]\\w+)'`)) || []).slice(1)) tags.add(m);
-for (const m of flowText.matchAll(/,\s*'([A-Z][A-Za-z0-9]+)'\s*\)/g)) tags.add(m[1]);
+// a tag passed as a call's last argument, single-line or prettier's multi-line form with its trailing comma
+for (const m of flowText.matchAll(/,\s*'([A-Z][A-Za-z0-9]+)'\s*,?\s*\)/g)) tags.add(m[1]);
 if (!thrName) flag('no exported *Thresholds object in the flow');
 else {
   const helperTags = new Set(

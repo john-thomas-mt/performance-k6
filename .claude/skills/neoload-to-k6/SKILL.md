@@ -52,7 +52,7 @@ node .claude/scripts/neoload-digest.cjs "team/vus/<VU>"
 
 It prints one compact digest: step order, the transaction **spine** (each request classified SPINE / CHROME / DROP with its `<variable-extractor>` names), the solved **correlation map**, the **data pools** every `${P_…}` the VU references resolves to (row counts, columns, sample rows, and the `gen-pool.cjs` command to port each one — plus which `${P_…}` are constants/generated rather than pools), the **paired data-script VU** (from the test-data population), and a **dissection of each write / detail-form-open body** — resolved values pulled from the recorded-artifacts zips: envelope shape, populated transport-table cells by column name, and the `{Key,Value}` context arrays. **Read the digest, not the raw tree** — it keeps the XML, the extractor blocks, and the multi-KB captured bodies out of the main context. Hand-dumping the tree (`cat` the xml, ad-hoc node walkers, manual `unzip` + per-body dumps) instead of running the digest first is the main avoidable token sink in this workflow.
 
-The digest is **advisory** on the SPINE/CHROME split — it flags likely UI-chrome by endpoint suffix, but the final keep decision is yours (§2): a read is load-bearing if a downstream write consumes its extract, which the digest's per-request extractor list makes visible.
+The digest is **advisory** on the SPINE/CHROME split — it flags likely UI-chrome by endpoint suffix, but the final keep decision is yours (§2). Each spine request prints what it **consumes** (`consume ←`, the `${…}` tokens in its body/query) and what it **extracts** (`extract →`); §2 needs both.
 
 For a body the digest doesn't dissect (a grid/search read, or a second capture), pull and dissect it directly:
 
@@ -71,9 +71,10 @@ A NeoLoad recording captures **everything the browser did**. Keep only the funct
 
 - **Drop** static assets (css/js/html/fonts/images), telemetry (`/v1/traces`, analytics), and pure UI chrome (menu/column-cache/window-info/recently-used/grid-view reads that only paint the UI).
 - **Keep** the writes (the `Save2`/create/update calls) and the reads whose extracted values **feed a later write**.
-- **The `<variable-extractor>` blocks tell you which reads are load-bearing.** A read whose `C_…` extract is consumed by a downstream request stays; a read nothing consumes is chrome. (A 100-call recording is often ~10–15 functional calls.)
-- **Reads between writes can be load-bearing, not chrome** — e.g. a detail re-read that refreshes an optimistic-concurrency token (see §4). Don't drop a read just because it looks like a repaint; check whether a write consumes its extract.
-- **Dropped ≠ gone.** What you drop here (static assets + UI chrome) can be replayed as **optional additive fidelity tiers** (`-e FIDELITY=ui|full`) for a lean-vs-browser-realistic comparison — a pass *after* the spine is green (see §4a and `rules/fidelity.md`).
+- **The `<variable-extractor>` blocks tell you which reads are load-bearing.** A read whose `C_…` extract is consumed by a downstream request stays. (A 100-call recording is often ~10–15 functional calls.)
+- **A read that *consumes* a per-iteration value is functional flow too**, even when nothing consumes what it returns. If its `consume ←` line carries a `C_…` token or a jsAction output (the event key the user just picked, a stamp minted by the step before), it can't be a fixed replay. Keep it as a wrapper by default, especially a heavy one (multi-KB grid/detail responses). "Nothing reads its extract" proves it isn't needed for **correctness**; it says nothing about **load**. Downgrading such a read to chrome is a deliberate, reported choice, not the default.
+- **Reads between writes can be load-bearing, not chrome** — e.g. a detail re-read that refreshes an optimistic-concurrency token (see §4), or the dialog/drawer a save prompt opens before the answering save (see §5). Don't drop a read just because it looks like a repaint.
+- **Dropped ≠ gone — but only if the generator emits it.** What you drop here (static assets + UI chrome) replays in the **optional additive fidelity tiers** (`-e FIDELITY=ui|full`), a pass *after* the spine is green (§4a, `rules/fidelity.md`). The generator keeps scripted requests out of those tiers, so a downgraded read on a path it excludes fires at **no** tier. §4a's exclusion report and the §6 coverage gate are where you confirm every dropped request actually landed in a tier.
 
 ## 3. Correlate — translate NeoLoad's extractors, don't re-derive
 
@@ -114,19 +115,26 @@ compare lean vs. browser-realistic load. Do this only after the spine (§4) is g
 asks for it.
 
 - Generate the lists from the tree: `node .claude/scripts/gen-fidelity-lists.cjs "<VU tree>" source/data/chrome/<journey>.chrome.ts source/data/static/<journey>.static.ts source/data/transport/<journey>.transport.ts` (do-not-hand-edit; regenerate on re-record).
-- Before generating, confirm the journey's **write/upload spine endpoints are in the generator's `SPINE` exclusion** (e.g. `GenericServer/CacheFiles`). A spine endpoint missing from that list leaks into the chrome tier and double-fires — and a captured upload body is a huge base64 blob. Add it to `SPINE` (it's a correct general fix) and regenerate.
+- Before generating, tell the generator which recorded requests the journey scripts, so the tiers neither double-fire them nor drop them. It has three exclusion levels, so pick the narrowest that fits:
+  - **`SPINE` (global)** — only paths every journey always scripts: writes, uploads (`GenericServer/CacheFiles` — a captured upload body is a huge base64 blob), sign-in/out, and correlation sources. **Never a read path.** A read on a shared path (`GetGridData2`, `GenericDetailServer/GetInitialData2`, `WindowServer/GetWindowInfo`) is a wrapper in some steps and UI paint in others. A global entry once dropped every unscripted occurrence, in every journey, from every tier.
+  - **`JOURNEY_SPINE` (per journey, per step)** — a path the journey scripts in a given step, when that step records **only** the requests the wrapper reproduces.
+  - **`JOURNEY_SPINE_REQUESTS` (per request)** — one request among several on the same path in a step. Match it by body prefix (the object id leading a `GetObjectColumns` body), query substring (`astrWindowID=…`), or `max` when the step records identical requests and the wrapper reproduces only some.
+- **Read the generator's `excluded as scripted` report after every run.** It lists each request kept out of the tiers, by step, path and level. Every line must match a wrapper call in that step of the flow; an exclusion with no wrapper behind it means the request fires at no tier. A path+step entry that excludes 3 requests where the flow scripts 1 is the classic case: narrow it to `JOURNEY_SPINE_REQUESTS` and regenerate.
 - A chrome request whose body **echoes a full selected grid row** (`USIDataGridServer/GetControlInfo`, carrying `ROW*_` tokens) can't be resolved by per-token subs from the lean spine — the row isn't a spine output. When the journey needs 1:1 parity, reproduce it as a **dedicated fidelity-gated wrapper** (see `get_service_order_control_info` / `get_event_control_info`): extend the row type (`ServiceOrderRow` / `EventRow`) and its `parse_grid_rows` mapping with the echoed columns — they come from the same grid read the spine already makes — add a table-builder that weaves those cells and a wrapper fired behind `include_ui`, and keep the endpoint in the generator's `SPINE` exclusion so the chrome tier doesn't double-fire it. If parity isn't required, just leave it in `SPINE` (excluded, not fired) and note the omission in the report (no silent caps).
 - Wire the flow to fire each step's slice behind the `include_ui` / `include_static` gates alongside that
   step's spine call, and correlate the requests' `${…}` tokens through a subs map built from the
   correlation the spine already extracts.
 - **Never `Read` the generated `*.chrome.ts` / `*.static.ts` into the main context** — they carry multi-KB
   opaque replay bodies the flow never touches by hand (tokens are substituted at fire time). To build the
-  subs map, run `node .claude/scripts/fidelity-tokens.cjs source/data/chrome/<journey>.chrome.ts source/data/static/<journey>.static.ts`:
-  it prints the tokens per step and the **subs-map contract** (the full token-key set the flow must supply).
-  Cross-check each contract token against what the spine already correlates — a token that is *not* a standard
-  spine output (an event row key, an event name) needs its own `include_ui`-gated lookup wrapper that produces
-  it into the subs map before the batch consumes it. If you must see one specific generated request, `grep` its
-  path — don't `Read` the file.
+  subs map, run `node .claude/scripts/fidelity-tokens.cjs source/data/chrome/<journey>.chrome.ts source/data/static/<journey>.static.ts --vu "<VU tree>"`:
+  it prints the tokens per step and the **subs-map contract** (the full token-key set the flow must supply), each
+  with its **provenance** — the step and request whose extractor mints it in the recording.
+  Supply each token from the request its provenance names. A token that is *not* already a spine output (an
+  event row key, an event name, a column-cache stamp of another object) needs its own `include_ui`-gated lookup
+  wrapper that produces it into the subs map before the batch consumes it, plus a `JOURNEY_SPINE_REQUESTS`
+  entry so the tier doesn't also fire that request. **Never alias** a token to a same-shaped value the spine
+  already holds: two `GetObjectColumns` stamps from different steps/objects are different values. If you must
+  see one specific generated request, `grep` its path — don't `Read` the file.
 - The conventions — what the generator normalises (query strings, Base64 bodies, kept tokens, excluded
   spine dups, pruned stale endpoints), the substitute-or-skip contract, building the subs map, coarse
   tolerant tagging, think-time — live in `rules/fidelity.md`, which auto-loads when you edit the
@@ -151,6 +159,13 @@ Run each step via `k6-run-reporter` (hand it the exact command, and note the jou
 
 **Decode the response before changing inputs.** A `Save2` frequently returns **HTTP 201 with `ResultValue ≠ 0`** — a server-side *validation* failure, not a transport error. The body's `MessageInfoList[].MessageKey` names the exact problem (`OrderDateGreaterThan30Days`, `PrimaryKeyRecordChanged`, a search-key clash, …). Log the body on failure and read it — never guess-and-iterate on inputs. `MessageMode: 2` is a confirmation prompt ("do you wish to proceed?"), not a hard reject; keep the input inside the allowed range rather than replaying an out-of-range captured value.
 
+**A prompt the recording answers is part of the journey — reproduce the round trip.** When the recorded step holds two saves of the same endpoint with requests in between (`Save2` → `GetWindowInfo` / `GetObjectColumns` / a dialog or drawer `GetInitialData2` → `Save2_1`), the browser showed the prompt's dialog and the user answered it. Script it the same way, as flow-level calls:
+1. The first save, returning the prompt.
+2. The recorded reads between, correlated from the prompt's `MessageData` and the stamp the step mints, not replayed from the capture.
+3. The answering save.
+
+Give each its own **literal** tag default (`'SaveXConfirm'`, never a template like `` `${name}Confirm` ``, which no threshold check or review can resolve). Answering the prompt straight away drops the dialog's reads from the load, and a missing request never fails a check.
+
 Loop rules (per `generate-test`): fix, re-run; if the fix touched correlation/shared state, re-run from step 1; cap at ~2–3 attempts per step, then surface to the user. A `p(95)` latency threshold crossing under 2-VU load is a performance observation, not a correctness failure — the ladder proves correctness, not SLO.
 
 **Verify the journey as ported.**
@@ -162,10 +177,18 @@ Loop rules (per `generate-test`): fix, re-run; if the fix touched correlation/sh
 
 ## 6. Refactor & report
 
+**Coverage gate (zero traffic).** The 3-step ladder can't see a request the port never sends: absent traffic passes every check. Before handoff, run the deterministic coverage half of the review:
+
+```bash
+node .claude/scripts/neoload-port-review.cjs "<VU tree>" source/flows/<journey>.flow.ts
+```
+
+Resolve every FLAG in its **§2 SPINE COVERAGE** section before reporting. These include a spine endpoint `NeoLoad ×n, k6 ×m`, a recorded request that `fire[s] at no tier`, and a request `double-fired at -e FIDELITY=ui`. Either script the request, fix the generator exclusion and regenerate, or record an explicit, reasoned omission in the report. A fix to the flow or wrappers re-runs the ladder (§5). This gate is the script only; the judgment review (`/neoload-port-review`) stays in a fresh session (below).
+
 Final structural pass against the auto-loaded rules. Delegate the compliance scan to `k6-authoring-analyst` (as in `generate-test` §5) over the new `source/` files — but tell it the embedded payload constants **intentionally** contain captured values (the embed-and-override pattern), so the hardcoded-value scan targets the **flow/wrapper logic**, which must carry no hardcoded dynamic ids. Also have it check **pool fidelity**: every pool in the digest's DATA POOLS section has a `source/data/pools/` module whose row count matches, is reached with `pick_pool_value`, and no pool value sits inline in a flow or a payload builder instead. A truncated pool is functionally correct, so §5 can never catch it — this scan is the only gate that does.
 
 Report: NeoLoad steps ported vs dropped-as-chrome, wrappers reused vs created, **data pools ported (variable → module → row count, and any left to runtime seed discovery)**, correlation decisions (and any NeoLoad smells corrected), the 3-step results, and the run commands.
 
 The 3-step run proves the journey on `main` only. NeoLoad re-recorded per version precisely because it couldn't parameterize this; k6 can. Offer to hand off to `verify-envs` — targeting **the journey just ported** (pass its scenario name automatically; don't make the user restate it) — to prove the port trickles down across the `ReleaseVersion` matrix and surface any cross-version drift. A separate, user-approved traffic run, not part of this skill.
 
-Also suggest `/neoload-port-review <journey>` in a **fresh session** — a zero-traffic second look against the recording that doesn't inherit this session's assumptions. Only suggest it: never run the review, or its script, in this session. The porting context would make it cost more and would bias the second look.
+Also suggest `/neoload-port-review <journey>` in a **fresh session** — a zero-traffic second look against the recording that doesn't inherit this session's assumptions. Only suggest it: never run the review skill in this session. The porting context would make it cost more and would bias the second look. The coverage gate above runs the review's deterministic script, which needs no such protection. The skill's judgment of what that script flags is what stays fresh.

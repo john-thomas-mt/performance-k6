@@ -45,6 +45,9 @@ How to read the common FLAGs:
 |---|---|---|
 | spine endpoint `NeoLoad ×n, k6 ×m` | a later write consumes its extract (see §3 of the output) | pure UI paint the classifier missed — say which |
 | `in k6, not recorded in this step` | the call moved to the wrong group (timings mis-attributed) | it's a shared helper fired at a step boundary |
+| `recorded ×n (chrome), fired ×m — … fire at no tier` | a generator exclusion (global `SPINE`, a too-wide `JOURNEY_SPINE` path+step) swallowed a request no wrapper sends — fix the exclusion and regenerate | the endpoint is on the generator's `DEAD` list or a version gate (cite it) |
+| `lean ×n + ui tier ×m — double-fired` | a wrapper reproduces a request the tier also emits — add a `JOURNEY_SPINE`/`JOURNEY_SPINE_REQUESTS` exclusion and regenerate | the wrapper call is conditional (a fallback/retry branch) and the tier copy is the recorded one |
+| `k6 reaches n call sites` (INFO) | two unconditional calls where the recording has one | the extra call sites are a fallback/retry branch |
 | token-literal leak | the value is server-minted or per-record (ids, keys, stamps, names that must be unique) | it's the recorder's typed input the server only echoes back, identical every run |
 | GUID / bearer-token literal | a session token, API key or record GUID pasted into a flow, wrapper or type file | a fixed schema or app id the server expects on every call — cite where it's constant |
 | consumed but extracted nowhere | nothing in k6 produces the value | a jsAction or the `_N` occurrence of a multi-match extractor produces it |
