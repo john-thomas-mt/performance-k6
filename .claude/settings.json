@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(playwright-cli:*)",
-      "Bash(k6 inspect:*)"
+      "Bash(k6 inspect:*)",
+      "Bash(k6 run:*)"
     ]
   }
 }
