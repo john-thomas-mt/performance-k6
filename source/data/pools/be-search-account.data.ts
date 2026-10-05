@@ -2,9 +2,10 @@
    (variables/version_26_2/P_26_2_BE_SearchAccount.txt, column AccountName, 3089 rows) — do not hand-edit.
    Regenerate when the NeoLoad data file changes.
 
-   Then pruned against PERF/26_2: 'bb, bb' matches so many accounts that the search refuses it
-   ("Too many items in search results"), so search_booking_account fails the iteration. Re-apply the
-   prune after any regenerate, and re-probe the pool after a snapshot reset. */
+   Then pruned against PERF/26_2 by searching every name once: 8 names match so many accounts that
+   the search refuses them ("Too many items in search results"), so search_booking_account fails the
+   iteration: 'bb, bb', 'RS', '55, 55', 'Ungerboeck', 'JT', 'CD', 'o, test', 'ARI'. Re-apply the prune
+   after any regenerate, and re-probe the pool after a snapshot reset. */
 
 export const bookingAccountNames: string[] = [
   'STONE, MARIE',
@@ -270,7 +271,6 @@ export const bookingAccountNames: string[] = [
   'ALBUQUERQUE TECHNICAL VOCATIONAL INSTITUTE',
   'Carando Pizza Toppings',
   'Donnie Tapley',
-  'RS',
   'Invoice Account c461609',
   'USS Juneau',
   'American Range',
@@ -1350,7 +1350,6 @@ export const bookingAccountNames: string[] = [
   'Bohnert, Chris',
   'Knapp, Lisa',
   'Randolph, Randy',
-  '55, 55',
   "Big Mama' Diner",
   'AMERICAN ACADEMY OF DRAMATIC ARTS-WEST',
   "Dawson's Creek Bar & Grill",
@@ -1662,7 +1661,6 @@ export const bookingAccountNames: string[] = [
   'Hurtado & Associates',
   'LUM, CONSTANCE',
   'Selenium850826',
-  'Ungerboeck',
   'WATRO, MARGARET',
   'Cooper, Margaret',
   'Trim Flatwork1',
@@ -2254,7 +2252,6 @@ export const bookingAccountNames: string[] = [
   'COLLINS, JANE',
   'Nelson Tree Service, Inc.',
   'HOJNOSZ, PATRICIA',
-  'JT',
   'Invoice Account n109584',
   'Jason Pedone',
   'ITI TECHNICAL COLLEGE',
@@ -2275,7 +2272,6 @@ export const bookingAccountNames: string[] = [
   'The Walnut Bowl Outlet',
   'KS Test Acc S14',
   'Tradewind decorators',
-  'CD',
   'Illi, Tom',
   'Sheraton Towers',
   'My Pretty Ponies',
@@ -2346,7 +2342,6 @@ export const bookingAccountNames: string[] = [
   'Para Decorators',
   'UNIVERSITY OF HAWAII AT MANOA',
   'Airwatch by VMware',
-  'o, test',
   'CoCOOPCo',
   'Miller, George F.',
   'MAURMARCO, ANNA',
@@ -2878,7 +2873,6 @@ export const bookingAccountNames: string[] = [
   'baseball for sanity show organizers global',
   'Oceans 4Ocean',
   'IANDOLI, BRYAN',
-  'ARI',
   'Berkshire Hathaway',
   'Dock Workers Untion',
   'Playwright PaymentV2 556506',
