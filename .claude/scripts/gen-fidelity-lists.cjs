@@ -78,7 +78,14 @@ const JOURNEY_SPINE = {
     '/api/WindowServer/GetWindowInfo': ['08'],
   },
   'lead-account': {
+    '/api/ObjectColumnCacheServer/GetObjectColumns': ['03'],
+    '/api/GenericListServer/GetInitialData2': ['03', '07'],
+    '/api/USIDataGridServer/GetInitialData2': ['03', '06', '07'],
     '/api/GenericDetailServer/GetInitialData2': ['04', '05', '06'],
+    '/api/GenericDetailServer/HandleDependentFields2': ['05'],
+    '/api/USISearchComboServer/SaveRecentlyUsed': ['05'],
+    '/api/GenericDetailServer/AccessServerUI': ['06'],
+    '/api/GenericSearchServer/GetInitialData2': ['06'],
   },
   'room-diagram-upload': {
     '/api/USIDataGridServer/GetGridData2': ['04'],
@@ -99,7 +106,11 @@ const JOURNEY_SPINE = {
 // prefix of the whitespace-stripped body and/or a substring of the path+query; `max` caps how many matching
 // requests are excluded when the step records identical requests and the wrapper reproduces only some of them.
 const JOURNEY_SPINE_REQUESTS = {
-  'book-event': [{ path: '/api/WindowServer/GetWindowInfo', step: '03', query: 'astrWindowID=EB8776', max: 1 }],
+  'book-event': [
+    { path: '/api/WindowServer/GetWindowInfo', step: '03', query: 'astrWindowID=EB8776', max: 1 },
+    // the account pick: refresh_booking_account_fields reproduces it to correlate the account's contact
+    { path: '/api/GenericDetailServer/HandleDependentFields2', step: '07', max: 1 },
+  ],
   'contact-service-order': [
     { path: '/api/ObjectColumnCacheServer/GetObjectColumns', step: '04', body: '[1659,' },
     { path: '/api/ObjectColumnCacheServer/GetObjectColumns', step: '06', body: '[456,' },
