@@ -174,7 +174,9 @@ export function save_booking(
     } catch {
       /* keep raw slice */
     }
-    console.error(`[VU ${__VU}] save_booking failed — HTTP ${res.status}: ${detail}`);
+    console.error(
+      `[VU ${__VU}] save_booking failed for space "${get_cell(space, 'EV802_BKD_SPACE')}" on ${date} — HTTP ${res.status}: ${detail}`,
+    );
     fail('save_booking did not succeed');
   }
 
