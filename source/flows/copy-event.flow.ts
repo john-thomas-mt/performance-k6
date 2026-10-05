@@ -1,4 +1,5 @@
 import { check, group, fail } from 'k6';
+import exec from 'k6/execution';
 import { login_to_events } from './login.flow.ts';
 import {
   search_events,
@@ -22,8 +23,8 @@ import {
   sign_out,
   pick_pool_value,
 } from '../utils/exports/helpers.exp.ts';
-import { copyEventChrome, copyEventStatic, copyEventTransport, copyEventNames } from '../utils/exports/data.exp.ts';
-import { User, SetupData, EventRow, FidelityLevel } from '../utils/exports/types.exp.ts';
+import { copyEventChrome, copyEventStatic, copyEventTransport, copyEventNames, random_copy_to_date } from '../utils/exports/data.exp.ts';
+import { User, SetupData, EventRow, FidelityLevel, CopyFormFields } from '../utils/exports/types.exp.ts';
 
 const COPY_WINDOW_ID = 'EB2212';
 
@@ -48,8 +49,8 @@ function chrome_and_static(token: string, version: string, level: FidelityLevel,
 
 export function copy_event_journey(user: User, data: SetupData) {
   const level = fidelity_level();
-  const runToken = crypto.randomUUID().split('-')[0];
-  const newDescription = `Manual Event Perf Test - ${runToken}`;
+  const runToken = `${__VU}${exec.scenario.iterationInTest}${Date.now()}`;
+  const newDescription = `k6-t4-copied-event-${runToken}`;
   const sourceEvent = __ENV.SOURCE_EVENT || pick_pool_value(copyEventNames);
 
   const subs: Subs = {
@@ -101,19 +102,26 @@ export function copy_event_journey(user: User, data: SetupData) {
   const source = sourceRef;
   think();
 
+  const refreshKey = Date.now();
+  let formRef: CopyFormFields | null = null;
   group('T004_CopyEvent_05_CopyEvent', () => {
-    open_copy_form(bearerToken, data.version, encUserId, source);
+    formRef = open_copy_form(bearerToken, data.version, encUserId, source, refreshKey);
     if (include_ui(level)) subs.C_Version = get_window_version(bearerToken, data.version, COPY_WINDOW_ID, 'CopyWindowInfo');
-    subs.C_RefreshDependentKey = String(Date.now());
+    subs.C_RefreshDependentKey = String(refreshKey);
     chrome_and_static(bearerToken, data.version, level, ['05'], subs);
   });
+  const form = formRef!;
   think();
 
   group('T004_CopyEvent_06_ClickSave', () => {
-    const newEvtId = save_event_copy(bearerToken, data.version, encUserId, source, newDescription);
+    const newEvtId = save_event_copy(bearerToken, data.version, encUserId, source, form, {
+      description: newDescription,
+      refreshKey,
+      copyToDate: random_copy_to_date(),
+    });
     console.log(`[VU ${__VU}] Created event ${newEvtId} — ${newDescription}`);
     subs.C_Updated_EventId = newEvtId;
-    subs.C_ClickCopy_Timestamp1 = String(Date.now());
+    subs.C_ClickCopy_Timestamp1 = form.clickCopyStamp;
     chrome_and_static(bearerToken, data.version, level, ['06'], subs);
     open_event_detail(bearerToken, data.version, newEvtId, newDescription);
   });

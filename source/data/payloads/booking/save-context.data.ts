@@ -1,5 +1,5 @@
 /* windowBag for the two-table booking Save2 (window EB8073/EB8074). */
-export const bookingSaveContext = (date: string) => [
+export const bookingWindowContext = (date: string) => [
   { Key: 'WindowObjectID', Value: 1 },
   { Key: 'OrgCode', Value: '10' },
   { Key: 'wdwid', Value: 'EB8073' },
@@ -23,6 +23,10 @@ export const bookingSaveContext = (date: string) => [
   { Key: 'ShowQuickInfoHeader', Value: true },
   { Key: 'SectionUDFSets', Value: '' },
   { Key: 'LinkedFuncs', Value: 'Y' },
+];
+
+export const bookingSaveContext = (date: string) => [
+  ...bookingWindowContext(date),
   { Key: 'OrgParmBK026', Value: 'Y' },
   { Key: 'ContextObjectID', Value: 1 },
 ];

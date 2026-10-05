@@ -1,5 +1,5 @@
 import http from 'k6/http';
-import { check, fail } from 'k6';
+import { check, fail, JSONValue } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
 import {
   build_headers,
@@ -22,6 +22,8 @@ import {
 } from '../utils/exports/data.exp.ts';
 import {
   EventRow,
+  CopyFormFields,
+  EventCopyInput,
   EventSaveResult,
   EventDetailContext,
   EventDocumentContext,
@@ -93,10 +95,10 @@ export function search_events(token: string, version: string, searchValue: strin
   );
 }
 
-export function open_copy_form(token: string, version: string, encUserId: string, source: EventRow) {
+export function open_copy_form(token: string, version: string, encUserId: string, source: EventRow, refreshKey: number): CopyFormFields {
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/GetInitialData2`,
-    JSON.stringify(copyFormPayload(encUserId, source, version)),
+    JSON.stringify(copyFormPayload(encUserId, source, version, refreshKey)),
     { headers: build_headers(token, version), tags: { name: 'OpenCopyForm' } },
   );
 
@@ -109,12 +111,34 @@ export function open_copy_form(token: string, version: string, encUserId: string
     console.error(`[VU ${__VU}] open_copy_form failed — HTTP ${res.status}`);
     fail('open_copy_form did not succeed');
   }
+
+  const form = initial_data_table(res, 'OpenCopyForm');
+  const clickCopyStamp = (res.json() as JSONValue[])[11];
+  return {
+    priceList: get_cell(form, 'cCOPY_PRICE_LIST'),
+    status: get_cell(form, 'EV200_EVT_STATUS'),
+    billTo: get_cell(form, 'EV200_BILLTO_ACCT'),
+    salesperson: get_cell(form, 'EV200_SLSPER'),
+    search: get_cell(form, 'EV200_EVT_SEARCH'),
+    advCutoff: Number(get_cell(form, 'EV200_ADV_CUTOFF_DATE')),
+    stdCutoff: Number(get_cell(form, 'EV200_STD_CUTOFF_DATE')),
+    release: Number(get_cell(form, 'EV200_RELEASE_DATE')),
+    startEndDate: get_cell(form, 'cEVT_START_END_DATE'),
+    clickCopyStamp: typeof clickCopyStamp === 'string' ? clickCopyStamp : '',
+  };
 }
 
-export function save_event_copy(token: string, version: string, encUserId: string, source: EventRow, description: string) {
+export function save_event_copy(
+  token: string,
+  version: string,
+  encUserId: string,
+  source: EventRow,
+  form: CopyFormFields,
+  copy: EventCopyInput,
+) {
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/Save2`,
-    JSON.stringify(savePayload(encUserId, source, description, version)),
+    JSON.stringify(savePayload(encUserId, source, form, copy, version)),
     { headers: build_headers(token, version), tags: { name: 'SaveEventCopy' } },
   );
 

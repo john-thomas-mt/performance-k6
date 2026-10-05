@@ -25,21 +25,27 @@ import {
 } from '../utils/exports/helpers.exp.ts';
 import { copyServiceOrdersChrome, copyServiceOrdersStatic, copyServiceOrdersTransport } from '../utils/exports/data.exp.ts';
 import { config } from '../utils/exports/config.exp.ts';
-import { User, ServiceOrderSetup, ServiceOrderRow, EventRow, FidelityLevel } from '../utils/exports/types.exp.ts';
+import { User, ServiceOrderSetup, ServiceOrderRow, PooledServiceOrder, EventRow, FidelityLevel } from '../utils/exports/types.exp.ts';
+
+const POOL_EVENTS = Number(__ENV.POOL_EVENTS || 50);
+
+function interleave(lists: PooledServiceOrder[][]) {
+  const longest = Math.max(0, ...lists.map((l) => l.length));
+  const out: PooledServiceOrder[] = [];
+  for (let i = 0; i < longest; i++) for (const l of lists) if (i < l.length) out.push(l[i]);
+  return out;
+}
 
 export function discover_service_order_pool(version: string, user: User) {
   const { bearerToken } = login_to_events(user, version);
+  const prefix = config.dataScriptEventDesc;
 
-  const seedEvent = search_events(bearerToken, version, config.seedEventDesc, 'DiscoverSeedEvent')
-    .filter((e) => e.desc.startsWith(config.seedEventDesc))
-    .reduce<EventRow | null>((newest, e) => (newest && Number(newest.evtId) >= Number(e.evtId) ? newest : e), null);
-  if (!seedEvent) {
-    throw new Error(`seed event "${config.seedEventDesc}" not found — run source/seeds/service-orders.seed.ts after the snapshot reset`);
-  }
-
-  const pool = load_service_orders(bearerToken, version, seedEvent);
+  const seeded = search_events(bearerToken, version, prefix, 'DiscoverSeedEvent').filter((e) => e.desc.startsWith(prefix));
+  const events = shuffle(seeded).slice(0, POOL_EVENTS);
+  const pool = interleave(events.map((e) => load_service_orders(bearerToken, version, e).map((o) => ({ ...o, evtDesc: e.desc }))));
+  console.log(`"${prefix}" events: ${seeded.length} found, ${events.length} sampled, ${pool.length} service order(s)`);
   if (pool.length === 0) {
-    throw new Error(`seed event "${config.seedEventDesc}" has no service orders — reseed with a larger SEED_COUNT`);
+    throw new Error(`no service orders under "${prefix}" events — run source/seeds/service-orders.seed.ts after the snapshot reset`);
   }
   return pool;
 }
@@ -50,8 +56,6 @@ const COPY_COUNT_OVERRIDE = __ENV.COPY_COUNT ? Number(__ENV.COPY_COUNT) : undefi
    random upper bound here to a realistic per-event size rather than the whole pool. */
 const NEOLOAD_EVENT_SO_COUNT = 10;
 
-/* Save2 copies a random 1..N of the event's service orders per iteration (see pick_orders), so its p95
-   tracks the larger selections — sized against NeoLoad's T34_07 transaction p95 (~7.6s). */
 export const copyServiceOrdersThresholds = {
   'http_req_duration{name:OpenCopyServiceOrdersForm}': ['avg<4000'],
   'http_req_duration{name:SaveServiceOrderCopy}': ['avg<4000'],
@@ -59,7 +63,7 @@ export const copyServiceOrdersThresholds = {
 
 type Subs = { [token: string]: string };
 
-function shuffle(rows: ServiceOrderRow[]): ServiceOrderRow[] {
+function shuffle<T>(rows: T[]): T[] {
   const a = rows.slice();
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -146,7 +150,7 @@ export function copy_service_orders_journey(user: User, data: ServiceOrderSetup)
   let eventRowKey = '';
   group('T34_CopyServiceOrders_04_SearchEvent', () => {
     if (include_ui(level)) {
-      const event: EventRow | undefined = search_events(bearerToken, data.version, config.seedEventDesc, 'DiscoverCopyEvent').find(
+      const event: EventRow | undefined = search_events(bearerToken, data.version, anchor.evtDesc, 'DiscoverCopyEvent').find(
         (e) => String(e.evtId) === String(anchor.evtId),
       );
       if (event) {

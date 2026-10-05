@@ -79,15 +79,15 @@ export const functionSavePayload = (
   addedRowKey: string,
   encUserId: string,
   windowVersion: string,
-  stamp: string,
+  stamp: number,
 ) => {
   /* The CreateNewRows response encodes every cell as a string; the grid Save2 requires each column's
      native type (Int32/Decimal/DateTime as numbers), so coerce the echoed row before sending it back. */
   coerce_transport_types(table);
-  /* Optimistic-concurrency token: overwrite cRETRIEVE_STAMP with the stamp read immediately before this
-     save. The staged row still carries the step-08 read's stamp; the server rejects a stamp older than the
-     function-master's current state ("changed elsewhere since you last refreshed", rule 13049), which the
-     stale step-08 value trips on builds that advance the row between staging and save. */
+  /* Optimistic-concurrency token: the server rejects a cRETRIEVE_STAMP older than the function-master's
+     current state ("changed elsewhere since you last refreshed", rule 13049). The browser, like the
+     recording (${P_EpochTimestamp}), sends the save-time epoch as a native DateTime number, which is never
+     older than the row and needs no timezone-sensitive string render. */
   set_cell(table, 'cRETRIEVE_STAMP', stamp);
   set_cell(table, 'EV700_FUNC_DESC', funcDesc);
   set_cell(table, 'EV700_FUNC_SEARCH', funcDesc.toUpperCase());

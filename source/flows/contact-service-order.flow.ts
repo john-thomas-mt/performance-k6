@@ -28,6 +28,7 @@ import {
   include_ui,
   pick_pool_value,
   sign_out,
+  stamp_to_epoch,
   think,
 } from '../utils/exports/helpers.exp.ts';
 import {
@@ -64,10 +65,6 @@ export const contactServiceOrderThresholds = {
 };
 
 type Subs = { [token: string]: string };
-
-function stamp_to_epoch(stamp: string) {
-  return String(Date.parse(`${stamp.replace(' ', 'T')}Z`));
-}
 
 function chrome_and_static(token: string, version: string, level: FidelityLevel, step: string, subs: Subs) {
   if (include_ui(level)) fire_ui_chrome(token, version, contactServiceOrderChrome[step] ?? [], subs);

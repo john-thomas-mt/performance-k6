@@ -58,12 +58,14 @@ export function save_crystal_report(
   version: string,
   reportName: string,
   reportId: string,
+  srcName: string,
+  scope: string,
   detailWdwid: string,
   editWdwid: string,
 ) {
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/Save2`,
-    JSON.stringify(crystalReportSavePayload(reportName, reportId, detailWdwid, editWdwid)),
+    JSON.stringify(crystalReportSavePayload(reportName, reportId, srcName, scope, detailWdwid, editWdwid)),
     { headers: build_headers(token, version), tags: { name: 'SaveCrystalReport' } },
   );
 

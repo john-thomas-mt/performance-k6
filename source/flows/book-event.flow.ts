@@ -1,10 +1,12 @@
 import { group } from 'k6';
+import exec from 'k6/execution';
 import { login_to_events } from './login.flow.ts';
 import {
   get_window_version,
   stage_booking_space,
   open_booking_form,
   search_booking_account,
+  refresh_booking_account_fields,
   save_booking,
   read_event_functions,
   stage_event_function,
@@ -28,8 +30,7 @@ import {
 import {
   random_future_date,
   bookingSpaces,
-  BOOKING_ACCOUNT,
-  BOOKING_CONTACT,
+  bookingAccountNames,
   bookEventChrome,
   bookEventStatic,
   bookEventTransport,
@@ -40,6 +41,8 @@ export const bookEventThresholds = {
   'http_req_duration{name:GetBookingWindowInfo}': ['avg<4000'],
   'http_req_duration{name:StageBookingSpace}': ['avg<4000'],
   'http_req_duration{name:OpenBookingForm}': ['avg<4000'],
+  'http_req_duration{name:SearchBookingAccount}': ['avg<4000'],
+  'http_req_duration{name:HandleBookingAccountFields}': ['avg<4000'],
   'http_req_duration{name:SaveBooking}': ['avg<4000'],
   'http_req_duration{name:ReadEventFunctions}': ['avg<4000'],
   'http_req_duration{name:StageEventFunction}': ['avg<4000'],
@@ -60,10 +63,11 @@ function chrome_and_static(token: string, version: string, level: FidelityLevel,
 
 export function book_event_journey(user: User, data: SetupData) {
   const level = fidelity_level();
-  const runToken = crypto.randomUUID().split('-')[0];
+  const runToken = `${__VU}${exec.scenario.iterationInTest}${Date.now()}`;
   const date = random_future_date();
   const spaceCode = pick_pool_value(bookingSpaces);
-  const eventDesc = `Perf Booking ${runToken}`;
+  const accountName = pick_pool_value(bookingAccountNames);
+  const eventDesc = `k6-t2-booking-event-${runToken}`;
 
   const subs: Subs = {
     'C_USI_Version': data.version,
@@ -71,7 +75,7 @@ export function book_event_journey(user: User, data: SetupData) {
     'P_26_2_BE_SpaceCode.spaceCodes': spaceCode,
     'C_ALT_EVT_DESC': eventDesc,
     'C_EVT_SEARCH': '*EVTYR',
-    'C_NG_EVT_CONTACT': BOOKING_CONTACT,
+    'C_NG_EVT_CONTACT': '',
     'C_BE_searchResultKey': '',
     'NL-VirtualUserId': String(__VU),
     'P_IterationNumber': String(__ITER),
@@ -133,22 +137,17 @@ export function book_event_journey(user: User, data: SetupData) {
   think();
 
   let bookingRef: { addedRowKey: string; evtId: string } | null = null;
+  let account = '';
   group('T002_BookingEvent_07_EnterdetailsClicksave', () => {
-    const booked = save_booking(
-      bearerToken,
-      data.version,
-      formTableRef!,
-      spaceTableRef!,
-      date,
-      eventDesc,
-      BOOKING_ACCOUNT,
-      BOOKING_CONTACT,
-    );
+    account = search_booking_account(bearerToken, data.version, accountName);
+    subs.C_BE_searchResultKey = account;
+    const contact = refresh_booking_account_fields(bearerToken, data.version, formTableRef!, date, account);
+    subs.C_NG_EVT_CONTACT = contact;
+    const booked = save_booking(bearerToken, data.version, formTableRef!, spaceTableRef!, date, eventDesc, account, contact);
     bookingRef = booked;
     subs.C_EVT_ID = booked.evtId;
     subs.C_AddedRowKeys = booked.addedRowKey;
     console.log(`[VU ${__VU}] Booked event ${booked.evtId} — ${eventDesc}`);
-    if (include_ui(level)) subs.C_BE_searchResultKey = search_booking_account(bearerToken, data.version, BOOKING_ACCOUNT);
     chrome_and_static(bearerToken, data.version, level, ['07'], subs);
   });
   const booking = bookingRef!;
@@ -160,7 +159,7 @@ export function book_event_journey(user: User, data: SetupData) {
       bearerToken,
       data.version,
       spaceCode,
-      BOOKING_ACCOUNT,
+      account,
       booking.evtId,
       booking.addedRowKey,
       encUserId,
@@ -177,7 +176,7 @@ export function book_event_journey(user: User, data: SetupData) {
       data.version,
       date,
       spaceCode,
-      BOOKING_ACCOUNT,
+      account,
       booking.evtId,
       booking.addedRowKey,
       encUserId,
@@ -189,29 +188,20 @@ export function book_event_journey(user: User, data: SetupData) {
   think();
 
   group('T002_BookingEvent_10_ClickFunctionSave', () => {
-    const saveStamp = read_event_functions(
-      bearerToken,
-      data.version,
-      spaceCode,
-      BOOKING_ACCOUNT,
-      booking.evtId,
-      booking.addedRowKey,
-      encUserId,
-      windowVersion,
-    );
     save_event_function(
       bearerToken,
       data.version,
       funcTableRef!,
-      `Function ${runToken}`,
+      `k6-t2-function-${runToken}`,
       spaceCode,
-      BOOKING_ACCOUNT,
+      account,
       booking.evtId,
       booking.addedRowKey,
       encUserId,
       windowVersion,
-      format_retrieve_stamp(saveStamp),
+      Date.now(),
     );
+    read_event_functions(bearerToken, data.version, spaceCode, account, booking.evtId, booking.addedRowKey, encUserId, windowVersion);
     chrome_and_static(bearerToken, data.version, level, ['10'], subs);
   });
   think();

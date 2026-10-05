@@ -19,10 +19,22 @@ import {
   open_lead_contacts_search,
   open_leads_view_list,
   read_leads_view_grid,
+  signalr_negotiate,
 } from '../utils/exports/apis.exp.ts';
-import { fetch_bundle_versions, fidelity_level, include_static, pick_pool_value, sign_out, think } from '../utils/exports/helpers.exp.ts';
-import { leadAccount } from '../utils/exports/data.exp.ts';
-import { LeadFormSession, SetupData, User } from '../utils/exports/types.exp.ts';
+import {
+  fetch_bundle_versions,
+  fidelity_level,
+  fire_static_assets,
+  fire_transport,
+  fire_ui_chrome,
+  include_static,
+  include_ui,
+  pick_pool_value,
+  sign_out,
+  think,
+} from '../utils/exports/helpers.exp.ts';
+import { leadAccount, leadAccountChrome, leadAccountStatic, leadAccountTransport } from '../utils/exports/data.exp.ts';
+import { FidelityLevel, LeadFormSession, SetupData, User } from '../utils/exports/types.exp.ts';
 
 const ACCOUNT_REP_NAME = 'ADMIN USI';
 
@@ -47,22 +59,46 @@ export const leadAccountThresholds = {
   'http_req_duration{name:ReadLeadsViewGrid}': ['avg<4000'],
 };
 
+type Subs = { [token: string]: string };
+
+function chrome_and_static(token: string, version: string, level: FidelityLevel, step: string, subs: Subs) {
+  if (include_ui(level)) fire_ui_chrome(token, version, leadAccountChrome[step] ?? [], subs);
+  if (include_static(level)) {
+    fire_static_assets(leadAccountStatic[step] ?? []);
+    fire_transport(token, version, leadAccountTransport[step] ?? [], subs);
+  }
+}
+
 export function lead_account_journey(user: User, data: SetupData) {
+  const level = fidelity_level();
+  const subs: Subs = { P_EpochTimestamp: String(Date.now()) };
   const iter = exec.scenario.iterationInTest;
   const runToken = `${__VU}${iter}${Date.now()}`;
   const wdwBase = 8000000 + iter * 10;
   const listWdwid = `OA${wdwBase}`;
   const resultsWdwid = `OA${wdwBase + 3}`;
-  const companyName = `Comp_${runToken}`;
-  const lastName = `Account${runToken}`;
+  const companyName = `k6-t1-company-${runToken}`;
+  const lastName = `k6-t1-account-${runToken}`;
   const leadSourceCode = pick_pool_value(leadAccount);
 
   group('T001_AccountCreation_01_Launch', () => {
-    if (include_static(fidelity_level())) fetch_bundle_versions();
+    if (include_static(level)) {
+      const bundles = fetch_bundle_versions();
+      subs.C_backOffice_version = bundles.backOffice;
+      subs.C_css_version = bundles.css;
+      subs.C_modernizr_version = bundles.modernizr;
+      subs.C_english_version = bundles.english;
+    }
+    chrome_and_static('', data.version, level, '01', subs);
   });
   think();
 
-  const { bearerToken } = login_to_events(user, data.version, 'T001_AccountCreation_02_Login');
+  const { bearerToken } = login_to_events(user, data.version, 'T001_AccountCreation_02_Login', (token, enc, sso) => {
+    subs.C_UserId = token.split('|')[0];
+    subs.C_TokenID = sso;
+    if (include_static(level)) subs.C_ConnectionToken = signalr_negotiate(token, data.version);
+    chrome_and_static(token, data.version, level, '02', subs);
+  });
   think();
 
   let columnStamp = '';
@@ -70,6 +106,8 @@ export function lead_account_journey(user: User, data: SetupData) {
     columnStamp = get_lead_column_stamp(bearerToken, data.version);
     open_leads_list(bearerToken, data.version, listWdwid);
     read_leads_grid(bearerToken, data.version, listWdwid);
+    subs.C_SearchLeads_Timestamp1 = columnStamp;
+    chrome_and_static(bearerToken, data.version, level, '03', subs);
   });
   think();
 
@@ -81,6 +119,7 @@ export function lead_account_journey(user: User, data: SetupData) {
   };
   group('T001_AccountCreation_04_ClickAddButton', () => {
     session.layoutId = open_lead_create_form(bearerToken, data.version, session.formWdwid, session.editWdwid, columnStamp);
+    chrome_and_static(bearerToken, data.version, level, '04', subs);
   });
   think();
 
@@ -96,11 +135,13 @@ export function lead_account_journey(user: User, data: SetupData) {
       lastName,
       leadSource,
       accountRep,
-      email: `K6Lead${runToken}@pt.com`,
+      email: `k6-t1-lead-${runToken}@pt.com`,
       phone: `${11111 + Math.floor(Math.random() * 88889)}${String(Date.now()).slice(-5)}`,
     });
     console.log(`[VU ${__VU}] Created lead ${leadId} — ${companyName}`);
     open_lead_detail(bearerToken, data.version, session.editWdwid, leadId, columnStamp);
+    subs.C_LEAD_ID = leadId;
+    chrome_and_static(bearerToken, data.version, level, '05', subs);
   });
   think();
 
@@ -111,17 +152,20 @@ export function lead_account_journey(user: User, data: SetupData) {
     read_lead_contacts_grid(bearerToken, data.version, session.editWdwid, leadId);
     open_lead_contacts_search(bearerToken, data.version, session.editWdwid, leadId);
     console.log(`[VU ${__VU}] Converted lead ${leadId} to an account`);
+    chrome_and_static(bearerToken, data.version, level, '06', subs);
   });
   think();
 
   group('T001_AccountCreation_07_ClickSaveButton', () => {
     open_leads_view_list(bearerToken, data.version, listWdwid);
     read_leads_view_grid(bearerToken, data.version, listWdwid);
+    chrome_and_static(bearerToken, data.version, level, '07', subs);
   });
   think();
 
   group('T001_AccountCreation_08_SignOut', () => {
     sign_out(bearerToken, data.version);
+    chrome_and_static(bearerToken, data.version, level, '08', subs);
   });
   think();
 }

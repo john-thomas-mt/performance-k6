@@ -11,6 +11,10 @@ export function format_retrieve_stamp(epoch: string) {
   return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
 }
 
+export function stamp_to_epoch(stamp: string) {
+  return String(Date.parse(`${stamp.replace(' ', 'T')}Z`));
+}
+
 export const save2CreateChangeTracking = {
   SaveMode: 7,
   Delete: false,

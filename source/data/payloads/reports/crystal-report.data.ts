@@ -1,5 +1,12 @@
-/* Captured T30 Save2 that creates a Crystal Report Master (WindowObjectID 516). Cell 29 of MM845_RPT_MASTER is the report's .rpt source file embedded as a Base64 OLE blob (~1MB) — a frozen captured artifact, identical every run. Only RPT_NAME/RPT_ID vary (client-supplied, unique per iteration); RPT_SEQ -1 marks the insert (server assigns the real sequence, returned as AddedRowKeys). wdwid/EditWdwID are client-generated window-session ids echoed by the server. */
-export const crystalReportSavePayload = (reportName: string, reportId: string, wdwid: string, editWdwid: string) => [
+/* Captured T30 Save2 that creates a Crystal Report Master (WindowObjectID 516). Cell 29 of MM845_RPT_MASTER is the report's .rpt source file embedded as a Base64 OLE blob (~1MB) — a frozen captured artifact, identical every run. RPT_NAME/RPT_ID/SRC_NAME vary (client-supplied, unique per iteration, as the recording composes them per VU and iteration) and SCOPE comes from the P_CrystalReport_Scope pool; RPT_SEQ -1 marks the insert (server assigns the real sequence, returned as AddedRowKeys). wdwid/EditWdwID are client-generated window-session ids echoed by the server. */
+export const crystalReportSavePayload = (
+  reportName: string,
+  reportId: string,
+  srcName: string,
+  scope: string,
+  wdwid: string,
+  editWdwid: string,
+) => [
   1,
   '10',
   516,
@@ -329,7 +336,7 @@ export const crystalReportSavePayload = (reportName: string, reportId: string, w
             Values: {
               '0': reportName,
               '1': reportId,
-              '2': 'AccountBalance.rpt',
+              '2': srcName,
               '3': null,
               '4': null,
               '5': null,
@@ -340,7 +347,7 @@ export const crystalReportSavePayload = (reportName: string, reportId: string, w
               '10': 'N',
               '11': 'RP',
               '12': 'Report',
-              '13': 'X',
+              '13': scope,
               '14': 'C',
               '15': null,
               '16': 25,

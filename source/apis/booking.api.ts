@@ -1,7 +1,15 @@
 import http from 'k6/http';
 import { check, fail } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
-import { build_headers, body_text, initial_data_table, find_transport_table, parse_grid_rows } from '../utils/exports/helpers.exp.ts';
+import {
+  build_headers,
+  body_text,
+  initial_data_table,
+  find_transport_table,
+  get_cell,
+  parse_grid_rows,
+  set_cell,
+} from '../utils/exports/helpers.exp.ts';
 import {
   bookingFormPayload,
   bookingSpaceRowsPayload,
@@ -10,6 +18,7 @@ import {
   bookingSavePayload,
   functionSavePayload,
   bookingAccountSearchPayload,
+  bookingAccountFieldsPayload,
 } from '../utils/exports/data.exp.ts';
 import { TransportTable, EventSaveResult } from '../utils/exports/types.exp.ts';
 
@@ -78,13 +87,45 @@ export function search_booking_account(token: string, version: string, account: 
     JSON.stringify(bookingAccountSearchPayload(account)),
     { headers: build_headers(token, version), tags: { name } },
   );
-  check(res, { [`${name}: status is 201`]: (r) => r.status === 201 });
+  let key = '';
   try {
     const rows = JSON.parse(String((res.json() as unknown[])[0])) as { Key: string }[];
-    return rows[0]?.Key ?? '';
+    key = rows[0]?.Key ?? '';
   } catch {
-    return '';
+    key = '';
   }
+  if (
+    !check(res, {
+      [`${name}: status is 201`]: (r) => r.status === 201,
+      [`${name}: returns an account key`]: () => key !== '',
+    })
+  ) {
+    console.error(`[VU ${__VU}] search_booking_account failed for "${account}" — HTTP ${res.status}: ${body_text(res).slice(0, 300)}`);
+    fail(`${name}: no account matched "${account}"`);
+  }
+  return key;
+}
+
+export function refresh_booking_account_fields(
+  token: string,
+  version: string,
+  header: TransportTable,
+  date: string,
+  account: string,
+  name = 'HandleBookingAccountFields',
+) {
+  set_cell(header, 'EV200_CUST_NBR', account);
+  header.TableName = `${Date.now()}`;
+  const res = http.post(
+    `${config.baseUrl}/api/GenericDetailServer/HandleDependentFields2`,
+    JSON.stringify(bookingAccountFieldsPayload(date, header)),
+    { headers: build_headers(token, version), tags: { name } },
+  );
+  if (!check(res, { [`${name}: status is 201`]: (r) => r.status === 201 })) {
+    console.error(`[VU ${__VU}] refresh_booking_account_fields failed — HTTP ${res.status}: ${body_text(res).slice(0, 300)}`);
+    fail(`${name}: account fields not returned`);
+  }
+  return get_cell(find_transport_table(res, 'EV200_NG_EVT_CONTACT', name), 'EV200_NG_EVT_CONTACT');
 }
 
 export function save_booking(
@@ -127,7 +168,13 @@ export function save_booking(
   });
 
   if (!ok) {
-    console.error(`[VU ${__VU}] save_booking failed — HTTP ${res.status}: ${body_text(res).slice(0, 300)}`);
+    let detail = body_text(res).slice(0, 300);
+    try {
+      detail = JSON.stringify((res.json() as { MessageInfoList: unknown }[])[0].MessageInfoList);
+    } catch {
+      /* keep raw slice */
+    }
+    console.error(`[VU ${__VU}] save_booking failed — HTTP ${res.status}: ${detail}`);
     fail('save_booking did not succeed');
   }
 
@@ -201,7 +248,7 @@ export function save_event_function(
   addedRowKey: string,
   encUserId: string,
   windowVersion: string,
-  stamp: string,
+  stamp: number,
   name = 'SaveEventFunction',
 ) {
   const res = http.post(

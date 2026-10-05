@@ -23,6 +23,25 @@ export type EventRow = {
   evtInTime: string;
 };
 
+export type CopyFormFields = {
+  priceList: string;
+  status: string;
+  billTo: string;
+  salesperson: string;
+  search: string;
+  advCutoff: number;
+  stdCutoff: number;
+  release: number;
+  startEndDate: string;
+  clickCopyStamp: string;
+};
+
+export type EventCopyInput = {
+  description: string;
+  refreshKey: number;
+  copyToDate: number;
+};
+
 export type EventSaveResult = {
   ResultValue: number;
   AddedRowKeys: string[];
@@ -57,4 +76,5 @@ export type EventDocumentFields = {
 export type EventDocumentFixture = {
   name: string;
   content: ArrayBuffer;
+  folder: string;
 };

@@ -1,7 +1,7 @@
-import { major_minor } from '../../../utils/exports/helpers.exp.ts';
+import { format_retrieve_stamp, major_minor } from '../../../utils/exports/helpers.exp.ts';
 import { EventRow } from '../../../utils/exports/types.exp.ts';
 
-export const copyFormPayload = (encUserId: string, source: EventRow, version: string) => [
+export const copyFormPayload = (encUserId: string, source: EventRow, version: string, refreshKey: number) => [
   [
     { Key: 'wdwid', Value: 'EB2212' },
     { Key: 'WindowObjectID', Value: 1 },
@@ -23,7 +23,7 @@ export const copyFormPayload = (encUserId: string, source: EventRow, version: st
     { Key: 'LinkedFuncs', Value: source.linkedFuncs },
     { Key: 'OrgCode', Value: source.orgCode },
     { Key: 'RowKeyList', Value: source.rowKey },
-    { Key: 'RefreshDependentKey', Value: 1781793879701 },
+    { Key: 'RefreshDependentKey', Value: refreshKey },
     { Key: 'ForceOneColumnLayout', Value: false },
     { Key: 'ShowHelpTextInfo', Value: true },
     { Key: 'MoveGeneralSectionToNewTab', Value: true },
@@ -34,7 +34,7 @@ export const copyFormPayload = (encUserId: string, source: EventRow, version: st
   1,
   0,
   0,
-  '2026-06-17 23:34:12',
+  format_retrieve_stamp(String(refreshKey)),
   '',
   '',
   { TransportDataColumns: [], TransportDataRows: [], TableName: '' },

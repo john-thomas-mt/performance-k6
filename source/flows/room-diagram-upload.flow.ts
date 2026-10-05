@@ -59,7 +59,8 @@ export function room_diagram_upload_journey(user: User, data: SetupData, files: 
   const iter = exec.scenario.iterationInTest;
   const wdwid = `AA${90310 + iter}`;
   const keyword = pick_pool_value(eventSearchKeywords);
-  const fixture = files[iter % files.length];
+  const folder = ['heavy', 'medium', 'light'].map((f) => files.filter((x) => x.folder === f))[iter % 3];
+  const fixture = folder[Math.floor(iter / 3) % folder.length];
 
   const subs: Subs = {
     'C_USI_Version': data.version,
@@ -146,14 +147,13 @@ export function room_diagram_upload_journey(user: User, data: SetupData, files: 
   think();
 
   group('T31_RoomDiagramFileStorage_07_ClickOn_ImportDocument(s)', () => {
-    const fileKey = cache_document_file(bearerToken, data.version, fixture.name, fixture.content);
-    subs.C_FileKey = fileKey;
-    subs['random_file_name'] = fixture.name;
     chrome_and_static(bearerToken, data.version, level, ['07'], subs);
   });
   think();
 
   group('T31_RoomDiagramFileStorage_08_SelectAndClickOn_Import', () => {
+    subs.C_FileKey = cache_document_file(bearerToken, data.version, fixture.name, fixture.content);
+    subs['random_file_name'] = fixture.name;
     const doc = open_event_document_form(bearerToken, data.version, ctx, subs.C_FileKey, fixture.name, wdwid);
     subs.C_MM446_DOC_DESC = doc.docDesc;
     subs.C_docEvents_EV200_EVT_DESC = doc.evtDesc;

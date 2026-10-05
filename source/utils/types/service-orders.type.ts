@@ -46,8 +46,12 @@ export type ServiceOrderSaveResult = {
   AdditionalTableNameAddedRowKeys: { [tableName: string]: string[] } | null;
 };
 
+export type PooledServiceOrder = ServiceOrderRow & {
+  evtDesc: string;
+};
+
 export type ServiceOrderSetup = SetupData & {
-  soPool: ServiceOrderRow[];
+  soPool: PooledServiceOrder[];
 };
 
 export type SmokeSetup = ServiceOrderSetup &
@@ -57,7 +61,7 @@ export type SmokeSetup = ServiceOrderSetup &
 
 export type ServiceOrderSeedSetup = {
   version: string;
-  evtId: string;
   bearerToken: string;
   encUserId: string;
+  windowVersion: string;
 };

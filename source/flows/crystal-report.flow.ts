@@ -62,10 +62,13 @@ function chrome_and_static(token: string, version: string, level: FidelityLevel,
 export function crystal_report_journey(user: User, data: SetupData) {
   const level = fidelity_level();
   const runToken = crypto.randomUUID().split('-')[0];
-  const reportName = `k6 Crystal Report ${runToken}`;
-  const reportId = `K${runToken}`.toUpperCase().slice(0, 10);
-
   const iter = exec.scenario.iterationInTest;
+  const epoch = String(Date.now());
+  const reportName = `k6-t30-crystal-report-${__VU}${iter}${epoch}`;
+  const reportId = `K${runToken}`.toUpperCase().slice(0, 10);
+  const srcName = `k6-t30-demo-file-${__VU}${iter}${epoch}.rpt`;
+  const scope = pick_pool_value(crystalReportScopes);
+
   const wdwBase = 9000000 + iter * 100;
   const detailWdwid = `SA${wdwBase}`;
   const editWdwid = `SA${wdwBase + 1}`;
@@ -76,8 +79,8 @@ export function crystal_report_journey(user: User, data: SetupData) {
     'C_EnterpriseVersion': data.version,
     'P_RPT_Id': reportId,
     'P_RPT_NAME': reportName,
-    'P_CrystalReport_Scope.Value': pick_pool_value(crystalReportScopes),
-    'P_EpochTimestamp': String(Date.now()),
+    'P_CrystalReport_Scope.Value': scope,
+    'P_EpochTimestamp': epoch,
     'P_FormattedTimestamp': new Date().toISOString().slice(0, 19).replace('T', ' '),
     'P_IterationNumber': String(iter),
     'NL-VirtualUserId': String(__VU),
@@ -125,7 +128,7 @@ export function crystal_report_journey(user: User, data: SetupData) {
 
   let reportSeqRef: string | null = null;
   group('T30_CrystalReport_06_ApplyChanges_General_Details', () => {
-    reportSeqRef = save_crystal_report(bearerToken, data.version, reportName, reportId, detailWdwid, editWdwid);
+    reportSeqRef = save_crystal_report(bearerToken, data.version, reportName, reportId, srcName, scope, detailWdwid, editWdwid);
     console.log(`[VU ${__VU}] Created crystal report ${reportId} (seq ${reportSeqRef}) — ${reportName}`);
     subs.C_AddedRowKeys = reportSeqRef;
     chrome_and_static(bearerToken, data.version, level, ['06'], subs);
@@ -134,8 +137,8 @@ export function crystal_report_journey(user: User, data: SetupData) {
   think();
 
   group('T30_CrystalReport_07_ClickOn_ReportLists', () => {
-    open_report_lists_search(bearerToken, data.version, editWdwid, reportSeq);
     read_report_lists_grid(bearerToken, data.version, editWdwid, reportSeq);
+    open_report_lists_search(bearerToken, data.version, editWdwid, reportSeq);
     chrome_and_static(bearerToken, data.version, level, ['07'], subs);
   });
   think();
@@ -165,8 +168,8 @@ export function crystal_report_journey(user: User, data: SetupData) {
   think();
 
   group('T30_CrystalReport_09_ClickOn_OrganizationReportSourceFiles', () => {
-    open_org_source_search(bearerToken, data.version, editWdwid, reportSeq);
     read_org_source_grid(bearerToken, data.version, editWdwid, reportSeq);
+    open_org_source_search(bearerToken, data.version, editWdwid, reportSeq);
     chrome_and_static(bearerToken, data.version, level, ['09'], subs);
   });
   think();
