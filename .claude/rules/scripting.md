@@ -36,7 +36,8 @@ response encodes every cell as a **string**, but the grid `Save2` requires each 
 before sending — the browser type-coerces implicitly, so a raw string echo fails server-side validation.
 
 ## Test-data naming
-- Name every record a journey creates `k6-t<id>-<what>-<vu><iter><epoch>`: lowercase kebab-case, the `k6` marker, the NeoLoad test-case number with no zero padding (`T002_BookingEvent` → `t2`, `T34` → `t34`), a kebab noun for the record, then the per-iteration suffix `${__VU}${exec.scenario.iterationInTest}${Date.now()}` that keeps the record unique and identifiable (`k6-t2-booking-event-…`, `k6-t1-lead-…@pt.com`, `k6-t30-demo-file-….rpt`)
+- Name every record a journey or seed creates `k6-t<id>-<what>-<vu><iter><epoch>`: lowercase kebab-case, the `k6` marker, the NeoLoad test-case number with no zero padding (`T002_BookingEvent` → `t2`, `T34` → `t34`), a kebab noun for the record, then the per-iteration suffix `${__VU}${exec.scenario.iterationInTest}${Date.now()}` that keeps the record unique and identifiable (`k6-t2-booking-event-…`, `k6-t1-lead-…@pt.com`, `k6-t30-demo-file-….rpt`)
+- A seed uses the test id of the journey that consumes its records, not the data-script VU's (`U13` seeds `T34`, so `k6-t34-booking-event-…`, `k6-t34-function-…`)
 - The value only has to follow this pattern, not reproduce NeoLoad's own text (`Performance BookingEvent …`, `NeoLoadFunction_…`)
 - Exceptions: a field with a tight length or character-set limit keeps a short unique value that fits it (the crystal report ID's 10-char uppercase code), and a numeric field (phone) stays numeric
 - Generated fidelity tiers replay the recording's own name templates in UI-chrome requests; leave them as generated. They are field refreshes, not saves, so the stored record carries the spine's name
