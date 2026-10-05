@@ -38,7 +38,7 @@ function interleave(lists: PooledServiceOrder[][]) {
 
 export function discover_service_order_pool(version: string, user: User) {
   const { bearerToken } = login_to_events(user, version);
-  const prefix = config.dataScriptEventDesc;
+  const prefix = config.seedEventPrefix;
 
   const seeded = search_events(bearerToken, version, prefix, 'DiscoverSeedEvent').filter((e) => e.desc.startsWith(prefix));
   const events = shuffle(seeded).slice(0, POOL_EVENTS);

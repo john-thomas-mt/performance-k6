@@ -32,6 +32,6 @@ if (site === 'QE') {
 export const config = {
   baseUrl: `https://${urlPrefix}.ungerboeck.${path}/${env}`,
   salesAiUrl,
-  dataScriptEventDesc: 'Performance BookingEvent K6',
+  seedEventPrefix: 'k6-t34-booking-event',
   cryptoKey: secret.key || '',
 };

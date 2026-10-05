@@ -80,7 +80,7 @@ export default function seed_service_orders(data: ServiceOrderSeedSetup) {
   const epoch = Date.now();
   const date = random_future_date();
   const space = pick_pool_value(bookingSpaces);
-  const description = `${config.dataScriptEventDesc} ${__VU}${iter}${epoch}`;
+  const description = `${config.seedEventPrefix}-${__VU}${iter}${epoch}`;
 
   const spaceTable = stage_booking_space(bearerToken, version, date, space);
   const form = open_booking_form(bearerToken, version, date);
@@ -105,7 +105,7 @@ export default function seed_service_orders(data: ServiceOrderSeedSetup) {
     bearerToken,
     version,
     funcTable,
-    `NeoLoadFunction_${__VU}${iter}${epoch}`,
+    `k6-t34-function-${__VU}${iter}${epoch}`,
     space,
     account,
     booked.evtId,
