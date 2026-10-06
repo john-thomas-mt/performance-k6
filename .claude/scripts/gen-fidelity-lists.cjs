@@ -14,7 +14,11 @@ if (!vuRoot || !chromeOut || !staticOut || !transportOut) {
 }
 const ROOT = path.join(vuRoot, 'actions-container');
 
-const camel = (file, suffix) => path.basename(file, suffix).replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+const camel = (file, suffix) =>
+  path
+    .basename(file, suffix)
+    .replace(/^t\d+-/, '')
+    .replace(/-([a-z])/g, (_, c) => c.toUpperCase());
 const journey = path.basename(chromeOut, '.chrome.ts');
 const chromeVar = `${camel(chromeOut, '.chrome.ts')}Chrome`;
 const staticVar = `${camel(staticOut, '.static.ts')}Static`;
@@ -99,6 +103,16 @@ const JOURNEY_SPINE = {
     '/api/USIDataGridServer/GetGridData2': ['03', '07'],
     '/api/GenericDetailServer/GetInitialData2': ['04', '06', '08'],
   },
+  't8-invoice-events': {
+    '/api/MainMenuServer/GetMainMenuData': ['03'],
+    '/api/GenericListServer/GetInitialData2': ['03'],
+    '/api/USIDataGridServer/GetInitialData2': ['03'],
+    '/api/GenericSearchServer/GetInitialData2': ['04'],
+    '/api/USIDataGridServer/GetGridData2': ['04', '06'],
+    '/api/USIDataGridServer/AccessServerUI': ['05'],
+    '/api/GenericDetailServer/GetInitialData2': ['05'],
+    '/api/GenericDetailServer/HandleDependentFields2': ['06'],
+  },
 };
 // per-journey, per-request spine: individual requests scripted as wrappers on a path whose other requests in
 // the same step stay chrome (contact-service-order step 04 fires 15 GetObjectColumns, only the object-1659 one
@@ -125,7 +139,11 @@ const VERSION_GATED = {};
 // endpoints absent on every live version in the matrix — verified 404 across 25.4/26.1/26.2/26.3 by a
 // verify-envs full-fidelity sweep. They were fired by the recording but no live release serves them, so
 // emitting them only inflates http_req_failed; never emit them to any tier.
-const DEAD = ['/api/NotificationServer/RetrieveNotificationCount', '/api/NotificationServer/RetrieveUnseenChangelogNotificationsCount'];
+const DEAD = [
+  '/api/NotificationServer/RetrieveNotificationCount',
+  '/api/NotificationServer/RetrieveUnseenChangelogNotificationsCount',
+  '/util00/scripts/jquery.js',
+];
 const STATIC_EXT = /\.(js|css|html|svg|png|ico|woff2?|ttf|otf|eot|map|jpg|jpeg|gif)(\?|$)/i;
 
 // every step folder, including those inside a loop/if/try action (stepNodes), relative to actions-container
