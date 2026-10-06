@@ -2,7 +2,7 @@
 // neoload-port-review skill. Zero traffic: it reads the NeoLoad tree, the project's variables/ and
 // populations, and the k6 source, and prints one compact report of OK / FLAG / INFO lines per area
 // (steps, spine coverage and lean-path order, fidelity tiers, correlation, token-literal leaks and transport
-// tables column by column, variables/pools, seed, SLA, wiring). The
+// tables column by column, test-data names, variables/pools, the seed against its data-script VU, SLA, wiring). The
 // reviewer judges only the FLAG lines — it never re-derives what this already checked.
 //
 // Usage:
@@ -102,20 +102,25 @@ const bodyFrom = (text, start) => {
   return text.slice(start);
 };
 const index = new Map();
-const srcFiles = ['source/apis', 'source/flows', 'source/utils/helpers', 'source/data/payloads'].flatMap(listTs);
+// source/seeds too: section 6 follows a seed's default function through the same wrappers and builders. k6's
+// lifecycle names (setup, options) are left out: every seed and spec has its own, and a comment's "setup()" would
+// otherwise reach one
+const LIFECYCLE = new Set(['setup', 'teardown', 'handleSummary', 'options']);
+const srcFiles = ['source/apis', 'source/flows', 'source/utils/helpers', 'source/data/payloads', 'source/seeds'].flatMap(listTs);
 for (const file of srcFiles) {
   const text = read(file);
   // line-anchored, so a comment's "the function Save2 (window EM9685)" is not a declaration
-  for (const m of text.matchAll(/^[ \t]*(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(/gm)) {
+  for (const m of text.matchAll(/^[ \t]*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+(\w+)\s*\(/gm)) {
     let i = m.index + m[0].length;
     for (let depth = 1; depth && i < text.length; i++) depth += text[i] === '(' ? 1 : text[i] === ')' ? -1 : 0;
     const open = text.indexOf('{', i);
     const line = (at) => text.slice(0, at).split('\n').length;
+    if (LIFECYCLE.has(m[1])) continue;
     index.set(m[1], { file, body: bodyFrom(text, open), line: line(m.index), bodyLine: line(open) });
   }
   // top-level consts, exported or not: a builder often keeps its table in a module-local const (eventCopyTable)
   for (const m of text.matchAll(/^(?:export )?const (\w+)(?:\s*:\s*[^=]+)?\s*=\s*/gm)) {
-    if (index.has(m[1])) continue;
+    if (index.has(m[1]) || LIFECYCLE.has(m[1])) continue;
     const rest = text.slice(m.index + m[0].length);
     const end = rest.search(/\n(?:export |const |function )/);
     const line = text.slice(0, m.index).split('\n').length;
@@ -198,6 +203,11 @@ console.log(`=== NEOLOAD PORT REVIEW: ${vuUid} → ${rel(flowArg)} (${journeyFn 
 section('1. STEPS ↔ k6 GROUPS  (NeoLoad container order vs step-name strings in the flow)');
 const stepPos = tree.steps.map((s) => ({ ...s, pos: flowText.indexOf(`'${s.name}'`) }));
 for (const s of stepPos) (s.pos >= 0 ? ok : flag)(`${s.name}${s.pos >= 0 ? '' : '  — no group/step string in the flow'}`);
+// a step inside a logic action runs as that action decides: a loop repeats it, an if-action runs one branch
+for (const s of stepPos.filter((x) => x.within.length))
+  info(
+    `${s.name} runs inside ${s.within.join(' > ')}${s.loop > 1 ? ` — the flow must repeat it ${s.loop} times per iteration` : ' — confirm the flow takes the branch(es) the recording does'}`,
+  );
 const found = stepPos.filter((s) => s.pos >= 0);
 if (found.some((s, i) => i && s.pos < found[i - 1].pos)) flag('step strings appear in the flow out of NeoLoad order');
 const extraGroups = [...flowText.matchAll(/'(T\d+_[A-Za-z]+_\d+_\w+)'/g)]
@@ -390,10 +400,10 @@ if (!Object.values(tierFiles).every((f) => fs.existsSync(f))) {
     unver(tier === 'static' ? a.tier.bare : `${a.method} ${a.tier.url} ${a.method !== 'GET' && a.body !== undefined ? a.body : ''}`);
   const genKey = (tier, r) => unver(tier === 'static' ? r.path : `${r.method} ${r.path} ${r.body ?? ''}`);
   const label = (p) => (p.name || p.file).replace(/^\/[^/]+\//, '/');
-  const numbered = tree.steps.some((s) => /_(\d+)(?:_|$)/.test(s.dir));
+  const numbered = tree.steps.some((s) => /_(\d+)(?:_|$)/.test(path.basename(s.dir)));
   let pagesChecked = 0;
   tree.steps.forEach((s, i) => {
-    const stepNo = (s.dir.match(/_(\d+)(?:_|$)/) || [])[1] || (numbered ? null : String(i + 1).padStart(2, '0'));
+    const stepNo = (path.basename(s.dir).match(/_(\d+)(?:_|$)/) || [])[1] || (numbered ? null : String(i + 1).padStart(2, '0'));
     if (!stepNo) return;
     const rec = s.pages.map((p) => ({ ...p, actions: p.actions.filter((a) => a.enabled) }));
     const used = rec.map((p) => p.actions.map(() => false));
@@ -536,8 +546,8 @@ const nlTables = (tpl) => {
 // Values.1 from its response; CreateNewRows sends {"Key": "EV700_ALT_FUNC_DESC", "Value": "Planning - alt 1"}).
 // The template, not the resolved recording: a value NeoLoad generates (DemoFile_${…}.rpt) is never a literal there.
 const decoded = (tpl) => (tpl.startsWith('Encoded(Base64):') ? Buffer.from(tpl.slice(16), 'base64').toString('utf8') : tpl);
-const echoed = (token, value) =>
-  spineReqs.some((r) => {
+const echoed = (token, value, reqs = spineReqs) =>
+  reqs.some((r) => {
     const e = r.extractors.find((x) => x.name === token);
     if (!e || !r.template) return false;
     const col = ((e.jsonpath || '').match(/\.(\d+)$/) || [])[1];
@@ -624,30 +634,66 @@ const blockFrom = (text, start) => {
   }
   return text.slice(start);
 };
-const k6Tables = [];
-for (const { f, lines, offset, name: unit } of scopedText.filter((u) => /[\\/]payloads[\\/]/.test(u.f))) {
-  const text = lines.join('\n');
-  for (const m of text.matchAll(/TransportDataColumns\s*:\s*\[/g)) {
-    const colsText = blockFrom(text, m.index + m[0].length - 1);
-    const names = new Map();
-    for (const entry of colsText.match(/\{[^{}]*\}/g) || []) {
-      const name = (entry.match(/ColumnName:\s*'([^']*)'/) || [])[1];
-      const id = (entry.match(/ColumnID:\s*(\d+)/) || [])[1];
-      if (name && id) names.set(id, name);
+// the TransportDataColumns tables the payload builders in `units` declare, first row keyed by ColumnName
+// the entries of a { … } block split at its top-level commas, each with its offset in the block
+const topLevelEntries = (block) => {
+  const out = [];
+  let depth = 0;
+  let from = 1;
+  for (let i = 1; i < block.length - 1; i++) {
+    const c = block[i];
+    // a why-comment at a cell can hold an apostrophe or a comma
+    if (c === '/' && block[i + 1] === '/') i = block.indexOf('\n', i) < 0 ? block.length : block.indexOf('\n', i);
+    else if (c === '/' && block[i + 1] === '*') i = block.indexOf('*/', i + 2) < 0 ? block.length : block.indexOf('*/', i + 2) + 1;
+    else if (c === "'" || c === '"' || c === '`') {
+      for (i++; i < block.length && block[i] !== c; i++) if (block[i] === '\\') i++;
+    } else if ('([{'.includes(c)) depth++;
+    else if (')]}'.includes(c)) depth--;
+    else if (c === ',' && depth === 0) {
+      out.push({ text: block.slice(from, i), at: from });
+      from = i + 1;
     }
-    const rowsAt = text.indexOf('Values', m.index + colsText.length);
-    const brace = rowsAt < 0 ? -1 : text.indexOf('{', rowsAt);
-    if (brace < 0) continue;
-    const valuesText = blockFrom(text, brace);
-    const startLine = offset + text.slice(0, brace).split('\n').length;
-    const byName = new Map();
-    valuesText.split('\n').forEach((l, i) => {
-      const v = l.match(/^\s*'(\d+)'\s*:\s*(.*?),?\s*$/);
-      if (v && names.has(v[1])) byName.set(names.get(v[1]), { expr: v[2], line: startLine + i });
-    });
-    if (byName.size) k6Tables.push({ f, byName, unit });
   }
-}
+  out.push({ text: block.slice(from, block.length - 1), at: from });
+  return out.filter((e) => e.text.trim());
+};
+// A table is a literal `TransportDataColumns: [ … ]` or one naming a module const (`TransportDataColumns:
+// reportListColumns`), with its first row's Values one cell per line or all on one line. A builder that echoes a live
+// table instead (`set_cell(header, 'EV200_CUST_NBR', account)` on a TransportTable it was passed) yields an `echo`
+// table holding only the cells it sets.
+const tablesOf = (units) => {
+  const out = [];
+  for (const { f, lines, offset, name: unit } of units.filter((u) => /[\\/]payloads[\\/]/.test(u.f))) {
+    const text = lines.join('\n');
+    const lineAt = (i) => offset + text.slice(0, i).split('\n').length;
+    for (const m of text.matchAll(/TransportDataColumns\s*:\s*(\[|([A-Za-z_]\w*))/g)) {
+      const colsText = m[2] ? (index.get(m[2])?.body ?? '') : blockFrom(text, m.index + m[0].length - 1);
+      const names = new Map();
+      for (const entry of colsText.match(/\{[^{}]*\}/g) || []) {
+        const name = (entry.match(/ColumnName:\s*'([^']*)'/) || [])[1];
+        const id = (entry.match(/ColumnID:\s*(\d+)/) || [])[1];
+        if (name && id) names.set(id, name);
+      }
+      const rowsAt = text.indexOf('Values', m.index + m[0].length);
+      const brace = rowsAt < 0 ? -1 : text.indexOf('{', rowsAt);
+      if (brace < 0) continue;
+      const byName = new Map();
+      for (const e of topLevelEntries(blockFrom(text, brace))) {
+        const lead = e.text.match(/^(?:\s|\/\/[^\n]*\n|\/\*[\s\S]*?\*\/)*/)[0].length;
+        const cell = e.text.slice(lead).replace(/\s*\/\/[^\n]*$/gm, '');
+        const v = cell.match(/^'(\d+)'\s*:\s*([\s\S]*?)\s*$/);
+        if (v && names.has(v[1])) byName.set(names.get(v[1]), { expr: v[2], line: lineAt(brace + e.at + lead) });
+      }
+      if (byName.size) out.push({ f, byName, unit });
+    }
+    const echo = new Map();
+    for (const m of text.matchAll(/\bset_cell\(\s*\w+\s*,\s*'([^']+)'\s*,\s*([^;]*?)\)\s*;/g))
+      echo.set(m[1], { expr: m[2].trim(), line: lineAt(m.index) });
+    if (echo.size) out.push({ f, byName: echo, unit, echo: true });
+  }
+  return out;
+};
+const k6Tables = tablesOf(scopedText);
 const literalOf = (expr) => {
   const s = expr.match(/^'((?:\\.|[^'\\])*)'$/);
   if (s) return { v: s[1].replace(/\\(.)/g, '$1') };
@@ -657,11 +703,9 @@ const literalOf = (expr) => {
 // the builders a step's wrappers post to each endpoint: a wrapper of the step that names an endpoint, and every
 // function or const its body names, transitively (save wrapper → savePayload → eventCopyTable). A recorded request
 // is compared only with the builders of a wrapper that posts the same endpoint, never a sibling call's builder
-const unitEndpoints = new Map();
-const endpointsOfUnits = (step) => {
-  if (unitEndpoints.has(step)) return unitEndpoints.get(step);
+const unitEndpointMap = (fns) => {
   const map = new Map();
-  for (const fn of stepSeen.get(step) || []) {
+  for (const fn of fns) {
     const eps = [...index.get(fn).body.matchAll(ENDPOINT)].map((m) => m[1]);
     if (!eps.length) continue;
     const stack = [fn];
@@ -675,56 +719,127 @@ const endpointsOfUnits = (step) => {
       stack.push(...new Set(index.get(u).body.match(/\b\w+\b/g) || []));
     }
   }
-  unitEndpoints.set(step, map);
   return map;
 };
-const reportedTables = new Set();
-let tablesCompared = 0;
-for (const r of spineReqs.filter((x) => x.cls === 'SPINE' && x.template)) {
-  for (const t of nlTables(r.template)) {
-    const nlNames = [...t.names.values()];
-    if (nlNames.length < 5) continue;
-    const compare = (table) => {
-      const fromToken = [];
-      const differs = [];
-      for (const [id, name] of t.names) {
-        const k = table.byName.get(name);
-        if (!k || !(id in t.row)) continue;
-        const nl = t.row[id];
-        const lit = literalOf(k.expr);
-        const tokens = typeof nl === 'string' ? [...nl.matchAll(/\$\{([^}.]+)/g)].map((x) => x[1]) : [];
-        if (tokens.length) {
-          const varying = tokens.filter((tk) => !/^P_Performance_/.test(tk) && !constantVar(tk));
-          const echo = tokens.length === 1 && nl === `\${${tokens[0]}}` && lit && echoed(tokens[0], lit.v);
-          if (varying.length && !echo && lit && lit.v !== null && lit.v !== '')
-            fromToken.push(`${name} ${nl.slice(0, 50)} → '${lit.v}' (:${k.line})`);
-        } else if (lit && String(nl ?? null) !== String(lit.v ?? null)) differs.push(`${name} '${nl}' → '${lit.v}' (:${k.line})`);
+const unitEndpoints = new Map();
+const endpointsOfUnits = (step) => {
+  if (!unitEndpoints.has(step)) unitEndpoints.set(step, unitEndpointMap(stepSeen.get(step) || []));
+  return unitEndpoints.get(step);
+};
+// Compare every recorded Save2/HDF2 table in `reqs` with the builder tables of the wrappers that post the same
+// endpoint (`unitsOf(step)` → unit → endpoints). A recorded table no builder declares at all (a child table the
+// save carries, such as a service order's item lines) FLAGs too, when a wrapper of that step posts the endpoint.
+// `echoReqs` are the requests a typed-input echo is looked up in (all of them when `reqs` is a subset). Returns how
+// many recorded tables were compared.
+const compareTables = (reqs, tables, unitsOf, stepLabel, echoReqs = reqs) => {
+  const reportedTables = new Set();
+  let tablesCompared = 0;
+  for (const r of reqs.filter((x) => x.cls === 'SPINE' && x.template)) {
+    for (const t of nlTables(r.template)) {
+      const nlNames = [...t.names.values()];
+      if (nlNames.length < 5) continue;
+      const compare = (table) => {
+        const fromToken = [];
+        const differs = [];
+        for (const [id, name] of t.names) {
+          const k = table.byName.get(name);
+          if (!k || !(id in t.row)) continue;
+          const nl = t.row[id];
+          const lit = literalOf(k.expr);
+          const tokens = typeof nl === 'string' ? [...nl.matchAll(/\$\{([^}.]+)/g)].map((x) => x[1]) : [];
+          if (tokens.length) {
+            const varying = tokens.filter((tk) => !/^P_Performance_/.test(tk) && !constantVar(tk));
+            const echo = tokens.length === 1 && nl === `\${${tokens[0]}}` && lit && echoed(tokens[0], lit.v, echoReqs);
+            if (varying.length && !echo && lit && lit.v !== null && lit.v !== '')
+              fromToken.push(`${name} ${nl.slice(0, 50)} → '${lit.v}' (:${k.line})`);
+          } else if (lit && String(nl ?? null) !== String(lit.v ?? null)) differs.push(`${name} '${nl}' → '${lit.v}' (:${k.line})`);
+        }
+        return { fromToken, differs };
+      };
+      // the builder table sharing the most column names; between builders of one table shape (an HDF2 and the Save2
+      // that follows it), the one closest to this recording
+      const units = unitsOf(r.step);
+      const rank = (a, b) => b.hit - a.hit || a.fromToken.length + a.differs.length - (b.fromToken.length + b.differs.length);
+      const posted = tables
+        .filter((k) => units.get(k.unit)?.has(r.endpoint))
+        .map((k) => ({ k, hit: nlNames.filter((n) => k.byName.has(n)).length }));
+      // a declared table must carry most of the recorded columns; an echoed one only the cells the builder sets
+      const best =
+        posted
+          .filter((c) => !c.k.echo && c.hit >= nlNames.length * 0.8)
+          .map((c) => ({ ...c, ...compare(c.k) }))
+          .sort(rank)[0] ||
+        posted
+          .filter((c) => c.k.echo && c.hit > 0)
+          .map((c) => ({ ...c, ...compare(c.k) }))
+          .sort(rank)[0];
+      if (!best) {
+        const posting = [...units].filter(([, eps]) => eps.has(r.endpoint)).map(([u]) => u);
+        const key = `missing ${r.endpoint} ${nlNames.slice(0, 3).join()}`;
+        if (posting.length && !reportedTables.has(key)) {
+          reportedTables.add(key);
+          // a payload builder taking a TransportTable parameter posts a table it was handed from a live response
+          const echoer = posting.find(
+            (u) => /[\\/]payloads[\\/]/.test(index.get(u)?.file) && /\w+\s*:\s*TransportTable\b/.test(index.get(u).body),
+          );
+          const what = `${r.endpoint} [${stepLabel(r.step)}]: a recorded table (${nlNames.length} columns: ${nlNames.slice(0, 3).join(', ')}, …)`;
+          if (echoer) info(`${what} is not declared in k6; ${echoer} takes a TransportTable, so it likely posts the live one — confirm`);
+          else flag(`${what} matches no builder table the step's wrappers post — the k6 body leaves it out`);
+        }
+        continue;
       }
-      return { fromToken, differs };
-    };
-    // the builder table sharing the most column names; between builders of one table shape (an HDF2 and the Save2
-    // that follows it), the one closest to this recording
-    const units = endpointsOfUnits(r.step);
-    const best = k6Tables
-      .filter((k) => units.get(k.unit)?.has(r.endpoint))
-      .map((k) => ({ k, hit: nlNames.filter((n) => k.byName.has(n)).length }))
-      .filter((c) => c.hit >= nlNames.length * 0.8)
-      .map((c) => ({ ...c, ...compare(c.k) }))
-      .sort((a, b) => b.hit - a.hit || a.fromToken.length + a.differs.length - (b.fromToken.length + b.differs.length))[0];
-    if (!best) continue;
-    const { fromToken, differs } = best;
-    const key = `${rel(best.k.f)} ${fromToken.join()} ${differs.join()}`;
-    if (reportedTables.has(key)) continue;
-    reportedTables.add(key);
-    tablesCompared++;
-    const at = `${r.endpoint} [${r.step.replace(/^T\d+_[A-Za-z]+_/, '')}] vs ${rel(best.k.f)}`;
-    if (fromToken.length)
-      flag(`${at}: ${fromToken.length} column(s) NeoLoad fills from a token, k6 sends a literal — ${fromToken.slice(0, 4).join('; ')}`);
-    if (differs.length) flag(`${at}: ${differs.length} literal column(s) differ from the recording — ${differs.slice(0, 6).join('; ')}`);
-    if (!fromToken.length && !differs.length) ok(`${at}: first row matches by column name (${best.hit} columns)`);
+      const { fromToken, differs } = best;
+      const key = `${rel(best.k.f)} ${best.k.unit} ${fromToken.join()} ${differs.join()}`;
+      if (reportedTables.has(key)) continue;
+      reportedTables.add(key);
+      tablesCompared++;
+      const at = `${r.endpoint} [${stepLabel(r.step)}] vs ${rel(best.k.f)}${best.k.echo ? ' (echoes a live table)' : ''}`;
+      if (fromToken.length)
+        flag(`${at}: ${fromToken.length} column(s) NeoLoad fills from a token, k6 sends a literal — ${fromToken.slice(0, 4).join('; ')}`);
+      if (differs.length) flag(`${at}: ${differs.length} literal column(s) differ from the recording — ${differs.slice(0, 6).join('; ')}`);
+      if (!fromToken.length && !differs.length)
+        ok(`${at}: ${best.k.echo ? `the ${best.hit} cells it sets match` : 'first row matches'} by column name (${best.hit} columns)`);
+    }
   }
-}
+  return tablesCompared;
+};
+const tablesCompared = compareTables(spineReqs, k6Tables, endpointsOfUnits, (s) => s.replace(/^T\d+_[A-Za-z]+_/, ''));
 if (!tablesCompared) info('no recorded transport table matched a k6 builder table by column name');
+
+// ---- 4c. test-data names ------------------------------------------------------------------------
+// Every record a journey or seed creates is named k6-t<id>-<what>-<vu><iter><epoch> (rules/scripting.md): the test
+// id unpadded, the consuming journey's id for a seed. A per-iteration template literal with a word in it is a
+// record name; a log line, a check label, a URL, a digits-only value (a phone number), a client window id (AA90310)
+// and the helpers' request headers (wsid) are not.
+section('4c. TEST-DATA NAMES  (record names the journey writes vs k6-t<id>-<what>-<vu><iter><epoch>)');
+const configText = fs.existsSync('source/config/env.config.ts') ? read('source/config/env.config.ts') : '';
+const configValue = (key) => (configText.match(new RegExp(`\\b${key}\\s*:\\s*'([^']*)'`)) || [])[1];
+const tNum = Number((vuUid.match(/^T0*(\d+)/i) || [])[1]);
+const PER_ITERATION = /\$\{[^}]*\b(?:runToken|epoch|__VU|iter|iterationInTest|Date\.now|randomUUID)\b[^}]*\}/;
+const NAME = /^k6-t(\d+)-[a-z0-9]+(?:-[a-z0-9]+)*-$/;
+const checkNames = (units, label) => {
+  let named = 0;
+  for (const { f, lines, offset } of units.filter((u) => !/[\\/]utils[\\/]helpers[\\/]/.test(u.f)))
+    lines.forEach((l, i) => {
+      if (isComment(l) || /console\.|Error\(|\bfail\(|\bcheck\(|\btags\s*:/.test(l)) return;
+      for (const m of l.matchAll(/`((?:\\.|[^`\\])*)`/g)) {
+        const tpl = m[1];
+        const literal = tpl.replace(/\$\{[^}]*\}/g, '');
+        if (!PER_ITERATION.test(tpl) || !/[A-Za-z]{3}/.test(literal) || /[/?=&[\]]/.test(literal)) continue;
+        named++;
+        const where = `${rel(f)}:${offset + i + 1}`;
+        const head = tpl.replace(/^\$\{config\.(\w+)\}/, (x, k) => configValue(k) ?? x).split('${')[0];
+        const id = (head.match(NAME) || [])[1];
+        const capped = /^\s*(?:\.toUpperCase\(\)|\.toLowerCase\(\))?\.(?:slice|substring|substr)\(/.test(l.slice(m.index + m[0].length));
+        if (id && Number(id) === tNum && !id.startsWith('0')) ok(`${where} \`${tpl}\``);
+        else if (id) flag(`${where} \`${tpl}\` carries test id t${id}, expected t${tNum} (unpadded)`);
+        else if (capped) info(`${where} \`${tpl}\` is cut to length: a tight-limit field, exempt from the pattern — confirm the limit`);
+        else flag(`${where} \`${tpl}\` does not follow k6-t${tNum}-<what>-<vu><iter><epoch>`);
+      }
+    });
+  if (!named) info(`no per-iteration record name in ${label}`);
+};
+checkNames(scopedText, 'the code the journey reaches');
 
 // ---- 5. variables / data pools ------------------------------------------------------------------
 section('5. VARIABLES  (every ${P_…} the VU and its <VU>.xml reference, against variables/ and the k6 port)');
@@ -757,6 +872,7 @@ const discovery = [...new Set([...smokeText.matchAll(/\b(discover_\w+)\(/g)].map
   new RegExp(`function ${fn}\\s*\\(`).test(flowText),
 );
 const seedPrefixed = [];
+const seedPrefixedVars = [];
 const API_CREDENTIAL_FIELDS = { P_API_UserId: 'userId', P_API_Key: 'key', P_API_Secret: 'secret' };
 const translation = (name, r, tag) => {
   const has = (re) => re.test(reachedText);
@@ -832,7 +948,10 @@ for (const name of [...refs.keys()].sort()) {
   const col = cols[0] || (r.columns[0] || {}).name;
   const values = poolValues(r, col);
   const pre = commonPrefix(values);
-  if (pre.length >= 8) seedPrefixed.push(`${name} (prefix "${pre}")`);
+  if (pre.length >= 8) {
+    seedPrefixed.push(`${name} (prefix "${pre}")`);
+    seedPrefixedVars.push({ name, file: def.filename });
+  }
   const seedPool = pre.length >= 8 && discovery.length > 0;
   if (/UserCredentials/i.test(name)) {
     const users = [...read('source/data/creds/users.data.ts').matchAll(/username:\s*'([^']+)'/g)].map((m) => m[1]);
@@ -910,7 +1029,6 @@ for (const d of versionDirs) {
 
 // ---- 6. seed / data-script ---------------------------------------------------------------------
 section('6. SEED  (paired data-script VU via test-data population, DataWrite file chaining, seed-prefixed pools)');
-const tNum = Number((vuUid.match(/^T0*(\d+)/i) || [])[1]);
 const popsDir = path.join(root, 'team', 'populations');
 const pops = fs.readdirSync(popsDir).map((f) => {
   const xml = read(path.join(popsDir, f));
@@ -955,25 +1073,157 @@ seedPrefixed.forEach((s) => info(`seed-prefixed pool: ${s}`));
 if (!dataScripts.length && !chained.length && !seedPrefixed.length) {
   ok('no seed needed — no test-data population names this VU, no DataWrite writes a file it reads, no pool shares a generated prefix');
 } else {
-  flag('seed expected — review the data-script VU(s) below against source/seeds/');
   const heads = fs.readdirSync(vusDir).filter((f) => f.endsWith('.xml'));
-  for (const uid of dataScripts) {
+  const treeOf = (uid) => {
     const x = heads.find((f) => attr(openTag(read(path.join(vusDir, f)), 'virtual-user'), 'uid') === uid);
-    if (!x) {
-      flag(`data-script VU ${uid}: tree not found under team/vus`);
-      continue;
-    }
-    const dt = readTree(path.join(vusDir, x.replace(/\.xml$/, '')));
-    const loops =
-      (read(path.join(vusDir, x)) + dt.steps.map((s) => s.nonHttp.map((n) => n.root).join(' ')).join(' ')).match(/loop/gi) || [];
+    return x ? path.join(vusDir, x.replace(/\.xml$/, '')) : null;
+  };
+  // a population can name another version's data script (@population_@test@data_@t34_26#2E1 → U13 (26.1)); the
+  // same data script at this VU's version is the one the seed is checked against
+  const ver = (vuUid.match(/\(([\d.]+)\)$/) || [])[1];
+  const dsUids = [
+    ...new Set(
+      dataScripts.map((uid) => {
+        const same = ver && uid.replace(/\([\d.]+\)$/, `(${ver})`);
+        return same && treeOf(same) ? same : uid;
+      }),
+    ),
+  ];
+  dsUids.filter((uid) => !treeOf(uid)).forEach((uid) => flag(`data-script VU ${uid}: tree not found under team/vus`));
+
+  // where NeoLoad's own data run left its records: one variables/ file per version, mapped to an env by
+  // P_Performance_Sites. An env with no file has none of them, so the k6 seed is its only source
+  const sitesDef = defs.get('P_Performance_Sites');
+  const sites = sitesDef ? resolveDef(sitesDef, root) : null;
+  const envOf = (v) => {
+    const c = (sites?.columns || []).find((x) => x.name === `version_${v}`);
+    return c ? sites.rows?.[0]?.[c.number] : undefined;
+  };
+  const versions = fs
+    .readdirSync(path.join(root, 'variables'))
+    .filter((d) => /^version_/.test(d))
+    .map((d) => d.replace('version_', ''));
+  for (const { name, file } of seedPrefixedVars) {
+    const vm = (file || '').replace(/\\/g, '/').match(/variables\/version_([\d_]+)\/P_\1_(.+)$/);
+    if (!vm) continue;
+    const has = versions.filter((v) => fs.existsSync(path.join(root, 'variables', `version_${v}`, `P_${v}_${vm[2]}`)));
+    const label = (v) => `${v} → ${envOf(v) ?? '?'}`;
     info(
-      `${uid}: ${dt.steps.length} steps [${dt.steps.map((s) => s.name).join(', ')}]${loops.length ? `, ${loops.length} loop element(s)` : ''}`,
+      `${name}: NeoLoad's data run left records on ${has.map(label).join(', ') || 'no env'}; none on ${
+        versions
+          .filter((v) => !has.includes(v))
+          .map(label)
+          .join(', ') || 'no env'
+      }. Seed those; on the others, search one exact name from the file before reseeding`,
     );
   }
-  for (const f of listTs('source/seeds'))
-    info(`k6 seed ${rel(f)}: exports ${[...read(f).matchAll(/export (?:async )?function (\w+)/g)].map((m) => m[1]).join(', ')}`);
-  const smoke = fs.existsSync('source/tests/smoke.spec.ts') ? read('source/tests/smoke.spec.ts') : '';
-  info(`smoke setup() discovery calls: ${[...smoke.matchAll(/\b(discover_\w+)\(/g)].map((m) => m[1]).join(', ') || '(none)'}`);
+
+  // the journey finds the seeded records by a config prefix, and a seed must name its records with that prefix
+  if (!discovery.length) flag("the journey reads a data script's records, but no discover_* the flow defines is called from smoke setup()");
+  const keys = [
+    ...new Set(discovery.flatMap((fn) => [...(index.get(fn)?.body || '').matchAll(/\bconfig\.(\w+)/g)].map((m) => m[1]))),
+  ].filter((k) => configValue(k) !== undefined);
+  if (discovery.length && !keys.length)
+    flag(`${discovery.join(', ')} searches no config prefix, so no seed can share its name prefix with the journey`);
+  const seeds = listTs('source/seeds').map((f) => ({ f, text: read(f) }));
+  const seedFiles = new Set();
+  for (const k of keys) {
+    const v = configValue(k);
+    const by = seeds.filter((s) => s.text.includes(`\${config.${k}}`));
+    by.forEach((s) => seedFiles.add(s));
+    (by.length ? ok : flag)(
+      `discovery searches config.${k} = '${v}'${by.length ? `, the prefix ${by.map((s) => rel(s.f)).join(', ')} names its records with` : ': no source/seeds script names its records with it, so the journey discovers records nothing creates'}`,
+    );
+    const id = (`${v}-`.match(NAME) || [])[1];
+    (id && Number(id) === tNum && !id.startsWith('0') ? ok : flag)(
+      `seed prefix '${v}' ${id && Number(id) === tNum ? 'carries' : 'does not carry'} the consuming journey's id (k6-t${tNum}-<what>)`,
+    );
+  }
+
+  // the seed must leave the data the data script leaves: the same writes, loop volume, saved cells and pools.
+  // Navigation is irrelevant, so a read only matters when a saved value comes from it, and a recently-used list
+  // write is the user's UI state, not a seeded record
+  const WRITE = /\/(?:Save(?!RecentlyUsed)\w*|save|Create\w*|CacheFiles|Delete\w*|Update\w*|Insert\w*)$/;
+  for (const s of seedFiles) {
+    const entry = (s.text.match(/export default (?:async )?function (\w+)/) || [])[1];
+    if (!entry || !index.has(entry)) {
+      flag(`${rel(s.f)}: no named default function to follow`);
+      continue;
+    }
+    const seedReach = reach(index.get(entry).body);
+    const fns = new Set([entry, ...seedReach.seen]);
+    const seedUnits = [{ f: path.resolve(s.f), lines: s.text.split('\n'), offset: 0 }];
+    const added = new Set();
+    const add = (n) => {
+      const e = index.get(n);
+      if (!e || added.has(n) || path.resolve(e.file) === path.resolve(s.f)) return;
+      added.add(n);
+      seedUnits.push({ f: path.resolve(e.file), lines: e.body.split('\n'), offset: e.bodyLine - 1, name: n });
+    };
+    fns.forEach(add);
+    const named = seedUnits.map((u) => u.lines.join('\n')).join('\n');
+    for (const [n, e] of index) if (/payloads/.test(e.file) && new RegExp(`\\b${n}\\b`).test(named)) add(n);
+    const seedText = seedUnits.map((u) => u.lines.join('\n')).join('\n');
+    checkNames(seedUnits, rel(s.f));
+    const k6 = count(seedReach.endpoints);
+    const unitMap = unitEndpointMap(fns);
+    for (const uid of dsUids) {
+      const dsTree = treeOf(uid);
+      if (!dsTree) continue;
+      const dt = readTree(dsTree);
+      const dsReqs = dt.steps.flatMap((st) => st.requests.map((r) => ({ ...r, step: st.name })));
+      const short = uid.replace(/_.*/, '');
+      info(
+        `${uid}: ${dt.steps.length} steps [${dt.steps.map((st) => `${st.name}${st.loop > 1 ? ` ×${st.loop}` : ''}`).join(', ')}] vs ${rel(s.f)} (${entry})`,
+      );
+      writers
+        .filter((w) => w.vu === path.basename(dsTree))
+        .forEach((w) => info(`${short} hands ${w.variable} to the journey through ${w.file}; the seed's name prefix replaces that file`));
+      const nl = count(dsReqs.filter((r) => r.cls === 'SPINE').map((r) => r.endpoint));
+      for (const [ep, n] of nl) {
+        const got = k6.get(ep) || 0;
+        if (got === n) ok(`${short} ${ep} ×${n}, seed ×${got}`);
+        else if (WRITE.test(ep)) flag(`${short} ${ep} ×${n} per pass, seed ×${got}: the seed ${got < n ? 'leaves out' : 'adds'} a write`);
+        else
+          info(`${short} ${ep} ×${n}, seed ×${got}: not a write to the seeded records, so it matters only if a saved value comes from it`);
+      }
+      for (const [ep, n] of k6) if (!nl.has(ep) && WRITE.test(ep)) flag(`${ep} ×${n} in the seed is not a write ${short} makes`);
+      // a loop-action repeats its steps; the seed must repeat the same calls as often
+      const bounds = [...seedText.matchAll(/for\s*\([^;]*;\s*\w+\s*<\s*(\w+)\s*;/g)].map((m) =>
+        /^\d+$/.test(m[1])
+          ? Number(m[1])
+          : Number((seedText.match(new RegExp(`const ${m[1]}\\s*=\\s*(?:Number\\([^)]*\\|\\|\\s*)?(\\d+)`)) || [])[1]),
+      );
+      const loops = new Map(dt.steps.filter((st) => st.loop > 1).map((st) => [st.within.join(' > '), st.loop]));
+      for (const [where, n] of loops)
+        (bounds.includes(n) ? ok : flag)(
+          `${short} runs ${where} — ${bounds.includes(n) ? `the seed repeats it ${n} times` : `the seed has no loop of ${n}`}`,
+        );
+      const writes = dsReqs.filter((r) => WRITE.test(r.endpoint));
+      const compared = compareTables(
+        writes,
+        tablesOf(seedUnits),
+        () => unitMap,
+        (st) => `${short} ${st}`,
+        dsReqs,
+      );
+      if (!compared) info(`no ${short} transport table matched a seed builder table by column name`);
+      // a pool the data script picks per iteration is picked the same way, never pinned to one value
+      const unversioned = (n) => (n || '').replace(/^P_\d+_\d+_/, '');
+      for (const name of refsInTree(dsTree).keys()) {
+        const def = defs.get(name);
+        if (!def || /UserCredentials/i.test(name)) continue;
+        const r = resolveDef(def, root);
+        if (r.kind !== 'pool' || r.error || r.rows.length <= 1) continue;
+        const mod =
+          poolModules.find((m) => m.pool === name) || poolModules.find((m) => m.pool && unversioned(m.pool) === unversioned(name));
+        const picked = mod && new RegExp(`pick_pool_value\\(\\s*${mod.exportName}\\b`).test(seedText);
+        (picked ? ok : flag)(
+          `${short} picks ${name} per iteration (${r.rows.length} rows)${mod ? `: ${mod.exportName} ${picked ? 'is' : 'is not'} picked with pick_pool_value in the seed` : ': no source/data/pools module'}`,
+        );
+      }
+    }
+  }
 }
 
 // ---- 7. SLA → thresholds ----------------------------------------------------------------------
