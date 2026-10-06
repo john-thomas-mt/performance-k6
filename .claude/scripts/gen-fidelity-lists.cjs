@@ -123,6 +123,19 @@ const JOURNEY_SPINE = {
     '/api/USISearchComboServer/SaveRecentlyUsed': ['05', '07'],
     '/api/USIGLAccountServer/ValidateGLAccount': ['07'],
   },
+  't10-voucher-processing': {
+    '/api/MainMenuServer/GetMainMenuData': ['03'],
+    '/api/GenericListServer/GetInitialData2': ['03', '05', '10'],
+    '/api/USIDataGridServer/GetInitialData2': ['03', '05', '06', '07', '08', '10'],
+    '/api/USIDataGridServer/GetGridData2': ['07', '09', '10', '12'],
+    '/api/GenericDetailServer/GetInitialData2': ['04', '05', '06', '07', '08', '11'],
+    '/api/GenericDetailServer/GetData2': ['09'],
+    '/api/GenericSearchServer/GetInitialData2': ['05', '06', '07', '08'],
+    '/api/GenericDetailServer/HandleDependentFields2': ['06'],
+    '/api/USISearchComboServer/SaveRecentlyUsed': ['06'],
+    '/api/GenericDetailServer/AccessServerUI': ['07'],
+    '/api/USIDataGridServer/AccessServerUI': ['11'],
+  },
 };
 // per-journey, per-request spine: individual requests scripted as wrappers on a path whose other requests in
 // the same step stay chrome (contact-service-order step 04 fires 15 GetObjectColumns, only the object-1659 one
@@ -141,6 +154,10 @@ const JOURNEY_SPINE_REQUESTS = {
     { path: '/api/ObjectColumnCacheServer/GetObjectColumns', step: '08', body: '[2556,' },
   ],
   't9-purchase-orders': [{ path: '/api/ObjectColumnCacheServer/GetObjectColumns', step: '03', body: '[81,' }],
+  't10-voucher-processing': [
+    { path: '/api/ObjectColumnCacheServer/GetObjectColumns', step: '03', body: '[1138,' },
+    { path: '/api/ObjectColumnCacheServer/GetObjectColumns', step: '04', body: '[1106,' },
+  ],
 };
 // endpoints a later release drops but that still exist on an older *live* release — emit with a removedIn guard
 // so fire time skips them only where they're gone (version_at_least), keeping them on the releases that serve
