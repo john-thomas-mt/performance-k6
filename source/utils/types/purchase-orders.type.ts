@@ -1,3 +1,5 @@
+import { JSONObject } from 'k6';
+
 export type PurchaseOrderDefaults = {
   date: string;
   status: string;
@@ -54,8 +56,47 @@ export type PurchaseOrderSaveResult = {
   ResultValue: number;
   ErrorCodes: string[] | null;
   AddedRowKeys: string[] | null;
+  MessageInfoList?: JSONObject[] | null;
 };
 
 export type PurchaseOrderCells = {
   [cell: string]: string;
+};
+
+export type PurchaseOrderApprovalFields = {
+  poNbr: string;
+  description: string;
+  supplierKey: string;
+  supplierName: string;
+  orderDate: string;
+  status: string;
+  buyer: string;
+  totalCost: string;
+};
+
+export type PurchaseOrderReceiveFields = {
+  poNbr: string;
+  description: string;
+  supplierKey: string;
+  supplierName: string;
+  orderDate: string;
+  buyer: string;
+  billTo: string;
+  shipTo: string;
+  space: string;
+  itemKey: string;
+  itemDesc: string;
+  quantity: string;
+  unitCost: string;
+  totalCost: string;
+};
+
+export type PurchaseOrderAccessResult = {
+  AccessResult?: number;
+};
+
+export type PurchaseOrderDetail = {
+  stamp: string;
+  searchKey: string;
+  record: PurchaseOrderCells;
 };

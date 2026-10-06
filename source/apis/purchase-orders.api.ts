@@ -1,13 +1,15 @@
 import http from 'k6/http';
-import { check, fail, JSONValue } from 'k6';
+import { check, fail, JSONObject, JSONValue } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
 import { build_headers, body_text, find_transport_table, get_cell, initial_data_table } from '../utils/exports/helpers.exp.ts';
 import {
+  purchaseOrderApprovalPayload,
   purchaseOrderDepartmentFieldsPayload,
   purchaseOrderDepartmentSearchPayload,
   purchaseOrderDetailPayload,
   purchaseOrderFormPayload,
   purchaseOrderGlAccountPayload,
+  purchaseOrderIssuePayload,
   purchaseOrderItemCostFieldsPayload,
   purchaseOrderItemFormPayload,
   purchaseOrderItemQuantityFieldsPayload,
@@ -19,6 +21,8 @@ import {
   purchaseOrderItemSearchPayload,
   purchaseOrderItemSelectFieldsPayload,
   purchaseOrderItemsSearchPayload,
+  purchaseOrderReceiveFieldsPayload,
+  purchaseOrderReceivePayload,
   purchaseOrderSavePayload,
   purchaseOrderSupplierFieldsPayload,
   purchaseOrderSupplierRecentlyUsedPayload,
@@ -27,11 +31,15 @@ import {
   purchaseOrdersListPayload,
 } from '../utils/exports/data.exp.ts';
 import {
+  PurchaseOrderAccessResult,
+  PurchaseOrderApprovalFields,
   PurchaseOrderCells,
   PurchaseOrderComboRow,
   PurchaseOrderContext,
   PurchaseOrderDefaults,
+  PurchaseOrderDetail,
   PurchaseOrderItemCells,
+  PurchaseOrderReceiveFields,
   PurchaseOrderSaveResult,
   PurchaseOrderSupplierFields,
   PurchaseOrderWindows,
@@ -83,7 +91,7 @@ function report_save(result: PurchaseOrderSaveResult | undefined, name: string) 
     [`${name}: no error codes`]: (r) => (r?.ErrorCodes ?? []).length === 0,
   });
   if (!ok) {
-    console.error(`[VU ${__VU}] ${name} failed — ${JSON.stringify(result).slice(0, 400)}`);
+    console.error(`[VU ${__VU}] ${name} failed — ${JSON.stringify(result)}`);
     fail(`${name} did not save`);
   }
 }
@@ -128,7 +136,7 @@ export function open_purchase_order_form(
     space: get_cell(table, 'PO100_SPACE'),
     requestor: get_cell(table, 'PO100_REQUESTOR'),
   };
-  require_cells({ ...defaults }, name);
+  require_cells({ ...defaults, requestor: '-' }, name);
   if (!check(defaults, { [`${name}: returns a numeric order date`]: (d) => /^-?\d+$/.test(d.date) })) {
     console.error(`[VU ${__VU}] open_purchase_order_form failed — date ${defaults.date}`);
     fail(`${name}: order date is not an epoch`);
@@ -255,7 +263,7 @@ export function save_purchase_order(
   return poNbr;
 }
 
-export function open_purchase_order_detail(
+export function read_purchase_order_detail(
   token: string,
   version: string,
   windows: PurchaseOrderWindows,
@@ -270,16 +278,31 @@ export function open_purchase_order_detail(
     version,
     name,
   );
-  const detailStamp = string_at(res, 6);
+  const stamp = string_at(res, 6);
   const ok = check(res, {
     [`${name}: echoes the purchase order`]: (r) => body_text(r).includes(`10|${poNbr}`),
-    [`${name}: returns the detail stamp`]: () => /^\d{4}-\d{2}-\d{2} /.test(detailStamp),
+    [`${name}: returns the detail stamp`]: () => /^\d{4}-\d{2}-\d{2} /.test(stamp),
   });
   if (!ok) {
-    console.error(`[VU ${__VU}] open_purchase_order_detail failed — PO ${poNbr}, stamp "${detailStamp}"`);
+    console.error(`[VU ${__VU}] read_purchase_order_detail failed — PO ${poNbr}, stamp "${stamp}"`);
     fail(`${name}: purchase order ${poNbr} not opened`);
   }
-  return detailStamp;
+  const header = find_transport_table(res, 'PO100_SEARCH', name);
+  const record: PurchaseOrderCells = {};
+  for (const column of header.TransportDataColumns) record[column.ColumnName] = get_cell(header, column.ColumnName);
+  const detail: PurchaseOrderDetail = { stamp, searchKey: record['PO100_SEARCH'] ?? '', record };
+  return detail;
+}
+
+export function open_purchase_order_detail(
+  token: string,
+  version: string,
+  windows: PurchaseOrderWindows,
+  poNbr: string,
+  columnStamp: string,
+  name = 'OpenPurchaseOrderDetail',
+) {
+  return read_purchase_order_detail(token, version, windows, poNbr, columnStamp, name).stamp;
 }
 
 export function open_po_items_grid(token: string, version: string, windows: PurchaseOrderWindows, poNbr: string, name = 'OpenPoItemsGrid') {
@@ -503,4 +526,153 @@ export function refresh_po_items_grid(
   name = 'RefreshPoItemsGrid',
 ) {
   post_purchase_order('USIDataGridServer/GetInitialData2', purchaseOrderItemsGridRefreshPayload(windows, poNbr), token, version, name);
+}
+
+const PROMPT_YES = 6;
+const MAX_PROMPT_ROUNDS = 3;
+
+function unanswered_prompts(result: PurchaseOrderSaveResult | undefined) {
+  return (result?.MessageInfoList ?? []).filter((m) => m.MessageStyle === 6 && m.MessageAnswer === 0);
+}
+
+function prompt_data_pairs(data: JSONValue | undefined) {
+  return data !== null && typeof data === 'object' && !Array.isArray(data)
+    ? Object.entries(data).map(([key, value]) => ({ Key: key, Value: value }))
+    : [];
+}
+
+export function approve_purchase_order(
+  token: string,
+  version: string,
+  wdwid: string,
+  fields: PurchaseOrderApprovalFields,
+  name = 'ApprovePurchaseOrder',
+) {
+  let answers: JSONObject[] = [];
+  for (let round = 0; round <= MAX_PROMPT_ROUNDS; round++) {
+    const res = post_purchase_order(
+      'GenericDetailServer/Save2',
+      purchaseOrderApprovalPayload(
+        wdwid,
+        fields.poNbr,
+        fields.description,
+        fields.supplierKey,
+        fields.supplierName,
+        fields.orderDate,
+        fields.status,
+        fields.buyer,
+        fields.totalCost,
+        answers,
+      ),
+      token,
+      version,
+      name,
+    );
+    const result = save_result(res);
+    const prompts = unanswered_prompts(result);
+    if (result?.ResultValue === 0 || prompts.length === 0 || round === MAX_PROMPT_ROUNDS) {
+      report_save(result, name);
+      const stdCost = get_cell(find_transport_table(res, 'ApprovalPOInfo_PO100_TOT_STD_COST', name), 'ApprovalPOInfo_PO100_TOT_STD_COST');
+      require_cells({ stdCost }, name);
+      return stdCost;
+    }
+    answers = [...answers, ...prompts.map((p) => ({ ...p, MessageAnswer: PROMPT_YES, MessageData: prompt_data_pairs(p.MessageData) }))];
+  }
+  console.error(`[VU ${__VU}] approve_purchase_order failed — PO ${fields.poNbr} still prompting after ${MAX_PROMPT_ROUNDS} answers`);
+  fail(`${name}: purchase order ${fields.poNbr} not approved`);
+}
+
+export function issue_purchase_order(token: string, version: string, wdwid: string, poNbr: string, name = 'IssuePurchaseOrder') {
+  const res = post_purchase_order('GenericDetailServer/AccessServerUI', purchaseOrderIssuePayload(wdwid, poNbr), token, version, name);
+  let access: PurchaseOrderAccessResult = {};
+  try {
+    access = JSON.parse(string_at(res, 0)) as PurchaseOrderAccessResult;
+  } catch {
+    access = {};
+  }
+  if (!check(access, { [`${name}: access result is 0`]: (a) => a.AccessResult === 0 })) {
+    console.error(`[VU ${__VU}] issue_purchase_order failed — PO ${poNbr}: ${body_text(res).slice(0, 300)}`);
+    fail(`${name}: purchase order ${poNbr} not issued`);
+  }
+}
+
+export function open_purchase_order_receive_fields(
+  token: string,
+  version: string,
+  wdwid: string,
+  encUserId: string,
+  windowVersion: string,
+  fields: PurchaseOrderReceiveFields,
+  name = 'HandlePoReceiveFields',
+) {
+  const res = post_purchase_order(
+    'USIDataGridServer/HandleDependentFields2',
+    purchaseOrderReceiveFieldsPayload(
+      wdwid,
+      encUserId,
+      windowVersion,
+      fields.poNbr,
+      fields.supplierKey,
+      fields.supplierName,
+      fields.orderDate,
+      fields.buyer,
+      fields.billTo,
+      fields.shipTo,
+      fields.space,
+      fields.itemKey,
+      fields.itemDesc,
+      fields.quantity,
+      fields.unitCost,
+      fields.totalCost,
+    ),
+    token,
+    version,
+    name,
+  );
+  const updStamp = get_cell(find_transport_table(res, 'PO101_UPD_STAMP', name), 'PO101_UPD_STAMP');
+  require_cells({ updStamp }, name);
+  return updStamp;
+}
+
+export function receive_purchase_order(
+  token: string,
+  version: string,
+  wdwid: string,
+  encUserId: string,
+  windowVersion: string,
+  fields: PurchaseOrderReceiveFields,
+  stdCost: string,
+  searchKey: string,
+  updStamp: string,
+  name = 'ReceivePurchaseOrder',
+) {
+  const res = post_purchase_order(
+    'GenericDetailServer/Save2',
+    purchaseOrderReceivePayload(
+      wdwid,
+      encUserId,
+      windowVersion,
+      fields.poNbr,
+      fields.description,
+      fields.supplierKey,
+      fields.supplierName,
+      fields.orderDate,
+      fields.buyer,
+      fields.billTo,
+      fields.shipTo,
+      fields.space,
+      fields.itemKey,
+      fields.itemDesc,
+      fields.quantity,
+      fields.unitCost,
+      fields.totalCost,
+      stdCost,
+      searchKey,
+      updStamp,
+    ),
+    token,
+    version,
+    name,
+  );
+  report_save(save_result(res), name);
 }

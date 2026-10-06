@@ -1,5 +1,5 @@
 import { check } from 'k6';
-import { EventRow, ServiceOrderRow } from '../exports/types.exp.ts';
+import { EventRow, PurchaseOrderCells, ServiceOrderRow } from '../exports/types.exp.ts';
 
 type RecordFields = { [field: string]: string };
 
@@ -38,6 +38,30 @@ export const serviceOrderIdentityFields: (keyof ServiceOrderRow)[] = [
   'acctName',
   'funcDesc',
   'updDateIso',
+];
+
+export const purchaseOrderIdentityFields: (keyof PurchaseOrderCells & string)[] = [
+  'PO100_DESC',
+  'PO100_SEARCH',
+  'PO100_ORD_NBR',
+  'PO100_PO_REQ',
+  'PO100_DATE',
+  'PO100_DATE_IN',
+  'PO100_DATE_OUT',
+  'PO100_DUE_DATE',
+  'PO100_ENT_STAMP',
+  'PO100_UPD_STAMP',
+  'cINOUT_DATE',
+  'cUPDATED',
+  'PO100_SUPPLIER',
+  'PO100_SUPPLIER_CONT_NG',
+  'POSupplierAccount_EV870_NAME',
+  'POSupplierAccount_EV870_CLASS',
+  'POSupplierContact_EV870_CLASS',
+  'PO100_TOT_STD_COST',
+  'PO100_TOT_EST_COST',
+  'cCOMP_ENT_BY_NAME',
+  'cCOMP_CHG_BY_NAME',
 ];
 
 export function compare_record_fields<T extends RecordFields>(label: string, reference: T, seeded: T, varying: (keyof T & string)[]) {
