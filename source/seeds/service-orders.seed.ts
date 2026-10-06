@@ -20,7 +20,7 @@ import {
 } from '../utils/exports/apis.exp.ts';
 import {
   fetch_server_version,
-  decrypt_users,
+  decrypt_seed_users,
   pick_user,
   pick_pool_value,
   format_retrieve_stamp,
@@ -28,7 +28,7 @@ import {
 } from '../utils/exports/helpers.exp.ts';
 import { config } from '../utils/exports/config.exp.ts';
 import { SeedSetup, SeedSession } from '../utils/exports/types.exp.ts';
-import { userCredentials, bookingAccountNames, bookingSpaces, random_future_date } from '../utils/exports/data.exp.ts';
+import { bookingAccountNames, bookingSpaces, random_future_date } from '../utils/exports/data.exp.ts';
 
 const SEED_ADD = __ENV.SEED_ADD ? Number(__ENV.SEED_ADD) : undefined;
 const SEED_COUNT = SEED_ADD ?? Number(__ENV.SEED_COUNT || 100);
@@ -52,10 +52,7 @@ export async function setup() {
   if (!cryptoKey) {
     throw new Error('No decryption key — write temp/secret.json (npm run secret -- --key <pass>)');
   }
-  const users = await decrypt_users(userCredentials, cryptoKey);
-  if (users.length === 0) {
-    throw new Error('data/creds/users.data.ts is empty — add at least one user entry');
-  }
+  const users = await decrypt_seed_users(config.seedUsers, cryptoKey);
   const version = fetch_server_version();
   const { bearerToken } = login_to_events(users[0], version);
   const existing = search_events(bearerToken, version, config.seedEventPrefix, 'CountSeedEvents').filter((e) =>
@@ -68,7 +65,7 @@ export async function setup() {
     `"${config.seedEventPrefix}" events: ${existing} found, ${SEED_ADD === undefined ? `target ${SEED_COUNT}` : 'adding'}, creating ${shortfall}`,
   );
   console.log(
-    `Booking ${shortfall} event(s), each with a function and ${ORDERS_PER_EVENT} service orders, with ${SEED_VUS} VU(s), each signed in as its own pool user`,
+    `Booking ${shortfall} event(s), each with a function and ${ORDERS_PER_EVENT} service orders, with ${SEED_VUS} VU(s), each on its own session as a seed user from temp/seed-users.json`,
   );
   return { version, users, shortfall };
 }

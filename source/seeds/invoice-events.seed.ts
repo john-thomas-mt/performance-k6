@@ -23,7 +23,7 @@ import {
 } from '../utils/exports/apis.exp.ts';
 import {
   fetch_server_version,
-  decrypt_users,
+  decrypt_seed_users,
   pick_user,
   pick_pool_value,
   format_retrieve_stamp,
@@ -55,12 +55,7 @@ export async function setup() {
   if (!cryptoKey) {
     throw new Error('No decryption key — write temp/secret.json (npm run secret -- --key <pass>)');
   }
-  const users = await decrypt_users(config.seedUsers, cryptoKey);
-  if (users.length === 0) {
-    throw new Error(
-      'No seed user — write temp/seed-users.json with an encrypted user that has the Allow Closing Of Orders privilege (rules/data.md)',
-    );
-  }
+  const users = await decrypt_seed_users(config.seedUsers, cryptoKey);
   const version = fetch_server_version();
   const { bearerToken } = login_to_events(users[0], version);
   const existing = read_non_invoiced_orders(bearerToken, version, config.seedInvoiceEventPrefix, 'CountSeedOrders').length;

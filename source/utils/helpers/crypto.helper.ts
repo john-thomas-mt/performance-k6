@@ -36,6 +36,18 @@ export async function decrypt_users(credentials: User[], passphrase: string) {
   return users;
 }
 
+const SEED_USERNAME = 'usiadmin';
+
+export async function decrypt_seed_users(credentials: User[], passphrase: string) {
+  const seedCredentials = credentials.filter((user) => user.username.toLowerCase() === SEED_USERNAME);
+  if (seedCredentials.length === 0) {
+    throw new Error(
+      `No seed user — every seed signs in as ${SEED_USERNAME}: write temp/seed-users.json with an encrypted ${SEED_USERNAME} entry (rules/data.md)`,
+    );
+  }
+  return decrypt_users(seedCredentials, passphrase);
+}
+
 export async function decrypt_api_credentials(credentials: ApiCredentials, passphrase: string) {
   const key = await derive_key(passphrase);
   return {

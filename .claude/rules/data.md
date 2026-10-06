@@ -97,14 +97,14 @@ Anything passed to `http.file()` goes here, never in the request-body folders:
   where the `password` is AES-GCM-encrypted (base64 of `iv | ciphertext`) and the username stays plaintext. The
   AES key is `SHA-256(passphrase)` with no salt or KDF stretching: these are low-value QE accounts and the only
   goal is keeping passwords out of the repo — don't reuse this scheme for anything sensitive.
-- Decrypted once at runtime in a test/seed `setup()` via `decrypt_users(userCredentials, config.cryptoKey)`
+- Decrypted once at runtime in a test `setup()` (a seed uses `decrypt_seed_users(config.seedUsers, …)` instead, see Seed users below) via `decrypt_users(userCredentials, config.cryptoKey)`
   (`source/utils/helpers/crypto.helper.ts`), returning `User[]`. The passphrase is `config.cryptoKey`, sourced from a
   gitignored `temp/secret.json` (`npm run secret -- --key '<passphrase>'`; in CI, injected from a masked pipeline
   secret), never committed; `setup()` throws if it is missing.
 - Decryption is async (WebCrypto `crypto.subtle`), so it lives in `setup()` — never a `SharedArray`/init context. The
   decrypted `User[]` is returned in the `setup()` data and picked with `pick_user(data.users)` from
   `source/utils/helpers/users.helper.ts` (see `rules/tests.md`).
-- **Seed users are local, never committed.** Accounts with privileges the pool lacks, for seeds whose writes need them (closing service orders needs Allow Closing Of Orders), live in a gitignored `temp/seed-users.json`: a `[{ username, password }]` array with the password encrypted by the snippet below. `env.config.ts` reads it as `config.seedUsers` (empty when the file is missing), and the seed decrypts it with `decrypt_users`; a seed that needs one throws from `setup()` naming the file when it's empty.
+- **Seed users are local, never committed, and every seed uses `usiadmin`.** The seed account (`usiadmin`, which holds the privileges the pool lacks: closing service orders needs Allow Closing Of Orders, approving purchase orders needs PO approval rights) lives in a gitignored `temp/seed-users.json`: a `[{ username, password }]` array with the password encrypted by the snippet below. `env.config.ts` reads it as `config.seedUsers` (empty when the file is missing), and the seed decrypts it with `decrypt_users`; a seed that needs one throws from `setup()` naming the file when it's empty.
 - **Rotate/add accounts** by re-minting the encrypted values and pasting them into `users.data.ts`. The snippet
   reads the passphrase from `temp/secret.json` (write it first with `npm run secret -- --key '<passphrase>'`),
   takes a `{ username: plaintext-password }` map as its argument, and prints the `{ username, password }` array to

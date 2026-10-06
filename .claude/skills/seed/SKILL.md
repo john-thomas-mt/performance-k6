@@ -35,7 +35,9 @@ seed and target in one line before the first request, and give a rough duration 
 
 ## 2. Switch the env and size the count
 
-1. Check `temp/secret.json` exists (every `k6 run` needs the passphrase).
+1. Check `temp/secret.json` exists (every `k6 run` needs the passphrase) and that `temp/seed-users.json` holds a
+   `usiadmin` entry: every seed signs in as `usiadmin`, never as a pool user. If the file or the entry is missing,
+   stop and tell the user rather than running the seed on pool users.
 2. `npm run setup -- --env <env>` (the site stays `PERF`).
 3. Resolve the build: `curl -s https://performance.ungerboeck.net/<env>/app85.cshtml | grep -o "[?&]v=[0-9][0-9.]*" | head -1`
    (e.g. `26.2.0.123` → version `26_2`; a bare `?v=` match finds an empty token first). On a released env this also warms its cold app pool; repeat until it
@@ -59,7 +61,7 @@ k6 run --quiet -e SEED_COUNT=<n> source/seeds/<feature>.seed.ts > temp/claude/re
 
 - Target ≤ 20: run it through `k6-run-reporter`, which checks the run is clean.
 - Larger targets: run it with Bash `run_in_background`, then read the log's summary when it finishes. Each VU
-  signs in as its own pool user, so `-e SEED_VUS=` scales the run (default 10). The run stops at
+  signs in as `usiadmin` on its own session, so `-e SEED_VUS=` scales the run (default 10). The run stops at
   `SEED_MAX_DURATION` (default `4h`), so a very large count may be cut short; §4 catches that.
 
 ## 4. Judge the run
