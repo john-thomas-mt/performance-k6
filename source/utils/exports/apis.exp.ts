@@ -9,3 +9,4 @@ export * from '../../apis/purchase-orders.api.ts';
 export * from '../../apis/realtime.api.ts';
 export * from '../../apis/reports.api.ts';
 export * from '../../apis/service-orders.api.ts';
+export * from '../../apis/voucher-processing.api.ts';

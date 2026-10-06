@@ -91,3 +91,9 @@ export function coerce_transport_types(table: TransportTable) {
   }
   return table;
 }
+
+export function echo_cell(table: TransportTable, columnName: string): JsonScalar {
+  const i = table.TransportDataColumns.findIndex((c) => c.ColumnName === columnName);
+  const v = i < 0 ? undefined : table.TransportDataRows[0]?.Values[String(i)];
+  return v === undefined ? null : v;
+}
