@@ -1,6 +1,6 @@
 ---
 name: neoload-port-review
-description: Review a finished NeoLoad → k6 port against its recording, in a fresh session — step and spine coverage, correlation, recorded values left hardcoded, every variables/ pool and generated variable, the data-setup (seed) pairing, SLA thresholds and wiring. Zero traffic, review only. Use when the user wants to review, audit or double-check a ported journey (`/neoload-port-review <journey>`).
+description: Review a finished NeoLoad → k6 port against its recording, in a fresh session — step and spine coverage, correlation, recorded values left hardcoded, test-data names, every variables/ pool and generated variable, the seed against its data-script VU, SLA thresholds and wiring. Zero traffic, review only. Use when the user wants to review, audit or double-check a ported journey (`/neoload-port-review <journey>`).
 ---
 
 # NeoLoad port review — check a port against its recording
@@ -24,7 +24,8 @@ node .claude/scripts/neoload-port-review.cjs "C:/momentus-projects/performance" 
 Given the NeoLoad project root, it picks the VU from the flow's step prefix and the version its pools were
 generated from (pass the VU tree dir instead to override). It prints OK / FLAG / INFO lines across these
 areas:
-- **steps ↔ groups**
+- **steps ↔ groups**, including the steps a `loop`/`if`/`try` action holds (an INFO says how often or on which
+  branch each runs)
 - **spine coverage per step:** every enabled request in every page, not just each page's first. A spine request the
   flow only reaches behind `include_ui`/`include_static` FLAGs, because a lean run skips it. The lean spine's page
   order is compared with the recording; requests within one page fire in parallel, so their order isn't checked.
@@ -36,10 +37,20 @@ areas:
 - **token-literal leaks:** scanned in what the journey itself reaches. Typed input the extracting request already
   sends prints as INFO.
 - **transport tables (4b):** each recorded Save2/HDF2 first row is compared by `ColumnName` to the builder of the
-  wrapper that posts the same endpoint.
+  wrapper that posts the same endpoint. A builder that echoes a live table is compared on the cells it sets. A
+  recorded table no builder declares FLAGs, or prints as INFO when a builder of that step takes a `TransportTable`.
+- **test-data names (4c):** every per-iteration record name the journey writes must read
+  `k6-t<id>-<what>-<vu><iter><epoch>`, with this VU's test id unpadded. A name cut to length prints as INFO.
 - **variables:** pools row-for-row per column, cross-version files, credentials, jsAction-set variables (a
   computed subs-map key counts) and generated/constant translations, `p_` included.
-- **seed pairing**
+- **seed (6):** whether the journey needs one, and then the seed against the data-script VU at this VU's version,
+  judged by the data it leaves, not its navigation:
+  - which envs NeoLoad's own data run left records on;
+  - that discovery and the seed share one `config` prefix carrying this journey's test id;
+  - the seed's record names;
+  - each write per pass, and every `loop` count;
+  - each saved table, cell by cell;
+  - every pool the data script picks per iteration.
 - **SLA ↔ thresholds:** tags are resolved per call site, and shared `...xThresholds` spreads are followed. Tags
   fired only behind a fidelity guard or only outside the journey (setup discovery) print as INFO.
 - **wiring**
@@ -75,6 +86,14 @@ How to read the common FLAGs:
 | `spine order differs from the recording` | a refresh read moved ahead of the write it follows, or a call moved across a page boundary. The timings and server state differ | k6 needs the reversed order to correlate (a stamp read before a save). Cite the dependency |
 | `… n column(s) NeoLoad fills from a token, k6 sends a literal` | the token is per-iteration or per-record (dates, names, keys, a pool value) | the token resolves to a value that is constant across runs. Cite its definition |
 | `… n literal column(s) differ from the recording` | an option that changes what the server does (copy flags, scope, status, phase) | a captured timestamp or display string the server ignores. Say which |
+| `a recorded table … matches no builder table` | the body leaves out a table the save carries (a child table such as item lines), so the record is saved without it | the table is built by code the parser can't read (a helper, a spread). Cite where it is built |
+| `a recorded table … is not declared in k6; <builder> takes a TransportTable` (INFO) | the builder takes the table but drops it from the body | it posts the live table it is handed (a form read, a staged row). Confirm in the builder |
+| `` `<template>` does not follow k6-t<id>-… `` / `carries test id …` | a record the journey or seed creates is named some other way, or with another test's id | the value is not a record name (a header, a window id, a search term). Say what it is |
+| `seed prefix '…' does not carry the consuming journey's id` | always real: a seed's records are named for the journey that reads them | none |
+| `discovery searches config.<key> … no source/seeds script names its records with it` | always real: the journey looks for records no seed creates | none |
+| `<U> <endpoint> ×n per pass, seed ×m: the seed leaves out / adds a write` | the seed leaves different data from the data script (a missing function save, a missing prompt answer) | the write is UI state only, not the seeded record. Say which |
+| `<U> runs loop … — the seed has no loop of n` | the seed creates fewer (or more) child records per parent than the data script | none |
+| `<U> picks P_… per iteration … is not picked with pick_pool_value in the seed` | the seed pins one value (a fixed account) where the data script spreads across the pool | none |
 | `k6 reaches n call sites` (INFO) | two unconditional calls where the recording has one | the extra call sites are a fallback/retry branch |
 | token-literal leak | the value is server-minted or per-record (ids, keys, stamps, names that must be unique) | it's the recorder's typed input the server only echoes back, identical every run |
 | GUID / bearer-token literal | a session token, API key or record GUID pasted into a flow, wrapper or type file | a fixed schema or app id the server expects on every call — cite where it's constant |
@@ -82,7 +101,7 @@ How to read the common FLAGs:
 | pool rows differ | truncated or retyped pool | the module header documents a deliberate filter — check the reason still holds |
 | pool across versions `DIFFERS` | the journey runs on a version whose rows are not the ported ones | rows are env-independent or discovered at runtime |
 | generated variable, no evidence | the flow never regenerates it (a captured timestamp/counter replayed) | translated under another name — cite where |
-| seed expected | no `source/seeds/` pass and no `setup()` discovery for the rows the journey reads | an existing seed + marker covers it — cite both |
+| `no discover_* the flow defines is called from smoke setup()` | always real: nothing finds the data script's records at runtime | none |
 | SLA / threshold mismatch | a lean-spine request from an opted-in step lacks the profile's `avg<`, or a `p(95)` replaces it | the step has `slaProfileEnabled="false"` (launch/login in most VUs). Cite the step |
 | `p(95)` beside the average (INFO) | no commit records the measured run behind it | the commit that added it gives the run and the measured value (e.g. `202dc9d`) |
 
@@ -97,9 +116,11 @@ Read the **hand-written** files only: the flow, the journey's `source/apis/*.api
 - **Data isolation**: a record-modifying journey gives each iteration a unique row
   (`exec.scenario.iterationInTest % pool.length`), not a shared or `(__VU-1+__ITER)` row.
 - **Business-rule prompts**: a `Save2` returning `ResultValue ≠ 0` fails loudly with its `MessageInfoList`.
-- **Seed** (when §1 flagged one): the seed ports every create step and the `loop.xml` volume, plants the
-  marker, and the journey discovers its rows in `setup()` — no replayed captured keys, no seed-output file
-  ported as a static pool.
+- **Seed** (when §1 section 6 compares one): the script has already checked the writes, loops, saved tables and
+  pools against the data-script VU. Judge what it can't see: a prompt the data script answers is answered the same
+  way (the same answer and the same answering body), the values a saved cell takes from a read come from the same
+  read, and no captured key from the data script's recording is replayed. Navigation (a UI read the seed skips)
+  is not a finding unless a saved value depends on it.
 - **Fidelity tiers**, if `source/data/chrome/<journey>.chrome.ts` exists: run
   `node .claude/scripts/fidelity-tokens.cjs source/data/chrome/<journey>.chrome.ts source/data/static/<journey>.static.ts`
   and confirm the flow's subs map supplies every contract token. Never `Read` the generated tier files.
