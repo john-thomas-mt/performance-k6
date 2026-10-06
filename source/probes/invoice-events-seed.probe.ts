@@ -58,9 +58,8 @@ function read_record(data: PoolProbeSetup, row: NonInvoicedOrderRow, side: strin
 }
 
 export default function probe_invoice_events_seed(data: PoolProbeSetup) {
-  const rows = read_non_invoiced_orders(data.bearerToken, data.version, 'ProbeNonInvoicedOrders');
-  const reference = rows.find((r) => event_desc(r).startsWith(REF_PREFIX));
-  const seeded = rows.find((r) => event_desc(r).startsWith(config.seedInvoiceEventPrefix));
+  const reference = read_non_invoiced_orders(data.bearerToken, data.version, REF_PREFIX, 'ProbeNonInvoicedOrdersNeoLoad')[0];
+  const seeded = read_non_invoiced_orders(data.bearerToken, data.version, config.seedInvoiceEventPrefix, 'ProbeNonInvoicedOrdersSeed')[0];
   if (!reference) fail(`no non-invoiced order under a "${REF_PREFIX}" event: compare on an env NeoLoad's data run covered`);
   if (!seeded)
     fail(`no non-invoiced order under a "${config.seedInvoiceEventPrefix}" event: run source/seeds/invoice-events.seed.ts first`);

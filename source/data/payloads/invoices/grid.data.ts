@@ -1,5 +1,5 @@
-/* Captured Non-Invoiced Orders By Event grid read (USIDataGridServer/GetGridData2). The view carries three fixed SearchFilters and no event filter, so it returns every non-invoiced closed order for the org. ResultsCount is the client's last-known count and is not used by the server. */
-export const nonInvoicedOrdersGridPayload = () => [
+/* Captured Non-Invoiced Orders By Event grid read (USIDataGridServer/GetGridData2). The view carries three fixed SearchFilters (not invoiced, closed); k6 adds an event-description prefix filter, below. ResultsCount is the client's last-known count and is not used by the server. */
+export const nonInvoicedOrdersGridPayload = (eventPrefix: string) => [
   '10',
   280,
   744,
@@ -510,6 +510,33 @@ export const nonInvoicedOrdersGridPayload = () => [
         UsedInList2: false,
         UserID: '',
         Value: 'C',
+        Value2: '',
+      },
+      /* Event description (OrderEvent_EV200_EVT_DESC, object column 16810) LIKE the caller's prefix. The recording sends
+         no event filter, but the server caps this read at 1000 rows sorted by event name, so on an env with more
+         non-invoiced closed orders than that, rows under later-sorting names (k6-t8-…, Performance BookingEvent …)
+         never come back. Filtering by prefix returns exactly the seeded rows. */
+      {
+        ConvertedToUserDisplayTimeZone: false,
+        CustomXML: '',
+        EnterUserID: '',
+        FilterType: 0,
+        ForceUnparameterized: false,
+        ID: -1,
+        LikeType: 3,
+        ObjectColumnID: 16810,
+        ObjectID: 280,
+        Operand: 'LIKE',
+        Operand2: '',
+        SearchID: 2378,
+        ThemeID: 0,
+        ToUpper: 'N',
+        TrailingOperand: 'AND',
+        UpdateUserID: '',
+        UsedInList: false,
+        UsedInList2: false,
+        UserID: '',
+        Value: eventPrefix,
         Value2: '',
       },
     ],

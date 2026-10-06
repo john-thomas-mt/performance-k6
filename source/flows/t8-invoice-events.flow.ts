@@ -26,6 +26,7 @@ import {
   sign_out,
   seed_gap_message,
 } from '../utils/exports/helpers.exp.ts';
+import { config } from '../utils/exports/config.exp.ts';
 import { invoiceEventsChrome, invoiceEventsStatic, invoiceEventsTransport } from '../utils/exports/data.exp.ts';
 import { User, SetupData, FidelityLevel, NonInvoicedOrderRow, TransportTable } from '../utils/exports/types.exp.ts';
 
@@ -91,7 +92,7 @@ export function invoice_events_journey(user: User, data: SetupData) {
   let orderRef: NonInvoicedOrderRow | null = null;
   group('T008_InvoiceEvent_04_SearchEvent', () => {
     open_non_invoiced_orders_search(bearerToken, data.version);
-    const rows = read_non_invoiced_orders(bearerToken, data.version);
+    const rows = read_non_invoiced_orders(bearerToken, data.version, config.seedInvoiceEventPrefix);
     check(null, { 'Non-invoiced order available': () => rows.length > 0 });
     if (rows.length > 0) {
       orderRef = rows[exec.scenario.iterationInTest % rows.length];
@@ -118,7 +119,7 @@ export function invoice_events_journey(user: User, data: SetupData) {
     const table = refresh_invoice_fields(bearerToken, data.version, order.orderNbr, transSource, refreshKey, dialog);
     save_invoice(bearerToken, data.version, order.orderNbr, transSource, refreshKey, table);
     console.log(`[VU ${__VU}] Invoiced order ${order.orderNbr} (event ${order.evtId})`);
-    read_non_invoiced_orders(bearerToken, data.version, 'ReadNonInvoicedOrdersAfterInvoice');
+    read_non_invoiced_orders(bearerToken, data.version, config.seedInvoiceEventPrefix, 'ReadNonInvoicedOrdersAfterInvoice');
     chrome_and_static(bearerToken, data.version, level, ['06'], subs);
   });
   think();

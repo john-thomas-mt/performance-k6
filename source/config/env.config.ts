@@ -1,7 +1,15 @@
-import type { Site, ReleaseVersion } from '../utils/exports/types.exp.ts';
+import type { Site, ReleaseVersion, User } from '../utils/exports/types.exp.ts';
 
 const setup = JSON.parse(open('../../temp/setup.json')) as { [setting: string]: string };
 const secret = JSON.parse(open('../../temp/secret.json')) as { [setting: string]: string };
+
+function read_seed_users() {
+  try {
+    return JSON.parse(open('../../temp/seed-users.json')) as User[];
+  } catch {
+    return [];
+  }
+}
 
 const site = (setup.site || 'PERF') as Site;
 const env = (setup.env || 'main') as ReleaseVersion;
@@ -36,4 +44,5 @@ export const config = {
   seedEventPrefix: 'k6-t34-booking-event',
   seedInvoiceEventPrefix: 'k6-t8-booking-event',
   cryptoKey: secret.key || '',
+  seedUsers: read_seed_users(),
 };

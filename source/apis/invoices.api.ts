@@ -53,8 +53,8 @@ export function open_non_invoiced_orders_search(token: string, version: string, 
   post_invoice('GenericSearchServer/GetInitialData2', nonInvoicedOrdersSearchPayload(), token, version, name);
 }
 
-export function read_non_invoiced_orders(token: string, version: string, name = 'ReadNonInvoicedOrders') {
-  const res = post_invoice('USIDataGridServer/GetGridData2', nonInvoicedOrdersGridPayload(), token, version, name);
+export function read_non_invoiced_orders(token: string, version: string, eventPrefix: string, name = 'ReadNonInvoicedOrders') {
+  const res = post_invoice('USIDataGridServer/GetGridData2', nonInvoicedOrdersGridPayload(eventPrefix), token, version, name);
   const grid = find_transport_table(res, 'ER100_ORD_NBR', name);
   const rows: NonInvoicedOrderRow[] = grid.TransportDataRows.map((row) => {
     const table = { TransportDataColumns: grid.TransportDataColumns, TransportDataRows: [row] };

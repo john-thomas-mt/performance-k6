@@ -29,11 +29,10 @@ import {
   format_retrieve_stamp,
   stamp_to_epoch,
   today_midnight_utc,
-  get_cell,
 } from '../utils/exports/helpers.exp.ts';
 import { config } from '../utils/exports/config.exp.ts';
 import { SeedSetup, SeedSession } from '../utils/exports/types.exp.ts';
-import { userCredentials, bookingAccountNames, bookingSpaces, random_future_date } from '../utils/exports/data.exp.ts';
+import { bookingAccountNames, bookingSpaces, random_future_date } from '../utils/exports/data.exp.ts';
 
 const SEED_ADD = __ENV.SEED_ADD ? Number(__ENV.SEED_ADD) : undefined;
 const SEED_COUNT = SEED_ADD ?? Number(__ENV.SEED_COUNT || 250);
@@ -56,15 +55,15 @@ export async function setup() {
   if (!cryptoKey) {
     throw new Error('No decryption key — write temp/secret.json (npm run secret -- --key <pass>)');
   }
-  const users = await decrypt_users(userCredentials, cryptoKey);
+  const users = await decrypt_users(config.seedUsers, cryptoKey);
   if (users.length === 0) {
-    throw new Error('data/creds/users.data.ts is empty — add at least one user entry');
+    throw new Error(
+      'No seed user — write temp/seed-users.json with an encrypted user that has the Allow Closing Of Orders privilege (rules/data.md)',
+    );
   }
   const version = fetch_server_version();
   const { bearerToken } = login_to_events(users[0], version);
-  const existing = read_non_invoiced_orders(bearerToken, version, 'CountSeedOrders').filter((r) =>
-    get_cell(r.table, 'OrderEvent_EV200_EVT_DESC').startsWith(config.seedInvoiceEventPrefix),
-  ).length;
+  const existing = read_non_invoiced_orders(bearerToken, version, config.seedInvoiceEventPrefix, 'CountSeedOrders').length;
   const shortfall = SEED_ADD ?? Math.max(0, SEED_COUNT - existing);
 
   console.log(`Server version: ${version}`);
@@ -72,7 +71,7 @@ export async function setup() {
     `"${config.seedInvoiceEventPrefix}" non-invoiced orders: ${existing} found, ${SEED_ADD === undefined ? `target ${SEED_COUNT}` : 'adding'}, creating ${shortfall}`,
   );
   console.log(
-    `Booking ${shortfall} event(s), each with a function and one completed, closed service order, with ${SEED_VUS} VU(s), each signed in as its own pool user`,
+    `Booking ${shortfall} event(s), each with a function and one completed, closed service order, with ${SEED_VUS} VU(s), each on its own session as a seed user from temp/seed-users.json`,
   );
   return { version, users, shortfall };
 }
