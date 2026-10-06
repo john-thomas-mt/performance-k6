@@ -53,8 +53,7 @@ an ad-hoc prompt. At a leadership level, the four that matter:
   across different logins.
 - **Convert a NeoLoad script** — port an existing NeoLoad virtual user by reading its XML tree
   (requests + correlation) as the source of truth, distilling to the transaction that matters, and
-  translating it into k6 — no re-recording. This is the migration engine; see
-  [conversion-strategy-and-roadmap.md](./conversion-strategy-and-roadmap.md).
+  translating it into k6 — no re-recording. This is the migration engine.
 - **Verify across the version matrix** — run a journey (or the whole suite) once per live release to
   prove it holds beyond the authoring version and to catch real drift.
 - **Detect payload drift** — after a Momentus upgrade, run the suite and triage whether a captured
@@ -68,7 +67,7 @@ versioned alongside the tests they operate on — the same single-source-of-trut
 - **Onboarding cost collapses.** Authoring load tests stops requiring NeoLoad GUI expertise and a seat;
   it requires the repo and Claude. Any engineer — or the AI — can extend the suite.
 - **Maintenance stops being re-recording.** Upgrades become a verify-and-patch loop the AI can run,
-  not a manual re-capture per release (see [conversion-strategy-and-roadmap.md](./conversion-strategy-and-roadmap.md)).
+  not a manual re-capture per release.
 - **The knowledge lives in the repo.** Conventions, correlation patterns, and procedures are text files
   the AI reads on every task — the suite documents and enforces itself, rather than living in one
   engineer's head and a GUI.

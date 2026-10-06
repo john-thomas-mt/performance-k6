@@ -64,9 +64,7 @@ scripting stays local while real load comes from the agents. Evidence in
 NeoLoad's blanket "re-record per release" policy produces a full duplicate script per version. Analysis
 of the NeoLoad tree showed those per-version copies are **mechanical duplicates, not real re-recordings**
 — the only genuine drift across three releases was a single grid-column index shift. k6 handles this
-with one parameterized script plus a version-matrix check, eliminating the duplication entirely. The
-conversion approach and the roadmap to a fully migrated suite are in
-[conversion-strategy-and-roadmap.md](./conversion-strategy-and-roadmap.md).
+with one parameterized script plus a version-matrix check, eliminating the duplication entirely.
 
 ## What does _not_ change
 
@@ -75,7 +73,6 @@ conversion approach and the roadmap to a fully migrated suite are in
   showed identical application behaviour regardless of generator.
 - **The load model** — the batch-rotation suite and progressive standalone model from the performance
   strategy are reproduced in k6 profiles, not abandoned (see
-  [conversion-strategy-and-roadmap.md](./conversion-strategy-and-roadmap.md) and
   [k6-architecture-and-open-source.md](./k6-architecture-and-open-source.md)).
 
 ## Risks and how they're handled
@@ -83,7 +80,7 @@ conversion approach and the roadmap to a fully migrated suite are in
 | Risk                                                              | Mitigation                                                                                                                                                                                                                                                                                                                                                                                                               |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | No hosted results store like NeoLoad Web                          | Every run writes a self-contained HTML report. If we want hosted dashboards and retention, Grafana Cloud's free tier covers it. See [k6-reporting-approaches.md](./k6-reporting-approaches.md) for the reporting options and [cost-comparison.md](./cost-comparison.md) for the cost model.                                                                                                                              |
-| Migration effort for the full suite                               | The port is phased and AI-assisted, with a per-journey verify gate before anything is trusted. Most per-version NeoLoad scripts collapse into a single k6 script, so the real effort is far smaller than the raw script count suggests. See [conversion-strategy-and-roadmap.md](./conversion-strategy-and-roadmap.md).                                                                                                  |
+| Migration effort for the full suite                               | The port is phased and AI-assisted, with a per-journey verify gate before anything is trusted. Most per-version NeoLoad scripts collapse into a single k6 script, so the real effort is far smaller than the raw script count suggests.                                                                                                                                                                                  |
 | Hosted, visual per-group timing breakdown weaker than NeoLoad Web | Per-group timings are already available in the terminal with no new code — k6 emits a `group_duration` metric per group, shown in the end-of-test summary under `--summary-mode full`. What's weaker is the _hosted, visual_ breakdown NeoLoad Web gives out of the box; if that becomes a regular need, a local Grafana + Prometheus setup provides it. See [k6-reporting-approaches.md](./k6-reporting-approaches.md). |
 
 ## Where to go next
