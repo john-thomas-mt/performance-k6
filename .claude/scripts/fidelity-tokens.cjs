@@ -9,7 +9,7 @@
 //
 // Usage:
 //   node .claude/scripts/fidelity-tokens.cjs <chrome-file> [static-file ...] [--vu "<VU tree dir>"]
-//   node .claude/scripts/fidelity-tokens.cjs source/data/chrome/copy-service-orders.chrome.ts source/data/static/copy-service-orders.static.ts
+//   node .claude/scripts/fidelity-tokens.cjs source/data/chrome/t34-copy-service-orders.chrome.ts source/data/static/t34-copy-service-orders.static.ts
 
 const fs = require('fs');
 
