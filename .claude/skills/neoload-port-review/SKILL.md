@@ -33,7 +33,9 @@ areas:
   requests. Each generated page must hold requests from one recorded page, pages come in recorded order, every
   recorded non-api request is placed, and no sequential page is replayed as a parallel batch. Version-prefixed
   pool names are ignored for the match.
-- **correlation**, including jsActions that compose variable names (`C_CUST_NBR_1`)
+- **correlation**, including jsActions that compose variable names (`C_CUST_NBR_1`) or set each key of a map
+  (`for (var v in map) setValue(v, …)`, one variable per column of a picked row). Key-map variables print as one INFO
+  naming what the jsAction reads, and a consumed name one suffix short of a jsAction-set one prints as a NeoLoad typo
 - **token-literal leaks:** scanned in what the journey itself reaches. Typed input the extracting request already
   sends prints as INFO.
 - **transport tables (4b):** each recorded Save2/HDF2 first row is compared by `ColumnName` to the builder of the
@@ -46,11 +48,18 @@ areas:
 - **seed (6):** whether the journey needs one, and then the seed against the data-script VU at this VU's version,
   judged by the data it leaves, not its navigation:
   - which envs NeoLoad's own data run left records on;
-  - that discovery and the seed share one `config` prefix carrying this journey's test id;
+  - how the journey finds the records: a `discover_*` in smoke `setup()`, or, when the recording picks a random grid
+    row in-flow (a `TransportDataRows` extractor with matchNumber 0 feeding a jsAction), the same grid read in the
+    same k6 step;
+  - that discovery and the seed share one `config` prefix carrying this journey's test id. With no discovery prefix,
+    the seed is the one whose `config` prefix carries the test id, and a FLAG says so when none does;
   - the seed's record names;
   - each write per pass, and every `loop` count;
   - each saved table, cell by cell;
-  - every pool the data script picks per iteration.
+  - every pool the data script picks per iteration;
+  - that the seed has its seed probe, `source/probes/<feature>-seed.probe.ts`;
+  - a `seed target` INFO: the data file's planned size in NeoLoad's `data_distribution_config.csv` and the rows
+    its `variables/` file holds per version. `/seed … neoload` reads it; it needs no verdict.
 - **SLA ↔ thresholds:** tags are resolved per call site, and shared `...xThresholds` spreads are followed. Tags
   fired only behind a fidelity guard or only outside the journey (setup discovery) print as INFO.
 - **wiring**
@@ -101,7 +110,11 @@ How to read the common FLAGs:
 | pool rows differ | truncated or retyped pool | the module header documents a deliberate filter — check the reason still holds |
 | pool across versions `DIFFERS` | the journey runs on a version whose rows are not the ported ones | rows are env-independent or discovered at runtime |
 | generated variable, no evidence | the flow never regenerates it (a captured timestamp/counter replayed) | translated under another name — cite where |
-| `no discover_* the flow defines is called from smoke setup()` | always real: nothing finds the data script's records at runtime | none |
+| `no discover_* the flow defines is called from smoke setup()` | always real: nothing finds the data script's records at runtime | none (in-flow grid discovery is recognised and prints OK instead) |
+| `the recording picks its record in-flow … the lean flow does not read it in that step` | always real: the journey has no source for the record the recording picks | none |
+| `no source/seeds script names its records with a k6-t<id>- config prefix` | always real: the journey reads a data script's records and no seed creates them under this test id | none |
+| `<seed> has no seed probe` | always real: nothing reads the seed's records back beside NeoLoad's (`rules/probes.md`, Seed probes) | none |
+| `n variable(s) set by jsAction … from its key map` (INFO) | k6 takes them from a captured value, or from a different row than the one it writes to | the flow parses them from the same live row (grid row type, `get_cell` by column). Cite the wrapper |
 | SLA / threshold mismatch | a lean-spine request from an opted-in step lacks the profile's `avg<`, or a `p(95)` replaces it | the step has `slaProfileEnabled="false"` (launch/login in most VUs). Cite the step |
 | `p(95)` beside the average (INFO) | no commit records the measured run behind it | the commit that added it gives the run and the measured value (e.g. `202dc9d`) |
 
@@ -115,12 +128,18 @@ Read the **hand-written** files only: the flow, the journey's `source/apis/*.api
 - **Optimistic-concurrency stamps** correlated from the latest read and chained across sequential saves.
 - **Data isolation**: a record-modifying journey gives each iteration a unique row
   (`exec.scenario.iterationInTest % pool.length`), not a shared or `(__VU-1+__ITER)` row.
+- **Seed volume** for a journey whose write takes the record out of its own pick list (an invoiced order leaves the
+  non-invoiced grid): a modulo pick over a shrinking live list only stays unique while the stock exceeds the iterations
+  in flight. Compare the seed's `SEED_COUNT` default with what the `neoload` profile consumes (VUs × run time ÷
+  pacing) and note a shortfall as an observation.
 - **Business-rule prompts**: a `Save2` returning `ResultValue ≠ 0` fails loudly with its `MessageInfoList`.
 - **Seed** (when §1 section 6 compares one): the script has already checked the writes, loops, saved tables and
   pools against the data-script VU. Judge what it can't see: a prompt the data script answers is answered the same
   way (the same answer and the same answering body), the values a saved cell takes from a read come from the same
   read, and no captured key from the data script's recording is replayed. Navigation (a UI read the seed skips)
-  is not a finding unless a saved value depends on it.
+  is not a finding unless a saved value depends on it. In the seed probe, check that every field in the
+  `…IdentityFields` lists it skips really varies per record (a key, a name, a date, a pool pick, an account default).
+  A skipped status or type field hides exactly the difference the probe exists to catch.
 - **Fidelity tiers**, if `source/data/chrome/<journey>.chrome.ts` exists: run
   `node .claude/scripts/fidelity-tokens.cjs source/data/chrome/<journey>.chrome.ts source/data/static/<journey>.static.ts`
   and confirm the flow's subs map supplies every contract token. Never `Read` the generated tier files.

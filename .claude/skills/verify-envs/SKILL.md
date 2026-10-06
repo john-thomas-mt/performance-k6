@@ -31,7 +31,7 @@ Invocation: `/verify-envs <journey>` for per-journey; `/verify-envs --suite` (or
 1. Confirm mode + target (which journey, or the whole suite).
 2. Check the prerequisites exist: `temp/secret.json` (the decryption passphrase — every `k6 run` needs it) and `temp/setup.json`. The sweep only rewrites `env`; the site stays `PERF` (perf runs never target QE/AT/RC), so setup needs no `--site`.
 3. Read the `ReleaseVersion` members from `source/utils/types/config.type.ts`. Order the sweep **`main` first**, then the released segments newest→oldest.
-4. Get run approval once for the whole sweep.
+4. Get run approval once for the whole sweep. It covers the small seed runs §1 step 3 may add; name that possibility in the same message.
 5. **Released app pools are cold.** Only `main` stays warm (it's actively developed). A released-version pool is idle, and the first request can exceed k6's 60s `setupTimeout`, failing setup before any journey runs. Before each non-`main` env, warm its app pool (`GET <baseUrl>/app85.cshtml` until it returns 200 quickly) and run with a raised timeout — `K6_SETUP_TIMEOUT=180s k6 run …`. Carry that prefix on the reporter command for those envs.
 
 ## 1. Sweep the matrix (main first)
@@ -40,7 +40,8 @@ For each env in the matrix, in order:
 
 1. Point the run at it: `npm run setup -- --env <env>` (rewrites `temp/setup.json`; site stays the `PERF` default).
 2. Run the mode's command via `k6-run-reporter` (hand it the exact command, and whether the target journey(s) create data so it checks per-VU token isolation). If the journey carries fidelity tiers, run it **twice per env** — once lean (spine correctness) and once `-e FIDELITY=full` (the UI-chrome + static replay). The replay lists come from a single recording, so `full` per env is the cross-version check that the generator's normalizations hold beyond the recorded version; a tier drift shows as `http_req_failed` > 0 or an unresolved-token skip, distinct from a spine failure. Run those two **sequentially, not concurrently**, on a cold released env: two same-account `k6 run`s overlapping there can trip a server-side same-account serialization guard (Momentus serializes per-account requests) and fail one save with a spurious validation error (e.g. a report-replace rule on a shared source record) that vanishes on an isolated re-run. If you must parallelize, give each run a distinct user.
-3. Record the result against the env's **resolved** version, not the alias — a run correlates the app version at runtime (`fetch_server_version()`), so report `main → 26.3`, not just `main`. This keeps results unambiguous across branch cuts.
+3. **On a seed-data gap, seed and re-run once.** A journey whose records come from a seed fails with `no seed data (…): run /seed <env> <journey>` when the env has none (a T34-style discovery throws it in `setup()`, a T08-style grid pick fails the iteration with it). Ask `k6-run-reporter` to quote that line. When it appears, follow the `seed` skill for that env and journey with the default count of 3 (§1–4 of that skill, without its restore: the sweep restores at the end), then re-run the same command once. A pass is recorded as **pass (seeded 3)**; a second failure is triaged as below, since seeding didn't fix it. Any other failure is never answered with a seed. A journey that passes needs no seed, so a sweep seeds only the envs that have run dry.
+4. Record the result against the env's **resolved** version, not the alias — a run correlates the app version at runtime (`fetch_server_version()`), so report `main → 26.3`, not just `main`. This keeps results unambiguous across branch cuts.
 
 **`main` first is deliberate.** It's the highest-priority env and the one where next-version drift appears first — a failure there is the early warning for the change that will hit the next release. A clean `main` plus clean released envs is the goal; fail fast on `main` before spending traffic on the rest.
 
@@ -52,14 +53,14 @@ Classify each failing env, reusing the `payload-drift` triage (that skill is the
 
 - **Payload drift** — a save-success check fails on a journey whose login/reads passed; the write returns non-2xx or a 200/201 with a `ResultValue`/`MessageKey` error body. This is the real cross-version signal (e.g. a grid column added/removed, a field renamed). Hand off to `payload-drift` §2–4 to pinpoint and fix the builder.
 - **Correlation / auth / env** — login or a read step fails, or a value that should be extracted is stale. Out of scope for drift; fix the wrapper's correlation (per the scripting rule).
-- **Data starvation** — `dropped_iterations` > 0 with checks otherwise green means the env lacks the seed data the journey needs (a snapshot not reset, a pool not seeded on that env), **not** drift. Flag it as an env-provisioning gap, not a script bug. Single-journey `setup()` discovers only the seed pool its selected scenario needs, so a per-journey verify of a journey that doesn't read that pool is unaffected by its absence — the gap only blocks the journeys (and the full suite) that actually consume it.
+- **Data starvation** — a `no seed data` line that a seed and re-run (§1 step 3) didn't clear, or `dropped_iterations` > 0 with checks otherwise green, means the env lacks the data the journey needs (a snapshot not reset, a pool not seeded on that env), **not** drift. Flag it as an env-provisioning gap, not a script bug, and give the seed run's result. Single-journey `setup()` discovers only the seed pool its selected scenario needs, so a per-journey verify of a journey that doesn't read that pool is unaffected by its absence — the gap only blocks the journeys (and the full suite) that actually consume it.
 - **Cold-start latency** — an `http_req_duration{name:…}` threshold cross on a freshly-warmed released env, with `checks` 100% and `http_req_failed` 0, is first-sample cold-pool latency, not drift. Note it; re-run after warming if a clean latency read matters. Don't triage it as a script problem.
 
 A journey that passes on `main` but drifts on an older released env (or vice versa) is the case this skill exists to catch: fix it once in the builder with a version-tolerant approach — read the column **by name** from the grid metadata, or branch on version — rather than forking the script per env.
 
 ## 3. Report the matrix
 
-Present a journey × env grid — each cell pass / drift / correlation-fail / data-gap — labelled by resolved version. Name the exact builder/wrapper for each real drift, and separate genuine drift from env-provisioning gaps so the fix queue is clear.
+Present a journey × env grid — each cell pass / pass (seeded n) / drift / correlation-fail / data-gap — labelled by resolved version. Name the exact builder/wrapper for each real drift, and separate genuine drift from env-provisioning gaps so the fix queue is clear.
 
 ## 4. Restore
 
