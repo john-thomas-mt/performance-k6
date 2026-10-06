@@ -17,6 +17,10 @@ export type ApiSetup = SetupData & {
   apiCredentials: ApiCredentials;
 };
 
+export type PoolProbeSetup = SetupData & {
+  bearerToken: string;
+};
+
 export type SessionTokens = {
   bearerToken: string | null;
   encUserId: string | null;

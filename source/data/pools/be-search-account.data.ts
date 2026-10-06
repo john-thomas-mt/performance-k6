@@ -5,7 +5,7 @@
    Then pruned against PERF/26_2 by searching every name once: 8 names match so many accounts that
    the search refuses them ("Too many items in search results"), so search_booking_account fails the
    iteration: 'bb, bb', 'RS', '55, 55', 'Ungerboeck', 'JT', 'CD', 'o, test', 'ARI'. Re-apply the prune
-   after any regenerate, and re-probe the pool after a snapshot reset. */
+   after any regenerate, and re-run source/probes/be-search-account.probe.ts after a snapshot reset. */
 
 export const bookingAccountNames: string[] = [
   'STONE, MARIE',
