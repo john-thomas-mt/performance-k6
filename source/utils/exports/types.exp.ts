@@ -7,5 +7,6 @@ export * from '../types/fidelity.type.ts';
 export * from '../types/invoices.type.ts';
 export * from '../types/leads.type.ts';
 export * from '../types/payments.type.ts';
+export * from '../types/purchase-orders.type.ts';
 export * from '../types/reports.type.ts';
 export * from '../types/service-orders.type.ts';

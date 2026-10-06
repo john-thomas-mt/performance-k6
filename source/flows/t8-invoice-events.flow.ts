@@ -3,6 +3,7 @@ import exec from 'k6/execution';
 import { login_to_events } from './login.flow.ts';
 import {
   get_main_menu_data,
+  getMainMenuDataThresholds,
   open_non_invoiced_orders_list,
   open_non_invoiced_orders_grid,
   open_non_invoiced_orders_search,
@@ -31,7 +32,7 @@ import { invoiceEventsChrome, invoiceEventsStatic, invoiceEventsTransport } from
 import { User, SetupData, FidelityLevel, NonInvoicedOrderRow, TransportTable } from '../utils/exports/types.exp.ts';
 
 export const invoiceEventsThresholds = {
-  'http_req_duration{name:GetMainMenuData}': ['avg<4000'],
+  ...getMainMenuDataThresholds,
   'http_req_duration{name:OpenNonInvoicedOrdersList}': ['avg<4000'],
   'http_req_duration{name:OpenNonInvoicedOrdersGrid}': ['avg<4000'],
   'http_req_duration{name:OpenNonInvoicedOrdersSearch}': ['avg<4000'],

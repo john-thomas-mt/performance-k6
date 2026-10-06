@@ -1,0 +1,162 @@
+import { PurchaseOrderWindows } from '../../../utils/exports/types.exp.ts';
+
+/* Captured purchase order items grid open (USIDataGridServer/GetInitialData2) sent when the Add Item tab opens. */
+export const purchaseOrderItemsGridPayload = (windows: PurchaseOrderWindows, poNbr: string) => [
+  '10',
+  5451,
+  89,
+  81,
+  0,
+  4,
+  2,
+  [
+    {
+      Key: 'OrgCode',
+      Value: '10',
+    },
+    {
+      Key: 'WindowObjectID',
+      Value: 81,
+    },
+    {
+      Key: 'wdwid',
+      Value: windows.editWdwid,
+    },
+    {
+      Key: 'WdwType',
+      Value: 4,
+    },
+    {
+      Key: 'wdwMode',
+      Value: 0,
+    },
+    {
+      Key: 'RemoveEditLayoutLink',
+      Value: false,
+    },
+    {
+      Key: 'ContextObjectID',
+      Value: 0,
+    },
+    {
+      Key: 'MenuType',
+      Value: 6,
+    },
+    {
+      Key: 'ParentWindowType',
+      Value: 10,
+    },
+    {
+      Key: 'PWindowObjectID',
+      Value: 94,
+    },
+    {
+      Key: 'ParentWindowID',
+      Value: 'WB8108',
+    },
+    {
+      Key: 'ParentWindowTitle',
+      Value: 'Home Ã¢â€”ï¿½ Alex W - manager dash',
+    },
+    {
+      Key: 'AssemblyName',
+      Value: '',
+    },
+    {
+      Key: 'ClassName',
+      Value: 'home',
+    },
+    {
+      Key: 'documentSubject',
+      Value: 'PUR',
+    },
+    {
+      Key: 'MenuObjectID',
+      Value: 0,
+    },
+    {
+      Key: 'MenuContextObjectID',
+      Value: 0,
+    },
+    {
+      Key: 'ForceOneColumnLayout',
+      Value: false,
+    },
+    {
+      Key: 'ShowHelpTextInfo',
+      Value: true,
+    },
+    {
+      Key: 'MoveGeneralSectionToNewTab',
+      Value: true,
+    },
+    {
+      Key: 'ShowQuickInfoHeader',
+      Value: true,
+    },
+    {
+      Key: 'SectionUDFSets',
+      Value: '',
+    },
+    {
+      Key: 'PurchaseOrderNbr',
+      Value: Number(poNbr),
+    },
+  ],
+  2,
+  {
+    dm1: 0,
+    dm2: 0,
+    dm3: '',
+    dm4: 0,
+    dm5: '',
+    dm6: 0,
+    dm7: 'N',
+    dm9: '',
+    dm11: '',
+    dm12: 0,
+    dm13: '',
+    dm14: '',
+    dm15: false,
+    dm16: 0,
+    dm17: [],
+    dm18: '',
+    dm19: false,
+    dm20: '',
+    dm21: 1,
+    dm22: '',
+    dm23: '',
+    dm24: [],
+    dm32: false,
+    dm33: 0,
+  },
+  {
+    AutoRefresh: 'Y',
+    EnterUserID: '',
+    FilterCriteria: '',
+    ID: 0,
+    ObjectID: 0,
+    OrgCode: null,
+    ResultsCount: 0,
+    ResultsLimit: 0,
+    ResultsTime: 0,
+    SearchDesc: '',
+    SearchFilters: [],
+    ThemeID: 0,
+    USIID: 0,
+    UpdateUserID: '',
+    UserID: '',
+    SourceUSIID: 0,
+    ConvertToUserDisplayTimeZone: false,
+  },
+  0,
+  [],
+  false,
+  true,
+  true,
+  2,
+  -1,
+  false,
+  [0],
+  true,
+];

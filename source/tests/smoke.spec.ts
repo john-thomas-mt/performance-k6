@@ -21,6 +21,8 @@ import {
   badgeReportThresholds,
   invoice_events_journey,
   invoiceEventsThresholds,
+  purchase_orders_journey,
+  purchaseOrdersThresholds,
   loginThresholds,
 } from '../utils/exports/flows.exp.ts';
 import { pick_user, fetch_server_version, decrypt_users, decrypt_api_credentials } from '../utils/exports/helpers.exp.ts';
@@ -50,6 +52,7 @@ const allScenarios: { [scenario: string]: Scenario } = {
   payment_receipt_report: once('payment_receipt_report'),
   badge_report: once('badge_report'),
   invoice_events: once('invoice_events'),
+  purchase_orders: once('purchase_orders'),
 };
 
 const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
@@ -63,6 +66,7 @@ const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
   payment_receipt_report: paymentReceiptReportThresholds,
   badge_report: badgeReportThresholds,
   invoice_events: invoiceEventsThresholds,
+  purchase_orders: purchaseOrdersThresholds,
 };
 
 const selected = __ENV.SCENARIO;
@@ -146,4 +150,8 @@ export function badge_report(data: SmokeSetup) {
 
 export function invoice_events(data: SmokeSetup) {
   invoice_events_journey(pick_user(data.users), data);
+}
+
+export function purchase_orders(data: SmokeSetup) {
+  purchase_orders_journey(pick_user(data.users), data);
 }

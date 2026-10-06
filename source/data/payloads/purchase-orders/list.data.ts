@@ -1,0 +1,117 @@
+import { PurchaseOrderWindows } from '../../../utils/exports/types.exp.ts';
+
+/* Captured Purchase Orders list open (GenericListServer/GetInitialData2). ParentWindowTitle and ParentWindowID are the recording user's home dashboard, sent as captured. */
+export const purchaseOrdersListPayload = (windows: PurchaseOrderWindows) => [
+  [
+    {
+      Key: 'OrgCode',
+      Value: '10',
+    },
+    {
+      Key: 'WindowObjectID',
+      Value: 81,
+    },
+    {
+      Key: 'wdwid',
+      Value: windows.listWdwid,
+    },
+    {
+      Key: 'WdwType',
+      Value: 1,
+    },
+    {
+      Key: 'wdwMode',
+      Value: 0,
+    },
+    {
+      Key: 'RemoveEditLayoutLink',
+      Value: false,
+    },
+    {
+      Key: 'ContextObjectID',
+      Value: 0,
+    },
+    {
+      Key: 'MenuType',
+      Value: 1,
+    },
+    {
+      Key: 'ParentWindowType',
+      Value: 10,
+    },
+    {
+      Key: 'PWindowObjectID',
+      Value: 94,
+    },
+    {
+      Key: 'ParentWindowID',
+      Value: 'WB8108',
+    },
+    {
+      Key: 'ParentWindowTitle',
+      Value: 'Home Ã¢â€”ï¿½ Alex W - manager dash',
+    },
+    {
+      Key: 'AssemblyName',
+      Value: '',
+    },
+    {
+      Key: 'ClassName',
+      Value: 'home',
+    },
+  ],
+  windows.listWdwid,
+  0,
+  81,
+  0,
+  0,
+  0,
+  0,
+  {
+    ID: 0,
+    ThemeID: 0,
+    UserID: '',
+    ObjectID: 0,
+    ViewDesc: '',
+    SearchID: 0,
+    Default: 'N',
+    EnterUserID: '',
+    UpdateUserID: '',
+    USIID: 0,
+    SubTotalColumns: '',
+    GrandTotalColumns: '',
+    ShowGroupCounts: false,
+    ViewType: 0,
+    ViewColumns: [],
+    OrgCode: '',
+    GrandTotalRowCollapsed: false,
+    CustomXML: '',
+    AccessType: 1,
+    RoleIDs: '',
+    ContextObjectIDs: '',
+    ViewGroups: [],
+    UseCardList: false,
+    SourceUSIID: 0,
+  },
+  {
+    AutoRefresh: 'Y',
+    EnterUserID: '',
+    FilterCriteria: '',
+    ID: 0,
+    ObjectID: 0,
+    OrgCode: null,
+    ResultsCount: 0,
+    ResultsLimit: 0,
+    ResultsTime: 0,
+    SearchDesc: '',
+    SearchFilters: [],
+    ThemeID: 0,
+    USIID: 0,
+    UpdateUserID: '',
+    UserID: '',
+    SourceUSIID: 0,
+    ConvertToUserDisplayTimeZone: false,
+  },
+  [],
+  true,
+];

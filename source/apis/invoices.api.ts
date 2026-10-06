@@ -18,6 +18,10 @@ import {
 } from '../utils/exports/data.exp.ts';
 import { InvoiceSaveResult, NonInvoicedOrderRow, TransportTable } from '../utils/exports/types.exp.ts';
 
+export const getMainMenuDataThresholds = {
+  'http_req_duration{name:GetMainMenuData}': ['avg<4000'],
+};
+
 function post_invoice(endpoint: string, payload: unknown, token: string, version: string, name: string) {
   const res = http.post(`${config.baseUrl}/api/${endpoint}`, JSON.stringify(payload), {
     headers: build_headers(token, version),
