@@ -8,3 +8,4 @@ export * from '../../flows/t1-lead-account.flow.ts';
 export * from '../../flows/t3-contact-service-order.flow.ts';
 export * from '../../flows/t5-payment-receipt-report.flow.ts';
 export * from '../../flows/t6-badge-report.flow.ts';
+export * from '../../flows/t8-invoice-events.flow.ts';
