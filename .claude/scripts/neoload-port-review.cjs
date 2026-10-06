@@ -234,6 +234,7 @@ if (fs.existsSync(chromeFile)) {
 }
 const allReached = new Set();
 const stepSeen = new Map();
+const stepLean = new Map();
 let recordedTierRequests = 0;
 for (const s of stepPos) {
   const nl = count(s.requests.filter((r) => r.cls === 'SPINE').map((r) => r.endpoint));
@@ -253,6 +254,7 @@ for (const s of stepPos) {
     k6 = count(r.endpoints);
     lean = count(reach(slice, new Set(), new Set(), stripGuarded).endpoints);
     leanSeq = reachSeq(slice, new Set(), stripGuarded);
+    stepLean.set(s.name, lean);
   }
   console.log(
     `  [${s.name}]  spine ${[...nl.values()].reduce((a, b) => a + b, 0)} · chrome ${[...chrome.values()].reduce((a, b) => a + b, 0)} · static/telemetry ${drops}`,
@@ -333,19 +335,38 @@ const jsSets = new Map();
 // a jsAction that composes the name (setValue(varName + suffix) over a { 'C_CUST_NBR': 'EV200_CUST_NBR', … } map)
 // sets <key>_1…<key>_n; the map's keys are the bases
 const jsDynamic = new Map();
+// a jsAction that loops a map and passes the loop key straight to setValue (for (var v in map) setValue(v, …)) sets
+// the map's keys exactly, typically one variable per column of a row it picked
+const jsKeyMapped = new Map();
+// the variables each jsAction reads, to tell which extract feeds it
+const jsReads = new Map();
 const scripts = path.join(treeDir, '%resources%', 'scripts');
 if (fs.existsSync(scripts)) {
   for (const f of fs.readdirSync(scripts)) {
     const js = read(path.join(scripts, f));
     const sets = [...new Set([...js.matchAll(/setValue\s*\(\s*['"]([^'"]+)['"]/g)].map((m) => m[1]))];
-    const bases = /setValue\s*\(\s*[A-Za-z_]/.test(js) ? [...js.matchAll(/['"]([CP]_[A-Za-z0-9_]+)['"]\s*:/g)].map((m) => m[1]) : [];
+    const keyMapped = [];
+    for (const m of js.matchAll(/for\s*\(\s*(?:var|let|const)\s+(\w+)\s+in\s+(\w+)\s*\)/g)) {
+      if (!new RegExp(`setValue\\s*\\(\\s*${m[1]}\\s*,`).test(js)) continue;
+      const map = js.match(new RegExp(`\\b${m[2]}\\s*=\\s*\\{([\\s\\S]*?)\\}`));
+      if (map) keyMapped.push(...[...map[1].matchAll(/['"]([CP]_[A-Za-z0-9_]+)['"]\s*:/g)].map((k) => k[1]));
+    }
+    const bases = /setValue\s*\(\s*[A-Za-z_]/.test(js)
+      ? [...js.matchAll(/['"]([CP]_[A-Za-z0-9_]+)['"]\s*:/g)].map((m) => m[1]).filter((b) => !keyMapped.includes(b))
+      : [];
     const fns = [...js.matchAll(/function\s+(\w+)/g)].map((m) => m[1]);
+    jsReads.set(f, [...new Set([...js.matchAll(/getValue\s*\(\s*['"]([^'"]+)['"]/g)].map((m) => m[1]))]);
     sets.forEach((v) => jsSets.set(v, f));
+    keyMapped.forEach((v) => {
+      jsSets.set(v, f);
+      jsKeyMapped.set(v, f);
+    });
     bases.forEach((b) => jsDynamic.set(b, f));
-    const done = sets.length > 0 && sets.every((v) => jsTranslated(v)[1]);
+    const done = sets.length > 0 && !keyMapped.length && sets.every((v) => jsTranslated(v)[1]);
     const composed = bases.length ? ` + composed [${bases.map((b) => `${b}_<n>`).join(', ')}]` : '';
+    const mapped = keyMapped.length ? ` + key map [${keyMapped.join(', ')}]` : '';
     (done ? ok : info)(
-      `jsAction ${f}: functions [${fns.join(', ')}] sets [${sets.join(', ')}]${composed} — ${done ? `translated (${sets.map((v) => jsTranslated(v)[0]).join(', ')})` : 'confirm translated'}`,
+      `jsAction ${f}: functions [${fns.join(', ')}] sets [${sets.join(', ')}]${mapped}${composed} — ${done ? `translated (${sets.map((v) => jsTranslated(v)[0]).join(', ')})` : 'confirm translated'}`,
     );
   }
 }
@@ -487,16 +508,34 @@ for (const [i, r] of spineReqs.entries()) {
 if (unconsumed.length)
   info(`${unconsumed.length} extract(s) no later request consumes (safe to drop unless a jsAction reads them): ${unconsumed.join(', ')}`);
 const consumedC = new Set(spineReqs.flatMap((r) => [...tokenText(r).matchAll(/\$\{(C_[A-Za-z0-9_]+)/g)].map((m) => m[1])));
+const keyMappedUse = new Map();
 for (const c of consumedC) {
   const base = c.replace(/_\d+$/, '');
   if (extracted.has(c) || extracted.has(base)) continue;
-  if (base !== c && jsDynamic.has(base)) {
+  if (jsKeyMapped.has(c)) {
+    const f = jsKeyMapped.get(c);
+    keyMappedUse.set(f, [...(keyMappedUse.get(f) || []), c]);
+  } else if (base !== c && jsDynamic.has(base)) {
     const inK6 = new RegExp(`\\b${c}\\b`).test(reachedText);
     (inK6 ? ok : flag)(
       `${c} set by jsAction ${jsDynamic.get(base)} (composed name ${base}_<n>)${inK6 ? ' → the flow sets it' : ': nothing in k6 sets it'}`,
     );
   } else if (c.endsWith('_')) info(`${c}… is a dynamically composed variable name — confirm its k6 source by hand`);
-  else flag(`${c} consumed but extracted nowhere in this VU (jsAction or init-container?)`);
+  else {
+    // a name one suffix short of what a jsAction sets is a NeoLoad typo: the token goes out unresolved
+    const near = [...jsSets.keys()].find((n) => n.startsWith(`${c}_`));
+    if (near)
+      info(
+        `${c} is set nowhere, but jsAction ${jsSets.get(near)} sets ${near}: a NeoLoad typo, so it sends the token unresolved; k6 should send the real value`,
+      );
+    else flag(`${c} consumed but extracted nowhere in this VU (jsAction or init-container?)`);
+  }
+}
+for (const [f, names] of keyMappedUse) {
+  const from = (jsReads.get(f) || []).join(', ') || 'no getValue';
+  info(
+    `${names.length} variable(s) set by jsAction ${f} from its key map over ${from}: ${names.join(', ')}. Confirm k6 takes them from the same row (a parsed grid row, not a captured value)`,
+  );
 }
 
 // ---- 4. token-literal leaks ---------------------------------------------------------------------
@@ -1118,8 +1157,48 @@ if (!dataScripts.length && !chained.length && !seedPrefixed.length) {
     );
   }
 
+  // how many records NeoLoad sizes a data script's output at (team/data-distribution), and how many rows its
+  // per-version variables/ files hold now. /seed reads this line to size a `neoload` count
+  const distribution = (() => {
+    const f = path.join(root, 'team', 'data-distribution', 'data_distribution_config.csv');
+    if (!fs.existsSync(f)) return [];
+    const [head, ...rows] = read(f).replace(/^﻿/, '').split(/\r?\n/).filter(Boolean);
+    const cols = head.split(',');
+    return rows.map((r) => Object.fromEntries(r.split(',').map((v, i) => [cols[i], v])));
+  })();
+  const seedTarget = (dataFile) => {
+    const rows = distribution.filter((d) => d.SourceScript === dataFile);
+    if (rows.length === 0) return null;
+    const stems = [...new Set(rows.map((d) => d.FileName.replace(/^P_[\d_]+?_(?=[A-Z])/, '').replace(/\.txt$/, '')))];
+    const left = versions
+      .map((v) => {
+        const n = stems
+          .map((stem) => path.join(root, 'variables', `version_${v}`, `P_${v}_${stem}.txt`))
+          .filter((p) => fs.existsSync(p))
+          .reduce((sum, p) => sum + Math.max(0, read(p).split(/\r?\n/).filter(Boolean).length - 1), 0);
+        return n ? `${v} ${n}` : null;
+      })
+      .filter(Boolean);
+    return `${dataFile} is sized at ${rows[0].ExpectedTotalCount} in data_distribution_config.csv (${stems.join(', ')}); rows in variables/ now: ${left.join(', ') || 'none'}`;
+  };
+
   // the journey finds the seeded records by a config prefix, and a seed must name its records with that prefix
-  if (!discovery.length) flag("the journey reads a data script's records, but no discover_* the flow defines is called from smoke setup()");
+  // the recording may pick its record in-flow instead: a random row (matchNumber 0) of a grid read, handed to a
+  // jsAction that splits it into variables. The same read in the same k6 step is then the discovery
+  const inFlowPicks = spineReqs.flatMap((r) =>
+    r.extractors
+      .filter((e) => e.matchNumber === '0' && /TransportDataRows/.test(e.jsonpath || ''))
+      .map((e) => ({ e, r, js: [...jsReads].filter(([, reads]) => reads.includes(e.name)).map(([f]) => f) }))
+      .filter((p) => p.js.length),
+  );
+  for (const { e, r, js } of inFlowPicks) {
+    const got = (stepLean.get(r.step) || new Map()).get(r.endpoint) || 0;
+    (got ? ok : flag)(
+      `the recording picks its record in-flow: ${e.name} ← a random row of ${r.endpoint} [${r.step.replace(/^T\d+_[A-Za-z]+_/, '')}], split by jsAction ${js.join(', ')}; ${got ? 'the lean flow reads it in the same step, so no setup discovery is needed' : 'the lean flow does not read it in that step, so nothing picks the record'}`,
+    );
+  }
+  if (!discovery.length && !inFlowPicks.length)
+    flag("the journey reads a data script's records, but no discover_* the flow defines is called from smoke setup()");
   const keys = [
     ...new Set(discovery.flatMap((fn) => [...(index.get(fn)?.body || '').matchAll(/\bconfig\.(\w+)/g)].map((m) => m[1]))),
   ].filter((k) => configValue(k) !== undefined);
@@ -1137,6 +1216,29 @@ if (!dataScripts.length && !chained.length && !seedPrefixed.length) {
     const id = (`${v}-`.match(NAME) || [])[1];
     (id && Number(id) === tNum && !id.startsWith('0') ? ok : flag)(
       `seed prefix '${v}' ${id && Number(id) === tNum ? 'carries' : 'does not carry'} the consuming journey's id (k6-t${tNum}-<what>)`,
+    );
+  }
+  // with no discovery prefix to follow, the seed is the one whose config prefix carries this journey's test id
+  if (!keys.length) {
+    for (const s of seeds) {
+      const own = [...new Set([...s.text.matchAll(/\bconfig\.(\w+)/g)].map((m) => m[1]))].filter((k) =>
+        (configValue(k) || '').startsWith(`k6-t${tNum}-`),
+      );
+      if (!own.length) continue;
+      seedFiles.add(s);
+      info(
+        `no discovery prefix names a seed; ${rel(s.f)} names its records with config.${own[0]} = '${configValue(own[0])}', so it is the seed compared below`,
+      );
+    }
+    if (!seedFiles.size)
+      flag(`no source/seeds script names its records with a k6-t${tNum}- config prefix, so no seed is compared with ${dsUids.join(', ')}`);
+  }
+  // the requests are compared below; only a seed probe reads the resulting records back beside NeoLoad's
+  for (const s of seedFiles) {
+    const probe = path.join('source', 'probes', path.basename(s.f).replace(/\.seed\.ts$/, '-seed.probe.ts'));
+    const has = fs.existsSync(probe);
+    (has ? ok : flag)(
+      `${rel(s.f)} ${has ? `has its seed probe ${rel(probe)}` : `has no seed probe (${rel(probe)}), so nothing reads its records back beside NeoLoad's`}`,
     );
   }
 
@@ -1178,7 +1280,11 @@ if (!dataScripts.length && !chained.length && !seedPrefixed.length) {
       );
       writers
         .filter((w) => w.vu === path.basename(dsTree))
-        .forEach((w) => info(`${short} hands ${w.variable} to the journey through ${w.file}; the seed's name prefix replaces that file`));
+        .forEach((w) => {
+          info(`${short} hands ${w.variable} to the journey through ${w.file}; the seed's name prefix replaces that file`);
+          const target = seedTarget(w.file);
+          if (target) info(`seed target ${rel(s.f)}: ${target}`);
+        });
       const nl = count(dsReqs.filter((r) => r.cls === 'SPINE').map((r) => r.endpoint));
       for (const [ep, n] of nl) {
         const got = k6.get(ep) || 0;

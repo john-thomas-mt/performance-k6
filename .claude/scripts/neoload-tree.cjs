@@ -107,7 +107,12 @@ const parseAction = (action, page) => {
   const plain = cdata ? null : action.match(/<textPostContent>([\s\S]*?)<\/textPostContent>/);
   const template = cdata ? cdata[1] : plain ? xmlDecode(plain[1]) : null;
   const extractors = [...action.matchAll(/<variable-extractor\b(?:[^>"]|"[^"]*")*>/g)]
-    .map((m) => ({ name: attr(m[0], 'name'), jsonpath: attr(m[0], 'jsonpath'), regExp: attr(m[0], 'regExp') }))
+    .map((m) => ({
+      name: attr(m[0], 'name'),
+      jsonpath: attr(m[0], 'jsonpath'),
+      regExp: attr(m[0], 'regExp'),
+      matchNumber: attr(m[0], 'matchNumber'),
+    }))
     .filter((e) => e.name);
   return {
     uid: page.uid,
