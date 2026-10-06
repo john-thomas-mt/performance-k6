@@ -70,6 +70,11 @@ same row together.
   prints the ready-to-run command for every pool a VU references. Carrying only the first few rows
   narrows the data spread the run exercises — a run that touches 5 spaces instead of 824 is not the
   recorded workload, and it passes every check while doing it, so completeness is the pool's whole point.
+- **Complete is not the same as valid on this env.** A recorded row can be one the env rejects (an
+  account name the search refuses as too broad, a space that isn't bookable). Prune each one and record
+  it in the pool's header with the server's reason, so the prune survives a regenerate. A pool read by a
+  search has a probe in `source/probes/` that finds them all in one pass (`rules/probes.md`); a pool
+  only a save can test is pruned from the save wrapper's failure log.
 - **Select with `pick_pool_value(pool)`** (helpers barrel) rather than indexing in the flow, so every
   journey spreads across the pool the same way and concurrent VUs land on different rows.
 - **A pool holds pre-existing records the journey reads; rows a seed creates are discovered at runtime

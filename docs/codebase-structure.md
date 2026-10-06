@@ -34,7 +34,7 @@ config / types   (leaves — env values, load profiles, per-feature types)
       ↓
     flows         (composed user journeys; login owns the auth groups)
       ↓
- tests / seeds    (entry points k6 runs directly)
+ tests / seeds / probes   (entry points k6 runs directly)
 ```
 
 | Layer   | Folder                  | Responsibility                                                                                                                              | Naming pattern                        |
@@ -47,6 +47,7 @@ config / types   (leaves — env values, load profiles, per-feature types)
 | Flows   | `source/flows/`         | One composed journey per file; calls the shared `login.flow.ts`, then its own numbered groups; also exports its per-endpoint SLA thresholds | `<journey>.flow.ts`                   |
 | Tests   | `source/tests/`         | Entry-point specs that drive one or more journeys via k6 `scenarios`; each `exec` is a thin wrapper calling a flow                          | `<name>.spec.ts`                      |
 | Seeds   | `source/seeds/`         | Bulk prerequisite-data scripts run once after a snapshot reset, reusing the API wrappers                                                    | `<feature>.seed.ts`                   |
+| Probes  | `source/probes/`        | Read-only checks that send every row of a generated value pool through its journey's wrapper once, to find rows the env rejects             | `<pool>.probe.ts`                     |
 
 The authoritative, up-to-date contents of each folder are the folder listings themselves; the table
 describes the _shape_, not an inventory.
@@ -56,7 +57,7 @@ describes the _shape_, not an inventory.
 Every cross-folder import goes through a barrel in `source/utils/exports/` — one `<layer>.exp.ts` per
 layer — so importing a layer's members costs a single line. A module reaches _lower_ layers through
 their barrels and reaches a _same-layer_ peer by its direct file path (keeping the barrel out of any
-same-layer cycle). Entry-point folders (`tests/`, `seeds/`) have no barrel — nothing imports them; k6
+same-layer cycle). Entry-point folders (`tests/`, `seeds/`, `probes/`) have no barrel — nothing imports them; k6
 runs their files directly. The full rule (including why k6 forces relative full-`.ts`-extension paths
 and how export-name uniqueness is preserved) is in `.claude/rules/exports.md`.
 
@@ -100,5 +101,5 @@ project `CLAUDE.md` is the always-loaded overview and the rules index.
 ## Sources
 
 - Project `CLAUDE.md` — directory structure and running tests (this repo)
-- `.claude/rules/` — per-layer conventions (exports, scripting, apis, flows, helpers, types, config, data, tests, seeds)
+- `.claude/rules/` — per-layer conventions (exports, scripting, apis, flows, helpers, types, config, data, tests, seeds, probes)
 - [Grafana k6 — modules & imports](https://grafana.com/docs/k6/latest/using-k6/modules/)
