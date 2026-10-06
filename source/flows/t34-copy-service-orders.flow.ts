@@ -22,6 +22,7 @@ import {
   sign_out,
   major_minor,
   format_retrieve_stamp,
+  seed_gap_message,
 } from '../utils/exports/helpers.exp.ts';
 import { copyServiceOrdersChrome, copyServiceOrdersStatic, copyServiceOrdersTransport } from '../utils/exports/data.exp.ts';
 import { config } from '../utils/exports/config.exp.ts';
@@ -45,7 +46,7 @@ export function discover_service_order_pool(version: string, user: User) {
   const pool = interleave(events.map((e) => load_service_orders(bearerToken, version, e).map((o) => ({ ...o, evtDesc: e.desc }))));
   console.log(`"${prefix}" events: ${seeded.length} found, ${events.length} sampled, ${pool.length} service order(s)`);
   if (pool.length === 0) {
-    throw new Error(`no service orders under "${prefix}" events — run source/seeds/service-orders.seed.ts after the snapshot reset`);
+    throw new Error(seed_gap_message('copy_service_orders', `no service orders under "${prefix}" events`));
   }
   return pool;
 }

@@ -16,20 +16,23 @@ import {
   refresh_service_order_event_fields,
   save_contact_service_order,
   confirm_contact_service_order,
+  search_events,
 } from '../utils/exports/apis.exp.ts';
 import {
   fetch_server_version,
   decrypt_users,
+  pick_user,
   pick_pool_value,
   format_retrieve_stamp,
   stamp_to_epoch,
 } from '../utils/exports/helpers.exp.ts';
 import { config } from '../utils/exports/config.exp.ts';
-import { ServiceOrderSeedSetup } from '../utils/exports/types.exp.ts';
+import { SeedSetup, SeedSession } from '../utils/exports/types.exp.ts';
 import { userCredentials, bookingAccountNames, bookingSpaces, random_future_date } from '../utils/exports/data.exp.ts';
 
-const SEED_COUNT = Number(__ENV.SEED_COUNT || 100);
-const SEED_VUS = Number(__ENV.SEED_VUS || 5);
+const SEED_ADD = __ENV.SEED_ADD ? Number(__ENV.SEED_ADD) : undefined;
+const SEED_COUNT = SEED_ADD ?? Number(__ENV.SEED_COUNT || 100);
+const SEED_VUS = Number(__ENV.SEED_VUS || 10);
 const ORDERS_PER_EVENT = 2;
 const SERVICE_ORDER_OBJECT_ID = 456;
 
@@ -37,9 +40,9 @@ export const options: Options = {
   scenarios: {
     seed: {
       executor: 'shared-iterations',
-      vus: SEED_VUS,
+      vus: Math.min(SEED_VUS, SEED_COUNT),
       iterations: SEED_COUNT,
-      maxDuration: '60m',
+      maxDuration: __ENV.SEED_MAX_DURATION || '4h',
     },
   },
 };
@@ -47,22 +50,40 @@ export const options: Options = {
 export async function setup() {
   const cryptoKey = config.cryptoKey;
   if (!cryptoKey) {
-    throw new Error('No decryption key — write temp/secret.json (npm run secret -- --key <pass>) or pass -e CRYPTO_KEY=...');
+    throw new Error('No decryption key — write temp/secret.json (npm run secret -- --key <pass>)');
   }
   const users = await decrypt_users(userCredentials, cryptoKey);
   if (users.length === 0) {
     throw new Error('data/creds/users.data.ts is empty — add at least one user entry');
   }
   const version = fetch_server_version();
-  const { bearerToken, encUserId } = login_to_events(users[0], version);
-  const windowVersion = get_window_version(bearerToken, version, 'EB8776');
+  const { bearerToken } = login_to_events(users[0], version);
+  const existing = search_events(bearerToken, version, config.seedEventPrefix, 'CountSeedEvents').filter((e) =>
+    e.desc.startsWith(config.seedEventPrefix),
+  ).length;
+  const shortfall = SEED_ADD ?? Math.max(0, SEED_COUNT - existing);
 
   console.log(`Server version: ${version}`);
-  console.log(`Booking ${SEED_COUNT} event(s), each with a function and ${ORDERS_PER_EVENT} service orders, with ${SEED_VUS} VU(s)`);
-  return { version, bearerToken, encUserId, windowVersion };
+  console.log(
+    `"${config.seedEventPrefix}" events: ${existing} found, ${SEED_ADD === undefined ? `target ${SEED_COUNT}` : 'adding'}, creating ${shortfall}`,
+  );
+  console.log(
+    `Booking ${shortfall} event(s), each with a function and ${ORDERS_PER_EVENT} service orders, with ${SEED_VUS} VU(s), each signed in as its own pool user`,
+  );
+  return { version, users, shortfall };
 }
 
-function add_service_order(data: ServiceOrderSeedSetup, evtId: string) {
+let vuSession: SeedSession | null = null;
+
+function seed_session(data: SeedSetup) {
+  if (!vuSession) {
+    const { bearerToken, encUserId } = login_to_events(pick_user(data.users), data.version);
+    vuSession = { version: data.version, bearerToken, encUserId, windowVersion: get_window_version(bearerToken, data.version, 'EB8776') };
+  }
+  return vuSession;
+}
+
+function add_service_order(data: SeedSession, evtId: string) {
   const formStamp = get_contact_column_stamp(data.bearerToken, data.version, SERVICE_ORDER_OBJECT_ID, 'GetServiceOrderObjectColumns');
   const form = open_service_order_form(data.bearerToken, data.version, formStamp);
   const header = refresh_service_order_event_fields(data.bearerToken, data.version, form, evtId, stamp_to_epoch(formStamp));
@@ -74,8 +95,10 @@ function add_service_order(data: ServiceOrderSeedSetup, evtId: string) {
     : saved.orderNbr;
 }
 
-export default function seed_service_orders(data: ServiceOrderSeedSetup) {
-  const { bearerToken, version, encUserId, windowVersion } = data;
+export default function seed_service_orders(data: SeedSetup) {
+  if (exec.scenario.iterationInTest >= data.shortfall) return;
+  const session = seed_session(data);
+  const { bearerToken, version, encUserId, windowVersion } = session;
   const iter = exec.scenario.iterationInTest;
   const epoch = Date.now();
   const date = random_future_date();
@@ -116,6 +139,6 @@ export default function seed_service_orders(data: ServiceOrderSeedSetup) {
   );
 
   const orders: string[] = [];
-  for (let i = 0; i < ORDERS_PER_EVENT; i++) orders.push(add_service_order(data, booked.evtId));
+  for (let i = 0; i < ORDERS_PER_EVENT; i++) orders.push(add_service_order(session, booked.evtId));
   console.log(`[VU ${__VU}] Booked "${description}" (${booked.evtId}) with service orders ${orders.join(', ')}`);
 }

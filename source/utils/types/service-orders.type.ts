@@ -59,7 +59,13 @@ export type SmokeSetup = ServiceOrderSetup &
     users: User[];
   };
 
-export type ServiceOrderSeedSetup = {
+export type SeedSetup = {
+  version: string;
+  users: User[];
+  shortfall: number;
+};
+
+export type SeedSession = {
   version: string;
   bearerToken: string;
   encUserId: string;
