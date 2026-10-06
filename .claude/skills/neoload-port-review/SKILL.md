@@ -14,7 +14,7 @@ to a report; fixes belong to an authoring session.
 
 ## 1. Gather the evidence (one command)
 
-Resolve the flow from the argument (a scenario name like `lead_account` → `source/flows/lead-account.flow.ts`),
+Resolve the flow from the argument (a scenario name like `lead_account` → `source/flows/t1-lead-account.flow.ts`),
 then run:
 
 ```bash
