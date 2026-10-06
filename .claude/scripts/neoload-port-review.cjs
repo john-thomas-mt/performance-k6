@@ -615,7 +615,7 @@ for (const r of spineReqs.filter((x) => x.cls === 'SPINE' && x.template && x.tem
     if (value.length < (numeric ? 3 : 4) || /^(true|false|null)$/.test(value) || checked.has(value)) continue;
     checked.add(value);
     // a bare number matches any width or count (Width: 100), so a numeric value counts only as a quoted literal
-    const quoted = new RegExp(`['"\`]${value}['"\`]`);
+    const quoted = new RegExp(`['"\`]${value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"\`]`);
     const shown = /password|credential/i.test(token) ? '(masked)' : `"${value.slice(0, 40)}"`;
     for (const { f, lines, offset } of scopedText) {
       const hit = lines.findIndex((l) => !isComment(l) && (numeric ? quoted.test(l) : l.includes(value)));
