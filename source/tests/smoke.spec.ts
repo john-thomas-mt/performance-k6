@@ -19,6 +19,8 @@ import {
   paymentReceiptReportThresholds,
   badge_report_journey,
   badgeReportThresholds,
+  daily_function_report_journey,
+  dailyFunctionReportThresholds,
   loginThresholds,
 } from '../utils/exports/flows.exp.ts';
 import { pick_user, fetch_server_version, decrypt_users, decrypt_api_credentials } from '../utils/exports/helpers.exp.ts';
@@ -47,6 +49,7 @@ const allScenarios: { [scenario: string]: Scenario } = {
   contact_service_order: once('contact_service_order'),
   payment_receipt_report: once('payment_receipt_report'),
   badge_report: once('badge_report'),
+  daily_function_report: once('daily_function_report'),
 };
 
 const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
@@ -59,6 +62,7 @@ const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
   contact_service_order: contactServiceOrderThresholds,
   payment_receipt_report: paymentReceiptReportThresholds,
   badge_report: badgeReportThresholds,
+  daily_function_report: dailyFunctionReportThresholds,
 };
 
 const selected = __ENV.SCENARIO;
@@ -68,7 +72,7 @@ if (selected && !allScenarios[selected]) {
 
 const soPoolScenarios = new Set(['copy_service_orders']);
 const needsSoPool = !selected || soPoolScenarios.has(selected);
-const apiCredentialScenarios = new Set(['payment_receipt_report', 'badge_report']);
+const apiCredentialScenarios = new Set(['payment_receipt_report', 'badge_report', 'daily_function_report']);
 const needsApiCredentials = !selected || apiCredentialScenarios.has(selected);
 
 const activeThresholds: { [metric: string]: string[] } = selected
@@ -138,4 +142,8 @@ export function payment_receipt_report(data: SmokeSetup) {
 
 export function badge_report(data: SmokeSetup) {
   badge_report_journey(data);
+}
+
+export function daily_function_report(data: SmokeSetup) {
+  daily_function_report_journey(data);
 }

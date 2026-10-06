@@ -2,6 +2,7 @@ export * from '../types/badges.type.ts';
 export * from '../types/common.type.ts';
 export * from '../types/contacts.type.ts';
 export * from '../types/config.type.ts';
+export * from '../types/daily-functions.type.ts';
 export * from '../types/events.type.ts';
 export * from '../types/fidelity.type.ts';
 export * from '../types/leads.type.ts';
