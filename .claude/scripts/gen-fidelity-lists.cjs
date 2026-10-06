@@ -113,6 +113,16 @@ const JOURNEY_SPINE = {
     '/api/GenericDetailServer/GetInitialData2': ['05'],
     '/api/GenericDetailServer/HandleDependentFields2': ['06'],
   },
+  't9-purchase-orders': {
+    '/api/MainMenuServer/GetMainMenuData': ['03'],
+    '/api/GenericListServer/GetInitialData2': ['03'],
+    '/api/USIDataGridServer/GetInitialData2': ['03', '06', '07'],
+    '/api/GenericSearchServer/GetInitialData2': ['06', '07'],
+    '/api/GenericDetailServer/GetInitialData2': ['04', '05', '06', '07'],
+    '/api/GenericDetailServer/HandleDependentFields2': ['05', '07'],
+    '/api/USISearchComboServer/SaveRecentlyUsed': ['05', '07'],
+    '/api/USIGLAccountServer/ValidateGLAccount': ['07'],
+  },
 };
 // per-journey, per-request spine: individual requests scripted as wrappers on a path whose other requests in
 // the same step stay chrome (contact-service-order step 04 fires 15 GetObjectColumns, only the object-1659 one
@@ -130,6 +140,7 @@ const JOURNEY_SPINE_REQUESTS = {
     { path: '/api/ObjectColumnCacheServer/GetObjectColumns', step: '06', body: '[456,' },
     { path: '/api/ObjectColumnCacheServer/GetObjectColumns', step: '08', body: '[2556,' },
   ],
+  't9-purchase-orders': [{ path: '/api/ObjectColumnCacheServer/GetObjectColumns', step: '03', body: '[81,' }],
 };
 // endpoints a later release drops but that still exist on an older *live* release — emit with a removedIn guard
 // so fire time skips them only where they're gone (version_at_least), keeping them on the releases that serve
