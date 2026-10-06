@@ -1,8 +1,9 @@
 // Distill a NeoLoad VU tree into a compact authoring digest for the neoload-to-k6 workflow — the
-// NeoLoad-side analog of the recon-kit. Walks the tree and prints, in one pass: the step order, the
-// transaction spine (each request classified keep / chrome / drop), the solved <variable-extractor>
-// correlation map, the paired test-data-script VU, and a dissection of each write/open request body
-// pulled from its recorded-artifacts zip. Keeps the raw XML, extractor blocks, and multi-KB captured
+// NeoLoad-side analog of the recon-kit. Walks the tree and prints, in one pass: the step order (steps inside a
+// loop/if/try action included), the transaction spine (each request classified keep / chrome / drop), the solved
+// <variable-extractor> correlation map, the paired test-data-script VU with the command to digest it, what a data
+// script hands its consuming VU (DATA WRITES), and a dissection of each write/open request body pulled from its
+// recorded-artifacts zip. Keeps the raw XML, extractor blocks, and multi-KB captured
 // bodies out of the caller's main context — the caller reads this digest, not the tree.
 //
 // Usage:
@@ -17,7 +18,7 @@ const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
 const { findProjectRoot, loadDefs, refsInTree, poolReport } = require('./neoload-vars.cjs');
-const { attr, openTag, parsePage, pageOrder } = require('./neoload-tree.cjs');
+const { attr, openTag, parsePage, pageOrder, stepNodes } = require('./neoload-tree.cjs');
 
 const treeDir = process.argv[2];
 if (!treeDir) {
@@ -78,24 +79,20 @@ const classify = (method, p) => {
   return 'SPINE';
 };
 
-// step number from the folder name: `_NN_` mid-name (@t30_@crystal@report_02_@login) or `_NN` at the end
-// (@t28_@gadgets_@load_03); a VU whose steps carry no number at all (the single-step report VUs,
-// @t005_@payment@receipt_@report) numbers them by position. Mirrored in gen-fidelity-lists.cjs.
-const STEP_NO = /_(\d+)(?:_|$)/;
-const step_no = (name, i, all) =>
-  (name.match(STEP_NO) || [])[1] || (all.some((n) => STEP_NO.test(n)) ? '' : String(i + 1).padStart(2, '0'));
-
+// step number from the folder name: `_NN_` mid-name (@t30_@crystal@report_02_@login), `_NN` at the end
+// (@t28_@gadgets_@load_03) or a leading `NN_` (the data-script VUs: 03_@click@calender@tab); a VU whose steps carry
+// no number at all (the single-step report VUs, @t005_@payment@receipt_@report) numbers them by position. Steps come
+// from stepNodes, so a step inside a loop/if/try action is listed in execution order with what encloses it.
+const STEP_NO = /_(\d+)(?:_|$)|^(\d+)_/;
 const readStepFolders = () => {
   if (!fs.existsSync(actionsDir)) return [];
-  return fs
-    .readdirSync(actionsDir, { withFileTypes: true })
-    .filter((e) => e.isDirectory())
-    .map((e) => e.name)
-    .filter((name) => /^@t\d+/.test(name) || STEP_NO.test(name))
-    .sort()
-    .map((name, i, all) => ({ name, no: step_no(name, i, all) }))
-    .filter((s) => s.no)
-    .sort((a, b) => Number(a.no) - Number(b.no));
+  const nodes = stepNodes(treeDir).steps;
+  const numbered = nodes.some((s) => STEP_NO.test(path.basename(s.dir)));
+  return nodes.map((s, i) => {
+    const m = path.basename(s.dir).match(STEP_NO);
+    const no = (m && (m[1] || m[2])) || (numbered ? '?' : String(i + 1).padStart(2, '0'));
+    return { name: s.dir, no, loop: s.loop, within: s.within };
+  });
 };
 
 // One request of a page, read from its own <http-action> block: a page file bundles the main request plus its
@@ -236,7 +233,7 @@ console.log(`=== NEOLOAD DIGEST: ${vuName} ===\n`);
 
 const steps = readStepFolders();
 console.log(`STEP ORDER (${steps.length} steps): ${steps.map((s) => s.no).join(' → ')}`);
-steps.forEach((s) => console.log(`  ${s.no}  ${s.name}`));
+steps.forEach((s) => console.log(`  ${s.no}  ${s.name}${s.within.length ? `  [inside ${s.within.join(' > ')}]` : ''}`));
 
 console.log('\nSPINE  (SPINE=keep · CHROME=UI-paint, fidelity tier · DROP=static/telemetry):');
 const correlation = [];
@@ -277,9 +274,49 @@ if (!projectRoot) {
   console.log(poolReport(refsInTree(treeDir), loadDefs(projectRoot), projectRoot, 3));
 }
 
+// the data-script VU's own tree, so the seed is ported from its digest rather than from the journey's reads
+const vuTreeOf = (uid) => {
+  const vusDir = path.dirname(path.resolve(treeDir));
+  const head = fs
+    .readdirSync(vusDir)
+    .filter((f) => f.endsWith('.xml'))
+    .find((f) => attr(openTag(fs.readFileSync(path.join(vusDir, f), 'utf8'), 'virtual-user'), 'uid') === uid);
+  return head ? path.join(vusDir, head.replace(/\.xml$/, '')).replace(/\\/g, '/') : null;
+};
 const paired = findPairedDataScript();
 console.log('\nPAIRED DATA-SCRIPT VU  (port to source/seeds/ as a separate seed pass):');
-console.log(paired ? `  ${paired.population}\n    journey: ${paired.journey}\n    data-script VU: ${paired.dataScript}` : '  (none found)');
+if (!paired) console.log('  (none found)');
+else {
+  // a population can name another version's data script (@population_@test@data_@t34_26#2E1 → U13 (26.1)); the
+  // same data script at this VU's version is the one to port
+  const ver = (vuName.match(/#28([\d#E]+)#29/) || [])[1]?.replace(/#2E/g, '.');
+  const sameVer = ver && paired.dataScript.replace(/\([\d.]+\)$/, `(${ver})`);
+  const dsTree = (sameVer && vuTreeOf(sameVer)) || vuTreeOf(paired.dataScript);
+  console.log(`  ${paired.population}\n    journey: ${paired.journey}\n    data-script VU: ${paired.dataScript}`);
+  if (sameVer && sameVer !== paired.dataScript && vuTreeOf(sameVer)) console.log(`    at this VU's version: ${sameVer}`);
+  console.log(
+    dsTree ? `    → digest it: node .claude/scripts/neoload-digest.cjs "${dsTree}"` : '    (its tree was not found under team/vus)',
+  );
+}
+
+// a data-script VU hands its records to the consuming VU through a DataWrite jsAction that appends a variable to a
+// variables/ file; the k6 seed replaces that file with names the journey discovers (rules/seeds.md)
+const scriptsDir = path.join(treeDir, '%resources%', 'scripts');
+const writes = fs.existsSync(scriptsDir)
+  ? fs
+      .readdirSync(scriptsDir)
+      .flatMap((f) =>
+        [
+          ...fs
+            .readFileSync(path.join(scriptsDir, f), 'utf8')
+            .matchAll(/writeVariableToFile\s*\(\s*['"]([^'"]+)['"]\s*,\s*['"]([^'"]+)['"]/g),
+        ].map((m) => `${m[1]} → ${m[2]}  (${f})`),
+      )
+  : [];
+if (writes.length) {
+  console.log('\nDATA WRITES  (this VU is a data script: what it hands to the consuming VU):');
+  writes.forEach((w) => console.log(`  ${w}`));
+}
 
 console.log('\nWRITE / FORM-OPEN BODIES  (resolved real values from recorded-artifacts zips):');
 if (!dissectQueue.length) console.log('  (none)');

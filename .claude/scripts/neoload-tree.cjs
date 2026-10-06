@@ -3,7 +3,7 @@
 // templated (${…}-bearing) body, the tier path/body a fidelity list emits, and the resolved recorded request
 // pulled from a recorded-artifacts zip.
 //
-// Module only — required by neoload-port-review.cjs, fidelity-tokens.cjs and gen-fidelity-lists.cjs.
+// Module only — required by neoload-port-review.cjs, neoload-digest.cjs, fidelity-tokens.cjs and gen-fidelity-lists.cjs.
 // Deterministic and read-only; zip extraction shells out to `unzip` (git-bash / any *nix).
 
 const fs = require('fs');
@@ -152,30 +152,71 @@ const pageOrder = (stepXml, byPage) =>
     .map((u) => byPage.get(u))
     .filter(Boolean);
 
-// Steps in the VU's <actions-container> order; each step's pages and requests in recorded order.
-const readTree = (treeDir) => {
+// NeoLoad logic actions hold steps of their own. A <loop-action loop="2"> lists its children as <embedded-action>s,
+// an <if-action> in its then/else containers, and the child step files sit in the action's folder
+// (loop-multiple@service@orders/13_@enter@details@click@save.xml, @item@availability@for@user/then-container/…).
+// Walking only the top level of actions-container skips every one of those steps.
+const LOGIC_ACTION = /^(loop|if|try|while|fork)-action$/;
+const rootOf = (xml) => (xml.match(/<([a-z-]+)\b/) || [])[1];
+const childUids = (xml) =>
+  [...xml.matchAll(/<weighted-embedded-action uid="([^"]+)"|<embedded-action>([^<]+)<\/embedded-action>/g)].map((m) => m[1] || m[2]);
+// the action files in a folder by uid; a sub-folder with no sibling .xml (then-container/) is structure, not a step
+const nodesIn = (dir) => {
+  const out = new Map();
+  if (!fs.existsSync(dir)) return out;
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, e.name);
+    if (e.isFile() && e.name.endsWith('.xml')) {
+      const xml = fs.readFileSync(p, 'utf8');
+      const root = rootOf(xml);
+      const head = openTag(xml, root);
+      out.set(attr(head, 'uid'), { file: p, xml, root, head });
+    } else if (e.isDirectory() && !fs.existsSync(`${p}.xml`)) nodesIn(p).forEach((v, k) => out.set(k, v));
+  }
+  return out;
+};
+// Every step in execution order, through any nesting of logic actions. `dir` is the step folder relative to
+// actions-container (forward slashes), `loop` the product of the enclosing loop counts, and `within` names each
+// enclosing action (`loop loop-multipleServiceOrders ×2`, `if ItemAvailabilityForUser (then)`).
+const stepNodes = (treeDir) => {
   const actionsDir = path.join(treeDir, 'actions-container');
   const vuXml = fs.readFileSync(vuXmlPath(treeDir), 'utf8');
   const actionsTag = vuXml.slice(vuXml.indexOf('<actions-container'));
-  const order = embeddedUids(actionsTag.slice(0, actionsTag.indexOf('</actions-container>')));
-  const stepFiles = fs.readdirSync(actionsDir).filter((f) => f.endsWith('.xml'));
-  const byUid = new Map();
-  for (const f of stepFiles) {
-    const xml = fs.readFileSync(path.join(actionsDir, f), 'utf8');
-    const root = (xml.match(/<([a-z-]+)\b/) || [])[1];
-    const head = openTag(xml, root);
-    byUid.set(attr(head, 'uid'), { file: f, xml, root, head });
-  }
   const steps = [];
   const other = [];
-  for (const uid of order) {
-    const node = byUid.get(uid);
-    if (!node) continue;
-    if (node.root !== 'basic-logical-action-container') {
-      other.push({ file: node.file, root: node.root, name: attr(node.head, 'name') });
-      continue;
+  const walk = (uids, nodes, loop, within) => {
+    for (const uid of uids) {
+      const node = nodes.get(uid);
+      if (!node) continue;
+      const base = node.file.replace(/\.xml$/, '');
+      const name = attr(node.head, 'name');
+      if (node.root === 'basic-logical-action-container') {
+        steps.push({ ...node, name, dir: path.relative(actionsDir, base).replace(/\\/g, '/'), loop, within });
+      } else if (LOGIC_ACTION.test(node.root)) {
+        const kind = node.root.replace(/-action$/, '');
+        const n = kind === 'loop' ? Number(attr(node.head, 'loop')) || 1 : 1;
+        const inner = nodesIn(base);
+        const branches =
+          kind === 'if'
+            ? ['then', 'else'].map((b) => [b, (node.xml.match(new RegExp(`<${b}-container[\\s\\S]*?</${b}-container>`)) || [''])[0]])
+            : [[null, node.xml]];
+        for (const [branch, xml] of branches)
+          walk(childUids(xml), inner, loop * n, [...within, `${kind} ${name}${n > 1 ? ` ×${n}` : ''}${branch ? ` (${branch})` : ''}`]);
+      } else other.push({ file: path.relative(actionsDir, node.file).replace(/\\/g, '/'), root: node.root, name, within });
     }
-    const dir = path.join(actionsDir, node.file.replace(/\.xml$/, ''));
+  };
+  walk(embeddedUids(actionsTag.slice(0, actionsTag.indexOf('</actions-container>'))), nodesIn(actionsDir), 1, []);
+  return { vuXml, steps, other };
+};
+
+// Steps in the VU's <actions-container> order, logic actions included; each step's pages and requests in
+// recorded order.
+const readTree = (treeDir) => {
+  const actionsDir = path.join(treeDir, 'actions-container');
+  const { vuXml, steps: nodes, other } = stepNodes(treeDir);
+  const steps = [];
+  for (const node of nodes) {
+    const dir = path.join(actionsDir, node.dir);
     const byPage = new Map();
     const nonHttp = [];
     if (fs.existsSync(dir)) {
@@ -191,8 +232,10 @@ const readTree = (treeDir) => {
     }
     const pages = pageOrder(node.xml, byPage);
     steps.push({
-      name: attr(node.head, 'name'),
-      dir: node.file.replace(/\.xml$/, ''),
+      name: node.name,
+      dir: node.dir,
+      loop: node.loop,
+      within: node.within,
       slaProfile: attr(node.head, 'slaProfileEnabled') === 'true' ? attr(node.head, 'slaProfileName') : null,
       pages,
       // every request NeoLoad fires in the step, page by page; disabled actions (enabled="false") never fire
@@ -268,6 +311,7 @@ module.exports = {
   pageOrder,
   tierPath,
   tierBody,
+  stepNodes,
   readTree,
   recordedRequest,
   alignTokens,

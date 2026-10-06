@@ -5,7 +5,7 @@
    Usage: node .claude/scripts/gen-fidelity-lists.cjs "<path to VU tree>" <chrome-out.ts> <static-out.ts> <transport-out.ts> */
 const fs = require('fs');
 const path = require('path');
-const { embeddedUids, attr, openTag, tierPath, tierBody } = require('./neoload-tree.cjs');
+const { embeddedUids, attr, openTag, tierPath, tierBody, stepNodes } = require('./neoload-tree.cjs');
 
 const [vuRoot, chromeOut, staticOut, transportOut] = process.argv.slice(2);
 if (!vuRoot || !chromeOut || !staticOut || !transportOut) {
@@ -128,10 +128,9 @@ const VERSION_GATED = {};
 const DEAD = ['/api/NotificationServer/RetrieveNotificationCount', '/api/NotificationServer/RetrieveUnseenChangelogNotificationsCount'];
 const STATIC_EXT = /\.(js|css|html|svg|png|ico|woff2?|ttf|otf|eot|map|jpg|jpeg|gif)(\?|$)/i;
 
-const stepDirs = fs
-  .readdirSync(ROOT)
-  .filter((d) => /^@t\d+/.test(d) && fs.statSync(path.join(ROOT, d)).isDirectory())
-  .sort();
+// every step folder, including those inside a loop/if/try action (stepNodes), relative to actions-container
+const nodes = stepNodes(vuRoot).steps.filter((s) => /^@t\d+/.test(path.basename(s.dir)));
+const stepDirs = nodes.map((s) => s.dir).sort();
 
 const chrome = {};
 const stat = {};
@@ -145,10 +144,24 @@ const requestMatches = new Map();
 // (@t28_@gadgets_@load_03); a VU whose steps carry no number at all (the single-step report VUs,
 // @t005_@payment@receipt_@report) numbers them by position. Mirrored in neoload-digest.cjs.
 const STEP_NO = /_(\d+)(?:_|$)/;
-const anyNumbered = stepDirs.some((d) => STEP_NO.test(d));
+const anyNumbered = stepDirs.some((d) => STEP_NO.test(path.basename(d)));
+// an if-action records the same step number in its then and else branches; the tiers are keyed by step number, so
+// both branches would merge into one replay. Stop and name them rather than emit a merged step
+const placesOf = new Map();
+for (const s of nodes) {
+  const no = (path.basename(s.dir).match(STEP_NO) || [])[1];
+  if (no) placesOf.set(no, [...(placesOf.get(no) || []), s.within.join(' > ') || 'top level']);
+}
+const clashes = [...placesOf].filter(([, places]) => places.length > 1);
+if (clashes.length) {
+  console.error(
+    `steps recorded more than once: ${clashes.map(([no, places]) => `${no} in [${places.join('; ')}]`).join(', ')} — the tiers are keyed by step number, so decide which branch the journey ports before generating`,
+  );
+  process.exit(1);
+}
 
 for (const [i, step] of stepDirs.entries()) {
-  const stepNo = (step.match(STEP_NO) || [])[1] || (anyNumbered ? '' : String(i + 1).padStart(2, '0'));
+  const stepNo = (path.basename(step).match(STEP_NO) || [])[1] || (anyNumbered ? '' : String(i + 1).padStart(2, '0'));
   if (!stepNo) continue;
   const dir = path.join(ROOT, step);
   // walk the pages in recorded order (the step container's <weighted-embedded-action> list), not the
