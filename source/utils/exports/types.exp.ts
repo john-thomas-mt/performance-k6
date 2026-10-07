@@ -11,3 +11,4 @@ export * from '../types/purchase-orders.type.ts';
 export * from '../types/reports.type.ts';
 export * from '../types/service-orders.type.ts';
 export * from '../types/voucher-processing.type.ts';
+export * from '../types/work-orders.type.ts';

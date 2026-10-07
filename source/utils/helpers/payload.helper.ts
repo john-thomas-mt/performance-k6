@@ -11,6 +11,13 @@ export function format_retrieve_stamp(epoch: string) {
   return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
 }
 
+export function random_report_date_range() {
+  const dayMs = 86_400_000;
+  const toEpoch = today_midnight_utc() - Math.floor(Math.random() * 5 * 365) * dayMs;
+  const fromEpoch = toEpoch - (Math.floor(Math.random() * 100) + 1) * dayMs;
+  return { fromDate: format_retrieve_stamp(String(fromEpoch)), toDate: format_retrieve_stamp(String(toEpoch)) };
+}
+
 export function stamp_to_epoch(stamp: string) {
   return String(Date.parse(`${stamp.replace(' ', 'T')}Z`));
 }

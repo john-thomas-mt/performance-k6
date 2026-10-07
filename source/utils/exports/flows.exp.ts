@@ -11,3 +11,4 @@ export * from '../../flows/t6-badge-report.flow.ts';
 export * from '../../flows/t8-invoice-events.flow.ts';
 export * from '../../flows/t9-purchase-orders.flow.ts';
 export * from '../../flows/t10-voucher-processing.flow.ts';
+export * from '../../flows/t13-daily-work-order-report.flow.ts';
