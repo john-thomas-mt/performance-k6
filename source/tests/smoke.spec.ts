@@ -28,6 +28,8 @@ import {
   voucherProcessingThresholds,
   payment_plan_journey,
   paymentPlanThresholds,
+  launch_and_login_journey,
+  launchAndLoginThresholds,
   loginThresholds,
 } from '../utils/exports/flows.exp.ts';
 import { pick_user, fetch_server_version, decrypt_users, decrypt_api_credentials } from '../utils/exports/helpers.exp.ts';
@@ -60,6 +62,7 @@ const allScenarios: { [scenario: string]: Scenario } = {
   purchase_orders: once('purchase_orders'),
   voucher_processing: once('voucher_processing'),
   payment_plan: once('payment_plan'),
+  launch_and_login: once('launch_and_login'),
 };
 
 const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
@@ -76,6 +79,7 @@ const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
   purchase_orders: purchaseOrdersThresholds,
   voucher_processing: voucherProcessingThresholds,
   payment_plan: paymentPlanThresholds,
+  launch_and_login: launchAndLoginThresholds,
 };
 
 const selected = __ENV.SCENARIO;
@@ -173,4 +177,8 @@ export function voucher_processing(data: SmokeSetup) {
 
 export function payment_plan(data: SmokeSetup) {
   payment_plan_journey(pick_user(data.users), data);
+}
+
+export function launch_and_login(data: SmokeSetup) {
+  launch_and_login_journey(pick_user(data.users), data);
 }

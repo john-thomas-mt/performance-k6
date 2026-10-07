@@ -174,3 +174,6 @@ export * from '../../data/pools/data-script-voucher-processing.data.ts';
 export * from '../../data/chrome/t11-payment-plan.chrome.ts';
 export * from '../../data/static/t11-payment-plan.static.ts';
 export * from '../../data/transport/t11-payment-plan.transport.ts';
+export * from '../../data/chrome/t12-launch-and-login.chrome.ts';
+export * from '../../data/static/t12-launch-and-login.static.ts';
+export * from '../../data/transport/t12-launch-and-login.transport.ts';
