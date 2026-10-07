@@ -4,6 +4,7 @@ export * from '../../apis/contacts.api.ts';
 export * from '../../apis/events.api.ts';
 export * from '../../apis/invoices.api.ts';
 export * from '../../apis/leads.api.ts';
+export * from '../../apis/payment-plans.api.ts';
 export * from '../../apis/payments.api.ts';
 export * from '../../apis/purchase-orders.api.ts';
 export * from '../../apis/realtime.api.ts';

@@ -44,6 +44,7 @@ export const config = {
   seedEventPrefix: 'k6-t34-booking-event',
   seedInvoiceEventPrefix: 'k6-t8-booking-event',
   seedVoucherPrefix: 'k6-t10-purchase-order',
+  seedPaymentPlanPrefix: 'k6-t11-booking-event',
   cryptoKey: secret.key || '',
   seedUsers: read_seed_users(),
 };
