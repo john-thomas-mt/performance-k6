@@ -30,6 +30,8 @@ import {
   paymentPlanThresholds,
   launch_and_login_journey,
   launchAndLoginThresholds,
+  detail_general_ledger_report_journey,
+  detailGeneralLedgerReportThresholds,
   loginThresholds,
 } from '../utils/exports/flows.exp.ts';
 import { pick_user, fetch_server_version, decrypt_users, decrypt_api_credentials } from '../utils/exports/helpers.exp.ts';
@@ -63,6 +65,7 @@ const allScenarios: { [scenario: string]: Scenario } = {
   voucher_processing: once('voucher_processing'),
   payment_plan: once('payment_plan'),
   launch_and_login: once('launch_and_login'),
+  detail_general_ledger_report: once('detail_general_ledger_report'),
 };
 
 const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
@@ -80,6 +83,7 @@ const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
   voucher_processing: voucherProcessingThresholds,
   payment_plan: paymentPlanThresholds,
   launch_and_login: launchAndLoginThresholds,
+  detail_general_ledger_report: detailGeneralLedgerReportThresholds,
 };
 
 const selected = __ENV.SCENARIO;
@@ -90,7 +94,7 @@ if (selected && !allScenarios[selected]) {
 const soPoolScenarios = new Set(['copy_service_orders']);
 const needsSoPool = !selected || soPoolScenarios.has(selected);
 const needsPlanPool = !selected || selected === 'payment_plan';
-const apiCredentialScenarios = new Set(['payment_receipt_report', 'badge_report']);
+const apiCredentialScenarios = new Set(['payment_receipt_report', 'badge_report', 'detail_general_ledger_report']);
 const needsApiCredentials = !selected || apiCredentialScenarios.has(selected);
 
 const activeThresholds: { [metric: string]: string[] } = selected
@@ -181,4 +185,8 @@ export function payment_plan(data: SmokeSetup) {
 
 export function launch_and_login(data: SmokeSetup) {
   launch_and_login_journey(pick_user(data.users), data);
+}
+
+export function detail_general_ledger_report(data: SmokeSetup) {
+  detail_general_ledger_report_journey(data);
 }

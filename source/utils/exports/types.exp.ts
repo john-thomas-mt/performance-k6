@@ -4,6 +4,7 @@ export * from '../types/contacts.type.ts';
 export * from '../types/config.type.ts';
 export * from '../types/events.type.ts';
 export * from '../types/fidelity.type.ts';
+export * from '../types/general-ledger.type.ts';
 export * from '../types/invoices.type.ts';
 export * from '../types/leads.type.ts';
 export * from '../types/payment-plans.type.ts';

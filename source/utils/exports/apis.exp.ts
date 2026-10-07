@@ -2,6 +2,7 @@ export * from '../../apis/badges.api.ts';
 export * from '../../apis/booking.api.ts';
 export * from '../../apis/contacts.api.ts';
 export * from '../../apis/events.api.ts';
+export * from '../../apis/general-ledger.api.ts';
 export * from '../../apis/invoices.api.ts';
 export * from '../../apis/leads.api.ts';
 export * from '../../apis/payment-plans.api.ts';

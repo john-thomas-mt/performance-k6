@@ -56,6 +56,9 @@ const JOURNEY_SPINE = {
   't5-payment-receipt-report': {
     '/api/v1/Reports/10/204/RunReport': ['01'],
   },
+  't14-detail-general-ledger-report': {
+    '/api/v1/Reports/10/105/RunReport': ['01'],
+  },
   't6-badge-report': {
     '/api/v1/Reports/10/6044/RunReport': ['01'],
   },
