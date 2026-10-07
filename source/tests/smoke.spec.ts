@@ -25,6 +25,8 @@ import {
   purchaseOrdersThresholds,
   voucher_processing_journey,
   voucherProcessingThresholds,
+  daily_work_order_report_journey,
+  dailyWorkOrderReportThresholds,
   loginThresholds,
 } from '../utils/exports/flows.exp.ts';
 import { pick_user, fetch_server_version, decrypt_users, decrypt_api_credentials } from '../utils/exports/helpers.exp.ts';
@@ -56,6 +58,7 @@ const allScenarios: { [scenario: string]: Scenario } = {
   invoice_events: once('invoice_events'),
   purchase_orders: once('purchase_orders'),
   voucher_processing: once('voucher_processing'),
+  daily_work_order_report: once('daily_work_order_report'),
 };
 
 const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
@@ -71,6 +74,7 @@ const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
   invoice_events: invoiceEventsThresholds,
   purchase_orders: purchaseOrdersThresholds,
   voucher_processing: voucherProcessingThresholds,
+  daily_work_order_report: dailyWorkOrderReportThresholds,
 };
 
 const selected = __ENV.SCENARIO;
@@ -80,7 +84,7 @@ if (selected && !allScenarios[selected]) {
 
 const soPoolScenarios = new Set(['copy_service_orders']);
 const needsSoPool = !selected || soPoolScenarios.has(selected);
-const apiCredentialScenarios = new Set(['payment_receipt_report', 'badge_report']);
+const apiCredentialScenarios = new Set(['payment_receipt_report', 'badge_report', 'daily_work_order_report']);
 const needsApiCredentials = !selected || apiCredentialScenarios.has(selected);
 
 const activeThresholds: { [metric: string]: string[] } = selected
@@ -162,4 +166,8 @@ export function purchase_orders(data: SmokeSetup) {
 
 export function voucher_processing(data: SmokeSetup) {
   voucher_processing_journey(pick_user(data.users), data);
+}
+
+export function daily_work_order_report(data: SmokeSetup) {
+  daily_work_order_report_journey(data);
 }

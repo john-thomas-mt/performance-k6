@@ -59,6 +59,9 @@ const JOURNEY_SPINE = {
   't6-badge-report': {
     '/api/v1/Reports/10/6044/RunReport': ['01'],
   },
+  't13-daily-work-order-report': {
+    '/api/v1/Reports/10/12/RunReport': ['01'],
+  },
   't2-book-event': {
     '/api/USIDataGridServer/GetGridData2': ['08', '10'],
     '/api/GenericDetailServer/GetInitialData2': ['06'],
