@@ -1,4 +1,4 @@
-// Distill a NeoLoad VU tree into a compact authoring digest for the neoload-to-k6 workflow — the
+// Distill a NeoLoad VU tree into a compact authoring digest for the perf-1-seed-port / perf-3-journey-port workflow — the
 // NeoLoad-side analog of the recon-kit. Walks the tree and prints, in one pass: the step order (steps inside a
 // loop/if/try action included), the transaction spine (each request classified keep / chrome / drop), the solved
 // <variable-extractor> correlation map, the paired test-data-script VU with the command to digest it, what a data
@@ -9,6 +9,7 @@
 // Usage:
 //   node .claude/scripts/neoload-digest.cjs "<VU tree dir>"
 //   node .claude/scripts/neoload-digest.cjs "team/vus/@t34_@copy@service@orders #2826#2E2#29"
+//   node .claude/scripts/neoload-digest.cjs "<VU tree dir>" --paired   (only the paired data-script VU, no digest)
 //
 // Deterministic and read-only. Body dissection shells out to `unzip` (git-bash / any *nix); if unzip
 // is absent it degrades to listing the zip path so the author can extract it manually.
@@ -20,9 +21,10 @@ const { execSync } = require('child_process');
 const { findProjectRoot, loadDefs, refsInTree, poolReport } = require('./neoload-vars.cjs');
 const { attr, openTag, parsePage, pageOrder, stepNodes } = require('./neoload-tree.cjs');
 
-const treeDir = process.argv[2];
+const pairedOnly = process.argv.includes('--paired');
+const treeDir = process.argv.slice(2).find((a) => a !== '--paired');
 if (!treeDir) {
-  console.error('usage: node .claude/scripts/neoload-digest.cjs "<VU tree dir>"');
+  console.error('usage: node .claude/scripts/neoload-digest.cjs "<VU tree dir>" [--paired]');
   process.exit(1);
 }
 if (!fs.existsSync(treeDir)) {
@@ -228,8 +230,40 @@ const findPairedDataScript = () => {
   return null;
 };
 
+// the data-script VU's own tree, so the seed is ported from its digest rather than from the journey's reads
+function printPaired() {
+  const vuTreeOf = (uid) => {
+    const vusDir = path.dirname(path.resolve(treeDir));
+    const head = fs
+      .readdirSync(vusDir)
+      .filter((f) => f.endsWith('.xml'))
+      .find((f) => attr(openTag(fs.readFileSync(path.join(vusDir, f), 'utf8'), 'virtual-user'), 'uid') === uid);
+    return head ? path.join(vusDir, head.replace(/\.xml$/, '')).replace(/\\/g, '/') : null;
+  };
+  const paired = findPairedDataScript();
+  console.log('\nPAIRED DATA-SCRIPT VU  (port to source/seeds/ as a separate seed pass):');
+  if (!paired) {
+    console.log('  (none found)');
+    return;
+  }
+  // a population can name another version's data script (@population_@test@data_@t34_26#2E1 → U13 (26.1)); the
+  // same data script at this VU's version is the one to port
+  const ver = (vuName.match(/#28([\d#E]+)#29/) || [])[1]?.replace(/#2E/g, '.');
+  const sameVer = ver && paired.dataScript.replace(/\([\d.]+\)$/, `(${ver})`);
+  const dsTree = (sameVer && vuTreeOf(sameVer)) || vuTreeOf(paired.dataScript);
+  console.log(`  ${paired.population}\n    journey: ${paired.journey}\n    data-script VU: ${paired.dataScript}`);
+  if (sameVer && sameVer !== paired.dataScript && vuTreeOf(sameVer)) console.log(`    at this VU's version: ${sameVer}`);
+  console.log(
+    dsTree ? `    → digest it: node .claude/scripts/neoload-digest.cjs "${dsTree}"` : '    (its tree was not found under team/vus)',
+  );
+}
+
 // ---- emit digest ----
 console.log(`=== NEOLOAD DIGEST: ${vuName} ===\n`);
+if (pairedOnly) {
+  printPaired();
+  process.exit(0);
+}
 
 const steps = readStepFolders();
 console.log(`STEP ORDER (${steps.length} steps): ${steps.map((s) => s.no).join(' → ')}`);
@@ -274,30 +308,7 @@ if (!projectRoot) {
   console.log(poolReport(refsInTree(treeDir), loadDefs(projectRoot), projectRoot, 3));
 }
 
-// the data-script VU's own tree, so the seed is ported from its digest rather than from the journey's reads
-const vuTreeOf = (uid) => {
-  const vusDir = path.dirname(path.resolve(treeDir));
-  const head = fs
-    .readdirSync(vusDir)
-    .filter((f) => f.endsWith('.xml'))
-    .find((f) => attr(openTag(fs.readFileSync(path.join(vusDir, f), 'utf8'), 'virtual-user'), 'uid') === uid);
-  return head ? path.join(vusDir, head.replace(/\.xml$/, '')).replace(/\\/g, '/') : null;
-};
-const paired = findPairedDataScript();
-console.log('\nPAIRED DATA-SCRIPT VU  (port to source/seeds/ as a separate seed pass):');
-if (!paired) console.log('  (none found)');
-else {
-  // a population can name another version's data script (@population_@test@data_@t34_26#2E1 → U13 (26.1)); the
-  // same data script at this VU's version is the one to port
-  const ver = (vuName.match(/#28([\d#E]+)#29/) || [])[1]?.replace(/#2E/g, '.');
-  const sameVer = ver && paired.dataScript.replace(/\([\d.]+\)$/, `(${ver})`);
-  const dsTree = (sameVer && vuTreeOf(sameVer)) || vuTreeOf(paired.dataScript);
-  console.log(`  ${paired.population}\n    journey: ${paired.journey}\n    data-script VU: ${paired.dataScript}`);
-  if (sameVer && sameVer !== paired.dataScript && vuTreeOf(sameVer)) console.log(`    at this VU's version: ${sameVer}`);
-  console.log(
-    dsTree ? `    → digest it: node .claude/scripts/neoload-digest.cjs "${dsTree}"` : '    (its tree was not found under team/vus)',
-  );
-}
+printPaired();
 
 // a data-script VU hands its records to the consuming VU through a DataWrite jsAction that appends a variable to a
 // variables/ file; the k6 seed replaces that file with names the journey discovers (rules/seeds.md)
