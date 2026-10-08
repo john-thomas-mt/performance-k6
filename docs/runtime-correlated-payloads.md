@@ -402,7 +402,7 @@ here so nothing is lost):
   `open_<entity>_create_form` wrapper posting `GetInitialData2` and returning the `TransportTable`, and
   a create wrapper that takes that table as a parameter; the flow threads the fetched table between the
   two numbered groups (as `create-account.flow.ts` now does with group 3 "Open Create Account Form").
-- **`generate-test` and `neoload-to-k6` skills** — both currently script saves by pasting a captured
+- **`generate-test` and `perf-3-journey-port` skills** — both currently script saves by pasting a captured
   `Save2` column table into `source/data/payloads/**/create.data.ts`. To adopt the runtime pattern they
   must instead author the fetch-mutate-save path (window descriptor + business-cell map, no frozen
   table). Search authoring likewise moves to the lean `gridSearchPayload` builder (step 6). Until then

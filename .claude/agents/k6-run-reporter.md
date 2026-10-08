@@ -1,6 +1,6 @@
 ---
 name: k6-run-reporter
-description: Runs a single k6 command exactly as given and returns only a concise pass/fail verdict — checks rate, http_req_failed, dropped_iterations, thresholds crossed, WARN/ERRO, and (for data-creating journeys) whether each VU matched its own planted token. Keeps verbose k6 summaries out of the main context. Used by generate-test, neoload-to-k6, verify-envs, and payload-drift for each verification run.
+description: Runs a single k6 command exactly as given and returns only a concise pass/fail verdict — checks rate, http_req_failed, dropped_iterations, thresholds crossed, WARN/ERRO, and (for data-creating journeys) whether each VU matched its own planted token. Keeps verbose k6 summaries out of the main context. Used by generate-test, perf-3-journey-port, verify-envs, and payload-drift for each verification run.
 tools: Bash, Read
 model: haiku
 permissionMode: auto

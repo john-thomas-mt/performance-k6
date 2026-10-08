@@ -5,7 +5,7 @@ description: Verify a k6 journey (or the whole smoke suite) against the live ver
 
 # Verify across the version matrix
 
-A journey is authored and proven against **`main`** (the unreleased, highest-priority env — see `generate-test` / `neoload-to-k6`). This skill proves it **trickles down** to the released envs, and — in suite mode — re-checks the whole fleet after a branch cut. The insight behind it: across Momentus versions the same journey almost always runs unchanged; the rare real drift is a small, code-parameterizable change (a grid column shift, a renamed field). Running the script across envs surfaces exactly those cases without ever re-recording.
+A journey is authored and proven against **`main`** (the unreleased, highest-priority env — see `generate-test` / `perf-3-journey-port`). This skill proves it **trickles down** to the released envs, and — in suite mode — re-checks the whole fleet after a branch cut. The insight behind it: across Momentus versions the same journey almost always runs unchanged; the rare real drift is a small, code-parameterizable change (a grid column shift, a renamed field). Running the script across envs surfaces exactly those cases without ever re-recording.
 
 **This sends real traffic to each env (VPN required). Tell the user before running, and take run approval once for the whole matrix sweep.**
 
