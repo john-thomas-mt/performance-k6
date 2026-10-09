@@ -741,12 +741,12 @@ const tablesOf = (units) => {
   for (const { f, lines, offset, name: unit } of units.filter((u) => /[\\/]payloads[\\/]/.test(u.f))) {
     const text = lines.join('\n');
     const lineAt = (i) => offset + text.slice(0, i).split('\n').length;
-    for (const m of text.matchAll(/TransportDataColumns\s*:\s*(\[|([A-Za-z_]\w*))/g)) {
+    for (const m of text.matchAll(/TransportDataColumns['"]?\s*:\s*(\[|([A-Za-z_]\w*))/g)) {
       const colsText = m[2] ? (index.get(m[2])?.body ?? '') : blockFrom(text, m.index + m[0].length - 1);
       const names = new Map();
       for (const entry of colsText.match(/\{[^{}]*\}/g) || []) {
-        const name = (entry.match(/ColumnName:\s*'([^']*)'/) || [])[1];
-        const id = (entry.match(/ColumnID:\s*(\d+)/) || [])[1];
+        const name = (entry.match(/ColumnName['"]?:\s*['"]([^'"]*)['"]/) || [])[1];
+        const id = (entry.match(/ColumnID['"]?:\s*(\d+)/) || [])[1];
         if (name && id) names.set(id, name);
       }
       const rowsAt = text.indexOf('Values', m.index + m[0].length);
@@ -756,7 +756,7 @@ const tablesOf = (units) => {
       for (const e of topLevelEntries(blockFrom(text, brace))) {
         const lead = e.text.match(/^(?:\s|\/\/[^\n]*\n|\/\*[\s\S]*?\*\/)*/)[0].length;
         const cell = e.text.slice(lead).replace(/\s*\/\/[^\n]*$/gm, '');
-        const v = cell.match(/^'(\d+)'\s*:\s*([\s\S]*?)\s*$/);
+        const v = cell.match(/^['"](\d+)['"]\s*:\s*([\s\S]*?)\s*$/);
         if (v && names.has(v[1])) byName.set(names.get(v[1]), { expr: v[2], line: lineAt(brace + e.at + lead) });
       }
       if (byName.size) out.push({ f, byName, unit });
@@ -770,7 +770,7 @@ const tablesOf = (units) => {
 };
 const k6Tables = tablesOf(scopedText);
 const literalOf = (expr) => {
-  const s = expr.match(/^'((?:\\.|[^'\\])*)'$/);
+  const s = expr.match(/^'((?:\\.|[^'\\])*)'$/) || expr.match(/^"((?:\\.|[^"\\])*)"$/);
   if (s) return { v: s[1].replace(/\\(.)/g, '$1') };
   if (/^-?\d+(\.\d+)?$|^null$|^true$|^false$/.test(expr)) return { v: expr === 'null' ? null : expr };
   return null;
