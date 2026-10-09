@@ -353,13 +353,15 @@ reach(flowText).seen.forEach((f) => allReached.add(f));
 const reachedText = [flowText, ...[...allReached].map((f) => index.get(f).body)].join('\n');
 const JS_TRANSLATIONS = {
   P_jwtToken: ['mint_api_jwt() (auth.helper.ts)', /\bmint_api_jwt\(/],
-  P_ERMR_StartDate: ['random_date_range() (payload.helper.ts)', /\brandom_date_range\(/],
-  P_ERMR_EndDate: ['random_date_range() (payload.helper.ts)', /\brandom_date_range\(/],
-  P_SUR_StartDate: ['random_date_range() (payload.helper.ts)', /\brandom_date_range\(/],
-  P_SUR_EndDate: ['random_date_range() (payload.helper.ts)', /\brandom_date_range\(/],
 };
+// a jsAction function every report VU copies under its own variable names (P_ERMR_*, P_SUR_*, P_OSR_*, …): matched
+// by the function that sets the variable, so a new report port needs no entry here
+const JS_FN_TRANSLATIONS = {
+  generateDateRange: ['random_date_range() (payload.helper.ts)', /\brandom_date_range\(/],
+};
+const jsSetFns = new Map();
 const jsTranslated = (name) => {
-  const t = JS_TRANSLATIONS[name];
+  const t = JS_TRANSLATIONS[name] ?? (jsSetFns.get(name) ?? []).map((fn) => JS_FN_TRANSLATIONS[fn]).find(Boolean);
   return t ? [t[0], t[1].test(reachedText)] : [null, false];
 };
 const jsSets = new Map();
@@ -387,7 +389,10 @@ if (fs.existsSync(scripts)) {
       : [];
     const fns = [...js.matchAll(/function\s+(\w+)/g)].map((m) => m[1]);
     jsReads.set(f, [...new Set([...js.matchAll(/getValue\s*\(\s*['"]([^'"]+)['"]/g)].map((m) => m[1]))]);
-    sets.forEach((v) => jsSets.set(v, f));
+    sets.forEach((v) => {
+      jsSets.set(v, f);
+      jsSetFns.set(v, fns);
+    });
     keyMapped.forEach((v) => {
       jsSets.set(v, f);
       jsKeyMapped.set(v, f);
