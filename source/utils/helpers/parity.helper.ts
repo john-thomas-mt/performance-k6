@@ -1,5 +1,5 @@
 import { check } from 'k6';
-import { EventRow, PurchaseOrderCells, ServiceOrderRow } from '../exports/types.exp.ts';
+import { EventFunctionRow, EventRow, PurchaseOrderCells, ServiceOrderRow } from '../exports/types.exp.ts';
 
 type RecordFields = { [field: string]: string };
 
@@ -17,6 +17,8 @@ export const eventIdentityFields: (keyof EventRow)[] = [
   'evtInDate',
   'evtInTime',
 ];
+
+export const eventFunctionIdentityFields: (keyof EventFunctionRow)[] = ['desc'];
 
 export const serviceOrderIdentityFields: (keyof ServiceOrderRow)[] = [
   'orderNbr',

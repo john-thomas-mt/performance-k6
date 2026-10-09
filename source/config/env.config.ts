@@ -45,6 +45,7 @@ export const config = {
   seedInvoiceEventPrefix: 'k6-t8-booking-event',
   seedVoucherPrefix: 'k6-t10-purchase-order',
   seedPaymentPlanPrefix: 'k6-t11-booking-event',
+  seedCopyPasteFunctionPrefix: 'k6-t16-booking-event',
   cryptoKey: secret.key || '',
   seedUsers: read_seed_users(),
 };

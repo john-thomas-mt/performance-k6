@@ -23,6 +23,15 @@ export type EventRow = {
   evtInTime: string;
 };
 
+export type EventFunctionRow = {
+  desc: string;
+  funcType: string;
+  funcClass: string;
+  statusCode: string;
+  altDesc: string;
+  funcSearch: string;
+};
+
 export type CopyFormFields = {
   priceList: string;
   status: string;
