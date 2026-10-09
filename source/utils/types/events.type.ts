@@ -1,3 +1,5 @@
+import { SetupData } from './common.type.ts';
+
 export type EventRow = {
   desc: string;
   evtId: string;
@@ -30,6 +32,15 @@ export type EventFunctionRow = {
   statusCode: string;
   altDesc: string;
   funcSearch: string;
+};
+
+export type EventGridFunction = {
+  funcId: string;
+  desc: string;
+};
+
+export type CopyPasteFunctionSetup = SetupData & {
+  copyPastePool: EventRow[];
 };
 
 export type CopyFormFields = {

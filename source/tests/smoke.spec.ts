@@ -2,6 +2,7 @@ import { Options, Scenario } from 'k6/options';
 import {
   discover_service_order_pool,
   discover_payment_plan_pool,
+  discover_copy_paste_function_pool,
   copy_event_journey,
   copyEventThresholds,
   copy_service_orders_journey,
@@ -38,6 +39,8 @@ import {
   spaceUtilizationReportThresholds,
   opportunity_conversion_report_journey,
   opportunityConversionReportThresholds,
+  copy_paste_event_function_journey,
+  copyPasteEventFunctionThresholds,
   loginThresholds,
 } from '../utils/exports/flows.exp.ts';
 import { pick_user, fetch_server_version, decrypt_users, decrypt_api_credentials } from '../utils/exports/helpers.exp.ts';
@@ -76,6 +79,7 @@ const allScenarios: { [scenario: string]: Scenario } = {
   event_revenue_metric_report: once('event_revenue_metric_report', '4h'),
   space_utilization_report: once('space_utilization_report', '4h'),
   opportunity_conversion_report: once('opportunity_conversion_report', '4h'),
+  copy_paste_event_function: once('copy_paste_event_function', '2h'),
 };
 
 const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
@@ -97,6 +101,7 @@ const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
   event_revenue_metric_report: eventRevenueMetricReportThresholds,
   space_utilization_report: spaceUtilizationReportThresholds,
   opportunity_conversion_report: opportunityConversionReportThresholds,
+  copy_paste_event_function: copyPasteEventFunctionThresholds,
 };
 
 const selected = __ENV.SCENARIO;
@@ -107,6 +112,7 @@ if (selected && !allScenarios[selected]) {
 const soPoolScenarios = new Set(['copy_service_orders']);
 const needsSoPool = !selected || soPoolScenarios.has(selected);
 const needsPlanPool = !selected || selected === 'payment_plan';
+const needsCopyPastePool = !selected || selected === 'copy_paste_event_function';
 const apiCredentialScenarios = new Set([
   'payment_receipt_report',
   'badge_report',
@@ -144,11 +150,12 @@ export async function setup() {
   const version = fetch_server_version();
   const soPool = needsSoPool ? discover_service_order_pool(version, users[0]) : [];
   const planPool = needsPlanPool ? discover_payment_plan_pool(version, users[0]) : [];
+  const copyPastePool = needsCopyPastePool ? discover_copy_paste_function_pool(version, users[0]) : [];
   console.log(`Server version: ${version}`);
   if (needsSoPool) {
     console.log(`Smoke: ${soPool.length} seeded service order(s) discovered`);
   }
-  return { version, users, soPool, planPool, apiCredentials };
+  return { version, users, soPool, planPool, copyPastePool, apiCredentials };
 }
 
 export function copy_event(data: SmokeSetup) {
@@ -221,4 +228,8 @@ export function space_utilization_report(data: SmokeSetup) {
 
 export function opportunity_conversion_report(data: SmokeSetup) {
   opportunity_conversion_report_journey(data);
+}
+
+export function copy_paste_event_function(data: SmokeSetup) {
+  copy_paste_event_function_journey(pick_user(data.users), data);
 }

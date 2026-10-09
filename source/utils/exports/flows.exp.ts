@@ -14,6 +14,7 @@ export * from '../../flows/t10-voucher-processing.flow.ts';
 export * from '../../flows/t11-payment-plan.flow.ts';
 export * from '../../flows/t12-launch-and-login.flow.ts';
 export * from '../../flows/t14-detail-general-ledger-report.flow.ts';
+export * from '../../flows/t16-copy-paste-event-function.flow.ts';
 export * from '../../flows/t17-event-revenue-metric-report.flow.ts';
 export * from '../../flows/t18-space-utilization-report.flow.ts';
 export * from '../../flows/t19-opportunity-conversion-report.flow.ts';

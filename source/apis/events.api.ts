@@ -19,9 +19,19 @@ import {
   eventDocumentFormPayload,
   eventDocumentSavePayload,
   eventControlInfoPayload,
+  eventsGridInitPayload,
+  eventsFilteredListPayload,
+  eventsFilteredGridPayload,
+  eventDetailFromRowPayload,
+  eventFunctionsGridPayload,
+  pasteFunctionsFormPayload,
+  pasteFunctionsSavePayload,
+  eventDetailDataPayload,
+  eventFunctionsRefreshPayload,
 } from '../utils/exports/data.exp.ts';
 import {
   EventRow,
+  EventGridFunction,
   CopyFormFields,
   EventCopyInput,
   EventSaveResult,
@@ -37,6 +47,31 @@ export const searchEventsThresholds = {
 
 export const openEventDetailThresholds = {
   'http_req_duration{name:OpenEventDetail}': ['avg<4000'],
+};
+
+const eventRowColumns = {
+  desc: 'EV200_EVT_DESC',
+  evtId: 'EV200_EVT_ID',
+  rowKey: 'cROW_KEY',
+  acct: 'EV200_CUST_NBR',
+  desig: 'EV200_EVT_DESIGNATION',
+  status: 'EV200_EVT_STATUS',
+  linkedFuncs: 'EV200_LINKED_FUNCS',
+  orgCode: 'EV200_ORG_CODE',
+  acctName: 'EventAccount_EV870_NAME',
+  acctClass: 'EventAccount_EV870_CLASS',
+  evtType: 'EV200_EVT_TYPE',
+  cEvtType: 'cEVT_TYPE',
+  cEvtTypeSort: 'cEVT_TYPE__SORT',
+  purgeInd: 'EV200_PURGE_IND',
+  plnAttend: 'EV200_PLN_ATTEND',
+  parentEvtId: 'cPARENT_EVT_ID',
+  evtStartDate: 'EV200_EVT_START_DATE',
+  evtStartTime: 'EV200_EVT_START_TIME',
+  evtEndDate: 'EV200_EVT_END_DATE',
+  evtEndTime: 'EV200_EVT_END_TIME',
+  evtInDate: 'EV200_EVT_IN_DATE',
+  evtInTime: 'EV200_EVT_IN_TIME',
 };
 
 export function get_event_control_info(token: string, version: string, row: EventRow, name = 'GetControlInfo') {
@@ -65,34 +100,7 @@ export function search_events(token: string, version: string, searchValue: strin
     return [];
   }
 
-  return parse_grid_rows(
-    res,
-    {
-      desc: 'EV200_EVT_DESC',
-      evtId: 'EV200_EVT_ID',
-      rowKey: 'cROW_KEY',
-      acct: 'EV200_CUST_NBR',
-      desig: 'EV200_EVT_DESIGNATION',
-      status: 'EV200_EVT_STATUS',
-      linkedFuncs: 'EV200_LINKED_FUNCS',
-      orgCode: 'EV200_ORG_CODE',
-      acctName: 'EventAccount_EV870_NAME',
-      acctClass: 'EventAccount_EV870_CLASS',
-      evtType: 'EV200_EVT_TYPE',
-      cEvtType: 'cEVT_TYPE',
-      cEvtTypeSort: 'cEVT_TYPE__SORT',
-      purgeInd: 'EV200_PURGE_IND',
-      plnAttend: 'EV200_PLN_ATTEND',
-      parentEvtId: 'cPARENT_EVT_ID',
-      evtStartDate: 'EV200_EVT_START_DATE',
-      evtStartTime: 'EV200_EVT_START_TIME',
-      evtEndDate: 'EV200_EVT_END_DATE',
-      evtEndTime: 'EV200_EVT_END_TIME',
-      evtInDate: 'EV200_EVT_IN_DATE',
-      evtInTime: 'EV200_EVT_IN_TIME',
-    },
-    name,
-  );
+  return parse_grid_rows(res, eventRowColumns, name);
 }
 
 export function open_copy_form(token: string, version: string, encUserId: string, source: EventRow, refreshKey: number): CopyFormFields {
@@ -309,5 +317,211 @@ export function save_event_document(token: string, version: string, ctx: EventDo
   if (!ok) {
     console.error(`[VU ${__VU}] save_event_document failed — HTTP ${res.status}: ${body_text(res).slice(0, 300)}`);
     fail('save_event_document did not succeed');
+  }
+}
+
+function post_event_window(endpoint: string, payload: unknown, token: string, version: string, name: string, timeout?: string) {
+  return http.post(`${config.baseUrl}/api/${endpoint}`, JSON.stringify(payload), {
+    headers: build_headers(token, version),
+    tags: { name },
+    ...(timeout ? { timeout } : {}),
+  });
+}
+
+export function open_events_grid(token: string, version: string, name = 'OpenEventsGrid'): EventRow[] {
+  const res = post_event_window('USIDataGridServer/GetInitialData2', eventsGridInitPayload(), token, version, name);
+
+  const ok = check(res, {
+    [`${name}: status is 201`]: (r) => r.status === 201,
+  });
+
+  if (!ok) {
+    console.error(`[VU ${__VU}] open_events_grid failed — HTTP ${res.status}`);
+    fail('open_events_grid did not succeed');
+  }
+
+  return parse_grid_rows(res, eventRowColumns, name);
+}
+
+export function open_event_detail_from_row(
+  token: string,
+  version: string,
+  event: EventRow,
+  refreshKey: number,
+  name = 'OpenEventDetailFromRow',
+) {
+  const res = post_event_window('GenericDetailServer/GetInitialData2', eventDetailFromRowPayload(event, refreshKey), token, version, name);
+
+  const ok = check(res, {
+    [`${name}: status is 201`]: (r) => r.status === 201,
+    [`${name}: returns event detail data`]: (r) => body_text(r).includes(event.evtId),
+  });
+
+  if (!ok) {
+    console.error(`[VU ${__VU}] open_event_detail_from_row failed — HTTP ${res.status}`);
+    fail('open_event_detail_from_row did not succeed');
+  }
+}
+
+export function read_event_functions_grid(
+  token: string,
+  version: string,
+  event: EventRow,
+  refreshKey: number,
+  name = 'ReadEventFunctionsGrid',
+): EventGridFunction[] {
+  const res = post_event_window('USIDataGridServer/GetInitialData2', eventFunctionsGridPayload(event, refreshKey), token, version, name);
+
+  const ok = check(res, {
+    [`${name}: status is 201`]: (r) => r.status === 201,
+    [`${name}: returns function ids and descriptions`]: (r) => {
+      const text = body_text(r);
+      return text.includes('EV700_FUNC_ID') && text.includes('EV700_FUNC_DESC');
+    },
+  });
+
+  if (!ok) {
+    console.error(`[VU ${__VU}] read_event_functions_grid failed — HTTP ${res.status}: ${body_text(res).slice(0, 300)}`);
+    fail('read_event_functions_grid did not succeed');
+  }
+
+  return parse_grid_rows(res, { funcId: 'EV700_FUNC_ID', desc: 'EV700_FUNC_DESC' }, name, (tables) =>
+    tables.find((t) => t.TransportDataColumns.some((c) => c.ColumnName === 'EV700_FUNC_DESC')),
+  );
+}
+
+export function open_paste_functions_form(
+  token: string,
+  version: string,
+  evtId: string,
+  functionIds: string,
+  refreshKey: number,
+  name = 'OpenPasteFunctionsForm',
+) {
+  const res = post_event_window(
+    'GenericDetailServer/GetInitialData2',
+    pasteFunctionsFormPayload(evtId, functionIds, refreshKey),
+    token,
+    version,
+    name,
+  );
+
+  const ok = check(res, {
+    [`${name}: status is 201`]: (r) => r.status === 201,
+  });
+
+  if (!ok) {
+    console.error(`[VU ${__VU}] open_paste_functions_form failed — HTTP ${res.status}`);
+    fail('open_paste_functions_form did not succeed');
+  }
+
+  const retrieveStamp = Number(get_cell(find_transport_table(res, 'cRETRIEVE_STAMP', name), 'cRETRIEVE_STAMP'));
+
+  if (!check(res, { [`${name}: returns the retrieve stamp`]: () => retrieveStamp > 0 })) {
+    console.error(`[VU ${__VU}] open_paste_functions_form returned no usable cRETRIEVE_STAMP`);
+    fail('open_paste_functions_form returned no retrieve stamp');
+  }
+
+  return retrieveStamp;
+}
+
+export function paste_event_functions(
+  token: string,
+  version: string,
+  event: EventRow,
+  functionIds: string,
+  retrieveStamp: number,
+  refreshKey: number,
+  name = 'SavePastedFunctions',
+) {
+  const res = post_event_window(
+    'GenericDetailServer/Save2',
+    pasteFunctionsSavePayload(event, functionIds, retrieveStamp, refreshKey),
+    token,
+    version,
+    name,
+    '1h',
+  );
+
+  const ok = check(res, {
+    [`${name}: status is 201`]: (r) => r.status === 201,
+    [`${name}: ResultValue is 0 (success)`]: (r) => {
+      try {
+        return (r.json() as EventSaveResult[])[0].ResultValue === 0;
+      } catch {
+        return false;
+      }
+    },
+    [`${name}: pasted function rows were added`]: (r) => {
+      try {
+        const k = (r.json() as EventSaveResult[])[0].AddedRowKeys;
+        return Array.isArray(k) && k.length > 0;
+      } catch {
+        return false;
+      }
+    },
+  });
+
+  if (!ok) {
+    console.error(`[VU ${__VU}] paste_event_functions failed — HTTP ${res.status}: ${body_text(res).slice(0, 600)}`);
+    fail('paste_event_functions did not succeed');
+  }
+}
+
+export function read_event_detail_data(token: string, version: string, event: EventRow, refreshKey: number, name = 'ReadEventDetailData') {
+  const res = post_event_window('GenericDetailServer/GetData2', eventDetailDataPayload(event, refreshKey), token, version, name);
+
+  const ok = check(res, {
+    [`${name}: status is 201`]: (r) => r.status === 201,
+  });
+
+  if (!ok) {
+    console.error(`[VU ${__VU}] read_event_detail_data failed — HTTP ${res.status}`);
+    fail('read_event_detail_data did not succeed');
+  }
+}
+
+export function read_event_functions_after_paste(
+  token: string,
+  version: string,
+  event: EventRow,
+  refreshKey: number,
+  name = 'ReadEventFunctionsAfterPaste',
+) {
+  const res = post_event_window('USIDataGridServer/GetGridData2', eventFunctionsRefreshPayload(event, refreshKey), token, version, name);
+
+  const ok = check(res, {
+    [`${name}: status is 201`]: (r) => r.status === 201,
+  });
+
+  if (!ok) {
+    console.error(`[VU ${__VU}] read_event_functions_after_paste failed — HTTP ${res.status}`);
+    fail('read_event_functions_after_paste did not succeed');
+  }
+}
+
+export function open_events_filtered_list(token: string, version: string, eventName: string, name = 'OpenEventsFilteredList') {
+  const res = post_event_window('GenericListServer/GetInitialData2', eventsFilteredListPayload(eventName), token, version, name);
+
+  const ok = check(res, {
+    [`${name}: status is 201`]: (r) => r.status === 201,
+  });
+
+  if (!ok) {
+    console.error(`[VU ${__VU}] open_events_filtered_list failed — HTTP ${res.status}`);
+    fail('open_events_filtered_list did not succeed');
+  }
+}
+
+export function open_events_filtered_grid(token: string, version: string, eventName: string, name = 'OpenEventsFilteredGrid') {
+  const res = post_event_window('USIDataGridServer/GetInitialData2', eventsFilteredGridPayload(eventName), token, version, name);
+
+  const ok = check(res, {
+    [`${name}: status is 201`]: (r) => r.status === 201,
+  });
+
+  if (!ok) {
+    console.error(`[VU ${__VU}] open_events_filtered_grid failed — HTTP ${res.status}`);
+    fail('open_events_filtered_grid did not succeed');
   }
 }
