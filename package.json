@@ -2,6 +2,9 @@
   "name": "performance-k6",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=22.15.0"
+  },
   "description": "k6 performance tests for Momentus, generated via playwright-cli exploration",
   "scripts": {
     "secret": "ts-node .config/yargs/secret.ts",
