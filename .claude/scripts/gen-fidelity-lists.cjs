@@ -84,6 +84,13 @@ const JOURNEY_SPINE = {
     '/api/USIDataGridServer/GetGridData2': ['04', '07'],
     '/api/GenericDetailServer/GetInitialData2': ['06'],
   },
+  't16-copy-paste-event-function': {
+    '/api/GenericListServer/GetInitialData2': ['07'],
+    '/api/USIDataGridServer/GetInitialData2': ['03', '07'],
+    '/api/USIDataGridServer/GetGridData2': ['04', '06'],
+    '/api/GenericDetailServer/GetInitialData2': ['04', '05'],
+    '/api/GenericDetailServer/GetData2': ['06'],
+  },
   't30-crystal-report': {
     '/api/GenericListServer/GetInitialData2': ['03', '10'],
     '/api/USIDataGridServer/GetInitialData2': ['03', '07', '09'],
@@ -177,6 +184,7 @@ const JOURNEY_SPINE_REQUESTS = {
     { path: '/api/ObjectColumnCacheServer/GetObjectColumns', step: '06', body: '[456,' },
     { path: '/api/ObjectColumnCacheServer/GetObjectColumns', step: '08', body: '[2556,' },
   ],
+  't16-copy-paste-event-function': [{ path: '/api/USIDataGridServer/GetInitialData2', step: '04', body: '["10",5451,23,' }],
   't9-purchase-orders': [{ path: '/api/ObjectColumnCacheServer/GetObjectColumns', step: '03', body: '[81,' }],
   't10-voucher-processing': [
     { path: '/api/ObjectColumnCacheServer/GetObjectColumns', step: '03', body: '[1138,' },
