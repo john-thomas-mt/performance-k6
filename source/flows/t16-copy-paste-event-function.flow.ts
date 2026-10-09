@@ -33,7 +33,6 @@ import { config } from '../utils/exports/config.exp.ts';
 import { User, FidelityLevel, EventGridFunction, CopyPasteFunctionSetup } from '../utils/exports/types.exp.ts';
 import { login_to_events } from './login.flow.ts';
 
-const FUNCTION_PREFIX = 'k6-t16-function-';
 const MIN_FUNCTIONS = 2;
 const ALL_FUNCTIONS_CHANCE = 0.25;
 
@@ -74,7 +73,9 @@ function chrome_and_static(token: string, version: string, level: FidelityLevel,
 }
 
 function select_functions(functions: EventGridFunction[]) {
-  const ids = functions.filter((f) => f.desc.includes(FUNCTION_PREFIX) && f.funcId !== '').map((f) => f.funcId);
+  const ids = functions
+    .filter((f) => f.desc.includes(`${config.seedCopyPasteFunctionDescPrefix}-`) && f.funcId !== '')
+    .map((f) => f.funcId);
   let selected = ids;
   if (ids.length > MIN_FUNCTIONS && Math.random() >= ALL_FUNCTIONS_CHANCE) {
     const count = MIN_FUNCTIONS + Math.floor(Math.random() * (ids.length - MIN_FUNCTIONS + 1));
@@ -153,7 +154,9 @@ export function copy_paste_event_function_journey(user: User, data: CopyPasteFun
   const functionIds = select_functions(functions);
   if (functionIds === '') {
     check(null, { 'Event has seeded functions to paste': () => false });
-    fail(seed_gap_message('copy_paste_event_function', `event "${event.desc}" has no "${FUNCTION_PREFIX}" functions`));
+    fail(
+      seed_gap_message('copy_paste_event_function', `event "${event.desc}" has no "${config.seedCopyPasteFunctionDescPrefix}-" functions`),
+    );
   }
   subs.P_SelectedNeoLoadFunctions = functionIds;
 

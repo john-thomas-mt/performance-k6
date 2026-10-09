@@ -105,7 +105,7 @@ export default function seed_copy_paste_functions(data: SeedSetup) {
       windowVersion,
       format_retrieve_stamp(stamp),
     );
-    const funcDesc = `k6-t16-function-${__VU}${iter}${epoch}${i}`;
+    const funcDesc = `${config.seedCopyPasteFunctionDescPrefix}-${__VU}${iter}${epoch}${i}`;
     save_event_function(
       bearerToken,
       version,

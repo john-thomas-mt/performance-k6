@@ -80,8 +80,8 @@ export default function probe_copy_paste_functions_seed(data: PoolProbeSetup & {
   const seededFunctions = read_functions(seeded, 'ProbeSeedFunctionsSeed');
   const neoloadAdded = neoloadFunctions.find((f) => f.desc.includes('NeoLoadFunction_'));
   const neoloadAddedCount = neoloadFunctions.filter((f) => f.desc.includes('NeoLoadFunction_')).length;
-  const seededAddedCount = seededFunctions.filter((f) => f.desc.startsWith('k6-t16-function-')).length;
-  const seededAdded = seededFunctions.find((f) => f.desc.startsWith('k6-t16-function-'));
+  const seededAddedCount = seededFunctions.filter((f) => f.desc.startsWith(`${config.seedCopyPasteFunctionDescPrefix}-`)).length;
+  const seededAdded = seededFunctions.find((f) => f.desc.startsWith(`${config.seedCopyPasteFunctionDescPrefix}-`));
   compare_record_fields('Event', reference, seeded, eventIdentityFields);
   check(seededAddedCount, { 'Added functions per event: within the seed range (2-10)': (n) => n >= 2 && n <= 10 });
   console.log(`Added functions: NeoLoad ${neoloadAddedCount}, k6 seed ${seededAddedCount}`);
@@ -92,6 +92,9 @@ export default function probe_copy_paste_functions_seed(data: PoolProbeSetup & {
     );
   }
   if (!seededAdded)
-    abort('k6 seeded function found', `no k6-t16-function- function on "${seeded.desc}": the seed's function save did not land`);
+    abort(
+      'k6 seeded function found',
+      `no ${config.seedCopyPasteFunctionDescPrefix}- function on "${seeded.desc}": the seed's function save did not land`,
+    );
   compare_record_fields('Function', neoloadAdded, seededAdded, eventFunctionIdentityFields);
 }
