@@ -23,3 +23,16 @@ export type ReportListRow = {
   desc: string;
   entStamp: string;
 };
+
+export type ReportDateRange = {
+  startDate: string;
+  endDate: string;
+};
+
+export type EventRevenueMetricReportResult = {
+  MimeType: string;
+  Description: string;
+  ReportData: string;
+};
+
+export type SpaceUtilizationReportResult = EventRevenueMetricReportResult;

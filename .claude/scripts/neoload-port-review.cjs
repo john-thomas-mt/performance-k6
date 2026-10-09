@@ -353,6 +353,10 @@ reach(flowText).seen.forEach((f) => allReached.add(f));
 const reachedText = [flowText, ...[...allReached].map((f) => index.get(f).body)].join('\n');
 const JS_TRANSLATIONS = {
   P_jwtToken: ['mint_api_jwt() (auth.helper.ts)', /\bmint_api_jwt\(/],
+  P_ERMR_StartDate: ['random_date_range() (payload.helper.ts)', /\brandom_date_range\(/],
+  P_ERMR_EndDate: ['random_date_range() (payload.helper.ts)', /\brandom_date_range\(/],
+  P_SUR_StartDate: ['random_date_range() (payload.helper.ts)', /\brandom_date_range\(/],
+  P_SUR_EndDate: ['random_date_range() (payload.helper.ts)', /\brandom_date_range\(/],
 };
 const jsTranslated = (name) => {
   const t = JS_TRANSLATIONS[name];

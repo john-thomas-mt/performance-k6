@@ -16,6 +16,12 @@ each folder's own rule file (`rules/apis.md`, `rules/flows.md`, `rules/helpers.m
 - Headers are never inlined: use `build_headers(token, version)` for the Momentus core API, `public_api_headers(apiJwt)` for the Momentus public REST API (`/api/v1/…`, JWT from `mint_api_jwt`), and `sales_ai_headers(jwt)` for the sales-ai API (all from `source/utils/helpers/headers.helper.ts`)
 - URLs are built from `config` values — never hardcode hosts or versions in a wrapper; the sales-ai `tenantId` is correlated from the session JWT (see Correlation), not `config`
 
+## Timeouts
+- k6 times out each request at **60s** by default, which fails it as `HTTP 0` / `request timeout`. A wrapper whose endpoint can legitimately run longer sets `timeout` on that one request only, never globally (e.g. `run_event_revenue_metric_report` uses `'1h'` because the report took from 30s to 17m on PERF)
+- `timeout: 0` does **not** mean unlimited in k6 1.1.x: the request fails at once with `HTTP 0`. Use a large explicit value instead
+- A `504 Gateway Time-out` HTML page arriving after a fixed time (17m0s on PERF) comes from the gateway/ALB, not from k6. Raising the k6 timeout won't fix it; report it as a performance finding
+- The scenario must outlive the slow request too: pair the request `timeout` with a scenario `maxDuration` (see `rules/tests.md`, Execution shape)
+
 ## Correlation — never hardcode dynamic values
 Every value the server generates must be extracted at runtime from a prior response:
 - App `version` header → `fetch_server_version()` (regex on `app85.cshtml`); throws if the page fetch fails or the `?v=` token is missing (no static fallback)

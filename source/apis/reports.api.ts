@@ -1,7 +1,7 @@
 import http from 'k6/http';
 import { check, fail } from 'k6';
 import { config } from '../utils/exports/config.exp.ts';
-import { build_headers, body_text, parse_grid_rows } from '../utils/exports/helpers.exp.ts';
+import { build_headers, public_api_headers, body_text, parse_grid_rows } from '../utils/exports/helpers.exp.ts';
 import {
   reportMasterListPayload,
   reportMasterGridPayload,
@@ -13,8 +13,18 @@ import {
   reportListSavePayload,
   orgSourceSearchPayload,
   orgSourceGridPayload,
+  eventRevenueMetricReportPayload,
+  spaceUtilizationReportPayload,
 } from '../utils/exports/data.exp.ts';
-import { ReportSaveResult, ReportListWindowInfo, ReportListContext, ReportListRow } from '../utils/exports/types.exp.ts';
+import {
+  ReportSaveResult,
+  ReportListWindowInfo,
+  ReportListContext,
+  ReportListRow,
+  ReportDateRange,
+  EventRevenueMetricReportResult,
+  SpaceUtilizationReportResult,
+} from '../utils/exports/types.exp.ts';
 
 export function open_report_master_list(token: string, version: string, name = 'OpenReportMasterList') {
   const res = http.post(`${config.baseUrl}/api/GenericListServer/GetInitialData2`, JSON.stringify(reportMasterListPayload()), {
@@ -234,5 +244,45 @@ export function report_application_unloading(token: string, version: string, nam
   if (!ok) {
     console.error(`[VU ${__VU}] report_application_unloading failed — HTTP ${res.status}`);
     fail('report_application_unloading did not succeed');
+  }
+}
+
+export function run_event_revenue_metric_report(apiJwt: string, range: ReportDateRange, name = 'RunEventRevenueMetricReport') {
+  const res = http.put(`${config.baseUrl}/api/v1/Reports/10/6168/RunReport`, JSON.stringify(eventRevenueMetricReportPayload(range)), {
+    headers: public_api_headers(apiJwt),
+    tags: { name },
+    timeout: '1h',
+  });
+  const isJson = res.status === 200 && (res.headers['Content-Type']?.includes('application/json') ?? false);
+  const report = isJson ? (res.json() as EventRevenueMetricReportResult) : null;
+  const ok = check(res, {
+    [`${name}: status is 200`]: (r) => r.status === 200,
+    [`${name}: report data present`]: () => Boolean(report?.ReportData),
+  });
+  if (!ok) {
+    console.error(
+      `[VU ${__VU}] run_event_revenue_metric_report failed for ${range.startDate}..${range.endDate} — HTTP ${res.status}: ${body_text(res).slice(0, 500)}`,
+    );
+    fail('run_event_revenue_metric_report did not succeed');
+  }
+}
+
+export function run_space_utilization_report(apiJwt: string, range: ReportDateRange, name = 'RunSpaceUtilizationReport') {
+  const res = http.put(`${config.baseUrl}/api/v1/Reports/10/6150/RunReport`, JSON.stringify(spaceUtilizationReportPayload(range)), {
+    headers: public_api_headers(apiJwt),
+    tags: { name },
+    timeout: '1h',
+  });
+  const isJson = res.status === 200 && (res.headers['Content-Type']?.includes('application/json') ?? false);
+  const report = isJson ? (res.json() as SpaceUtilizationReportResult) : null;
+  const ok = check(res, {
+    [`${name}: status is 200`]: (r) => r.status === 200,
+    [`${name}: report data present`]: () => Boolean(report?.ReportData),
+  });
+  if (!ok) {
+    console.error(
+      `[VU ${__VU}] run_space_utilization_report failed for ${range.startDate}..${range.endDate} — HTTP ${res.status}: ${body_text(res).slice(0, 500)}`,
+    );
+    fail('run_space_utilization_report did not succeed');
   }
 }
