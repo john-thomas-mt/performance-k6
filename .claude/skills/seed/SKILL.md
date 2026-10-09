@@ -19,7 +19,8 @@ same read its journey finds them with: an event search, or the non-invoiced grid
 records up) and creates only the shortfall. An env that already meets the target gets one count read and no
 writes, so re-running `/seed` is always safe.
 - `+n` — create n new records whatever is already there (`-e SEED_ADD=n`). Use it only to prove a new or changed
-  seed creates records (`neoload-to-k6` step 0): a top-up on an env that already holds enough would create none.
+  seed creates records (`perf-1-seed-port`, which passes the seed name since the journey isn't in `smoke.spec.ts`
+  yet): a top-up on an env that already holds enough would create none.
 - `--probe` — run the seed's probe afterwards (§5).
 
 **This sends write traffic to the env (VPN required).** Invoking the skill is the go-ahead, but state the env,

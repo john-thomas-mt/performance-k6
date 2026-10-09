@@ -1,4 +1,4 @@
-// Dissect a captured request/response body for k6 authoring (generate-test / neoload-to-k6).
+// Dissect a captured request/response body for k6 authoring (generate-test / perf-1-seed-port / perf-3-journey-port).
 // Prints the envelope shape, populated transport-table cells with column names, and
 // correlation candidates (values that must be regenerated client-side or extracted from a
 // response, never frozen into a builder). Keeps raw bytes out of the main context.

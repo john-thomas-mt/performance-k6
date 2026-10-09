@@ -82,5 +82,5 @@ whatever its runtime merits, is on the wrong side of that shift.
 ## Sources
 
 - [Grafana k6 — JavaScript/TypeScript compatibility mode](https://grafana.com/docs/k6/latest/using-k6/javascript-typescript-compatibility-mode/)
-- The repo's own AI-assisted procedures — `.claude/skills/` (generate-test, neoload-to-k6, verify-envs, payload-drift)
+- The repo's own AI-assisted procedures — `.claude/skills/` (generate-test, the perf-1…perf-4 NeoLoad port pipeline, seed, verify-envs, payload-drift)
 - NeoLoad authoring model — Enterprise Performance Suite `README.md` (sibling `performance` repo)

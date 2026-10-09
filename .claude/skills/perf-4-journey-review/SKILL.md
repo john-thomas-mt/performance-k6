@@ -1,11 +1,14 @@
 ---
-name: neoload-port-review
-description: Review a finished NeoLoad → k6 port against its recording, in a fresh session — step and spine coverage, correlation, recorded values left hardcoded, test-data names, every variables/ pool and generated variable, the seed against its data-script VU, SLA thresholds and wiring. Zero traffic, review only. Use when the user wants to review, audit or double-check a ported journey (`/neoload-port-review <journey>`).
+name: perf-4-journey-review
+description: Step 4 of the NeoLoad port pipeline — review a finished NeoLoad → k6 journey port against its recording, in a fresh session: step and spine coverage, correlation, recorded values left hardcoded, test-data names, every variables/ pool and generated variable, how the journey finds its seeded records, SLA thresholds and wiring. Zero traffic, review only. The seed itself is perf-2-seed-review's. Use when the user wants to review, audit or double-check a ported journey (`/perf-4-journey-review <journey>`).
 ---
 
-# NeoLoad port review — check a port against its recording
+# 4 · Journey review — check a port against its recording
 
-An independent second look at a journey `neoload-to-k6` produced. The **recording is the reference**, not
+**Pipeline** (each step in a fresh session; each ends by handing over the next command):
+`perf-1-seed-port` → `perf-2-seed-review` → `perf-3-journey-port` → **`perf-4-journey-review`** → `/verify-envs`.
+
+An independent second look at a journey `perf-3-journey-port` produced. The **recording is the reference**, not
 the porting session: don't read its recon kit or reasoning, and don't assume a choice was right because
 the code looks deliberate. Run it in a **fresh session** so nothing from the port leaks in.
 
@@ -18,8 +21,10 @@ Resolve the flow from the argument (a scenario name like `lead_account` → `sou
 then run:
 
 ```bash
-node .claude/scripts/neoload-port-review.cjs "C:/momentus-projects/performance" source/flows/<journey>.flow.ts
+node .claude/scripts/neoload-port-review.cjs "C:/momentus-projects/performance" source/flows/<journey>.flow.ts --skip 6b
 ```
+
+Section 6b, the seed against its data-script VU, is skipped: it's `perf-2-seed-review`'s.
 
 Given the NeoLoad project root, it picks the VU from the flow's step prefix and the version its pools were
 generated from (pass the VU tree dir instead to override). It prints OK / FLAG / INFO lines across these
@@ -45,21 +50,10 @@ areas:
   `k6-t<id>-<what>-<vu><iter><epoch>`, with this VU's test id unpadded. A name cut to length prints as INFO.
 - **variables:** pools row-for-row per column, cross-version files, credentials, jsAction-set variables (a
   computed subs-map key counts) and generated/constant translations, `p_` included.
-- **seed (6):** whether the journey needs one, and then the seed against the data-script VU at this VU's version,
-  judged by the data it leaves, not its navigation:
-  - which envs NeoLoad's own data run left records on;
-  - how the journey finds the records: a `discover_*` in smoke `setup()`, or, when the recording picks a random grid
-    row in-flow (a `TransportDataRows` extractor with matchNumber 0 feeding a jsAction), the same grid read in the
-    same k6 step;
-  - that discovery and the seed share one `config` prefix carrying this journey's test id. With no discovery prefix,
-    the seed is the one whose `config` prefix carries the test id, and a FLAG says so when none does;
-  - the seed's record names;
-  - each write per pass, and every `loop` count;
-  - each saved table, cell by cell;
-  - every pool the data script picks per iteration;
-  - that the seed has its seed probe, `source/probes/<feature>-seed.probe.ts`;
-  - a `seed target` INFO: the data file's planned size in NeoLoad's `data_distribution_config.csv` and the rows
-    its `variables/` file holds per version. `/seed … neoload` reads it; it needs no verdict.
+- **seed discovery (6):** whether the journey needs seeded records, and then how it finds them:
+  - a `discover_*` in smoke `setup()`, or, when the recording picks a random grid row in-flow (a `TransportDataRows`
+    extractor with matchNumber 0 feeding a jsAction), the same grid read in the same k6 step;
+  - that discovery and the seed share one `config` prefix carrying this journey's test id.
 - **SLA ↔ thresholds:** tags are resolved per call site, and shared `...xThresholds` spreads are followed. Tags
   fired only behind a fidelity guard or only outside the journey (setup discovery) print as INFO.
 - **wiring**
@@ -100,9 +94,6 @@ How to read the common FLAGs:
 | `` `<template>` does not follow k6-t<id>-… `` / `carries test id …` | a record the journey or seed creates is named some other way, or with another test's id | the value is not a record name (a header, a window id, a search term). Say what it is |
 | `seed prefix '…' does not carry the consuming journey's id` | always real: a seed's records are named for the journey that reads them | none |
 | `discovery searches config.<key> … no source/seeds script names its records with it` | always real: the journey looks for records no seed creates | none |
-| `<U> <endpoint> ×n per pass, seed ×m: the seed leaves out / adds a write` | the seed leaves different data from the data script (a missing function save, a missing prompt answer) | the write is UI state only, not the seeded record. Say which |
-| `<U> runs loop … — the seed has no loop of n` | the seed creates fewer (or more) child records per parent than the data script | none |
-| `<U> picks P_… per iteration … is not picked with pick_pool_value in the seed` | the seed pins one value (a fixed account) where the data script spreads across the pool | none |
 | `k6 reaches n call sites` (INFO) | two unconditional calls where the recording has one | the extra call sites are a fallback/retry branch |
 | token-literal leak | the value is server-minted or per-record (ids, keys, stamps, names that must be unique) | it's the recorder's typed input the server only echoes back, identical every run |
 | GUID / bearer-token literal | a session token, API key or record GUID pasted into a flow, wrapper or type file | a fixed schema or app id the server expects on every call — cite where it's constant |
@@ -112,8 +103,6 @@ How to read the common FLAGs:
 | generated variable, no evidence | the flow never regenerates it (a captured timestamp/counter replayed) | translated under another name — cite where |
 | `no discover_* the flow defines is called from smoke setup()` | always real: nothing finds the data script's records at runtime | none (in-flow grid discovery is recognised and prints OK instead) |
 | `the recording picks its record in-flow … the lean flow does not read it in that step` | always real: the journey has no source for the record the recording picks | none |
-| `no source/seeds script names its records with a k6-t<id>- config prefix` | always real: the journey reads a data script's records and no seed creates them under this test id | none |
-| `<seed> has no seed probe` | always real: nothing reads the seed's records back beside NeoLoad's (`rules/probes.md`, Seed probes) | none |
 | `n variable(s) set by jsAction … from its key map` (INFO) | k6 takes them from a captured value, or from a different row than the one it writes to | the flow parses them from the same live row (grid row type, `get_cell` by column). Cite the wrapper |
 | SLA / threshold mismatch | a lean-spine request from an opted-in step lacks the profile's `avg<`, or a `p(95)` replaces it | the step has `slaProfileEnabled="false"` (launch/login in most VUs). Cite the step |
 | `p(95)` beside the average (INFO) | no commit records the measured run behind it | the commit that added it gives the run and the measured value (e.g. `202dc9d`) |
@@ -128,25 +117,18 @@ Read the **hand-written** files only: the flow, the journey's `source/apis/*.api
 - **Optimistic-concurrency stamps** correlated from the latest read and chained across sequential saves.
 - **Data isolation**: a record-modifying journey gives each iteration a unique row
   (`exec.scenario.iterationInTest % pool.length`), not a shared or `(__VU-1+__ITER)` row.
-- **Seed volume** for a journey whose write takes the record out of its own pick list (an invoiced order leaves the
-  non-invoiced grid): a modulo pick over a shrinking live list only stays unique while the stock exceeds the iterations
-  in flight. Compare the seed's `SEED_COUNT` default with what the `neoload` profile consumes (VUs × run time ÷
-  pacing) and note a shortfall as an observation.
+- **Seeded-record picks** for a journey whose write takes the record out of its own pick list (an invoiced order
+  leaves the non-invoiced grid): a modulo pick over a shrinking live list only stays unique while the stock exceeds
+  the iterations in flight. The seed's volume is `perf-2-seed-review`'s; here, check that the journey reaches its
+  records through the seed's finder and fails a gap with `seed_gap_message`.
 - **Business-rule prompts**: a `Save2` returning `ResultValue ≠ 0` fails loudly with its `MessageInfoList`.
-- **Seed** (when §1 section 6 compares one): the script has already checked the writes, loops, saved tables and
-  pools against the data-script VU. Judge what it can't see: a prompt the data script answers is answered the same
-  way (the same answer and the same answering body), the values a saved cell takes from a read come from the same
-  read, and no captured key from the data script's recording is replayed. Navigation (a UI read the seed skips)
-  is not a finding unless a saved value depends on it. In the seed probe, check that every field in the
-  `…IdentityFields` lists it skips really varies per record (a key, a name, a date, a pool pick, an account default).
-  A skipped status or type field hides exactly the difference the probe exists to catch.
 - **Fidelity tiers**, if `source/data/chrome/<journey>.chrome.ts` exists: run
   `node .claude/scripts/fidelity-tokens.cjs source/data/chrome/<journey>.chrome.ts source/data/static/<journey>.static.ts`
   and confirm the flow's subs map supplies every contract token. Never `Read` the generated tier files.
 
 ## 4. Report
 
-Write `temp/claude/docs/port-review-<journey>.md`:
+Write `temp/claude/docs/journey-review-<journey>.md`:
 
 1. **Verdict** — `clean`, `minor findings` or `needs fixes`, with the VU + version reviewed and the FLAG
    tally by verdict (e.g. `6 FLAGs: 0 real · 1 accepted · 5 false positive`).
@@ -175,11 +157,6 @@ Then give the user the verdict line, the FLAG triage table (keep the Reason colu
 any Findings, and the report path. Don't restate the OK areas or the observations in chat. Offer to hand
 the fixes to an authoring session; do not apply them here.
 
-Then suggest `/verify-envs <journey>` as the next step — the in-depth check that the port trickles down across
-the `ReleaseVersion` matrix (pass the journey's scenario name; don't make the user restate it). Suggest it once
-the verdict is `clean`, or once fixes have landed and been re-verified (§5); with open High/Medium findings,
-say the sweep waits for the fixes. Only suggest it: it is a separate traffic run, not part of this review.
-
 ## 5. Re-verify only if the script changed
 
 A review that changes nothing needs no run: the port's own 3-step verification still stands. Once fixes
@@ -192,3 +169,11 @@ land in `source/`, that verification no longer covers the new code, so tell the 
   `--execution-requirements` for the load spec. This sends no traffic, and no run is needed.
 - In both cases, re-run the §1 command (zero traffic) and confirm that only the accepted FLAGs remain.
   Record the outcome as a status note at the top of the report.
+
+## 6. Handover
+
+End with exactly one next command, with its arguments filled in, to run after `/clear` (or in a new session):
+
+- `clean`, or fixes landed and re-verified (§5): `/verify-envs <journey scenario>` — the in-depth check that the port
+  trickles down across the `ReleaseVersion` matrix. It is a separate traffic run, not part of this review.
+- Open High/Medium findings: say the sweep waits for the fixes, which go to an authoring session.

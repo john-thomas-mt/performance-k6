@@ -1,0 +1,142 @@
+import exec from 'k6/execution';
+import { Options } from 'k6/options';
+import { login_to_events, find_unplanned_payment_plan_events } from '../utils/exports/flows.exp.ts';
+import {
+  get_window_version,
+  stage_booking_space,
+  open_booking_form,
+  search_booking_account,
+  refresh_booking_account_fields,
+  save_booking,
+  read_event_functions,
+  stage_event_function,
+  save_event_function,
+  get_contact_column_stamp,
+  open_service_order_form,
+  refresh_service_order_event_fields,
+  save_contact_service_order,
+  confirm_contact_service_order,
+} from '../utils/exports/apis.exp.ts';
+import {
+  fetch_server_version,
+  decrypt_seed_users,
+  pick_user,
+  pick_pool_value,
+  format_retrieve_stamp,
+  stamp_to_epoch,
+} from '../utils/exports/helpers.exp.ts';
+import { config } from '../utils/exports/config.exp.ts';
+import { SeedSetup, SeedSession } from '../utils/exports/types.exp.ts';
+import { bookingAccountNames, bookingSpaces, random_future_date } from '../utils/exports/data.exp.ts';
+
+const SEED_ADD = __ENV.SEED_ADD ? Number(__ENV.SEED_ADD) : undefined;
+const SEED_COUNT = SEED_ADD ?? Number(__ENV.SEED_COUNT || 100);
+const SEED_VUS = Number(__ENV.SEED_VUS || 10);
+const SERVICE_ORDER_OBJECT_ID = 456;
+
+export const options: Options = {
+  scenarios: {
+    seed: {
+      executor: 'shared-iterations',
+      vus: Math.min(SEED_VUS, SEED_COUNT),
+      iterations: SEED_COUNT,
+      maxDuration: __ENV.SEED_MAX_DURATION || '4h',
+    },
+  },
+};
+
+export async function setup() {
+  const cryptoKey = config.cryptoKey;
+  if (!cryptoKey) {
+    throw new Error('No decryption key — write temp/secret.json (npm run secret -- --key <pass>)');
+  }
+  const users = await decrypt_seed_users(config.seedUsers, cryptoKey);
+  const version = fetch_server_version();
+  const { bearerToken } = login_to_events(users[0], version);
+  const existing = find_unplanned_payment_plan_events(
+    bearerToken,
+    version,
+    config.seedPaymentPlanPrefix,
+    { events: 'CountSeedEvents', orders: 'CountSeedOrders' },
+    SEED_ADD === undefined ? SEED_COUNT : undefined,
+  ).length;
+  const shortfall = SEED_ADD ?? Math.max(0, SEED_COUNT - existing);
+
+  console.log(`Server version: ${version}`);
+  console.log(
+    `"${config.seedPaymentPlanPrefix}" events: ${existing} without a payment plan found, ${SEED_ADD === undefined ? `target ${SEED_COUNT}` : 'adding'}, creating ${shortfall}`,
+  );
+  console.log(
+    `Booking ${shortfall} event(s), each with a function and 1 service order, with ${SEED_VUS} VU(s), each on its own session as a seed user from temp/seed-users.json`,
+  );
+  return { version, users, shortfall };
+}
+
+let vuSession: SeedSession | null = null;
+
+function seed_session(data: SeedSetup) {
+  if (!vuSession) {
+    const { bearerToken, encUserId } = login_to_events(pick_user(data.users), data.version);
+    vuSession = { version: data.version, bearerToken, encUserId, windowVersion: get_window_version(bearerToken, data.version, 'EB8776') };
+  }
+  return vuSession;
+}
+
+function add_service_order(data: SeedSession, evtId: string) {
+  const formStamp = get_contact_column_stamp(data.bearerToken, data.version, SERVICE_ORDER_OBJECT_ID, 'GetServiceOrderObjectColumns');
+  const form = open_service_order_form(data.bearerToken, data.version, formStamp);
+  const header = refresh_service_order_event_fields(data.bearerToken, data.version, form, evtId, stamp_to_epoch(formStamp));
+  const start = format_retrieve_stamp(header.start);
+  const end = format_retrieve_stamp(header.end);
+  const saved = save_contact_service_order(data.bearerToken, data.version, start, end, evtId, header.orderAcct);
+  return saved.upsell
+    ? confirm_contact_service_order(data.bearerToken, data.version, start, end, evtId, header.orderAcct, saved.upsell)
+    : saved.orderNbr;
+}
+
+export default function seed_payment_plans(data: SeedSetup) {
+  if (exec.scenario.iterationInTest >= data.shortfall) return;
+  const session = seed_session(data);
+  const { bearerToken, version, encUserId, windowVersion } = session;
+  const iter = exec.scenario.iterationInTest;
+  const epoch = Date.now();
+  const date = random_future_date();
+  const space = pick_pool_value(bookingSpaces);
+  const description = `${config.seedPaymentPlanPrefix}-${__VU}${iter}${epoch}`;
+
+  const spaceTable = stage_booking_space(bearerToken, version, date, space);
+  const form = open_booking_form(bearerToken, version, date);
+  const account = search_booking_account(bearerToken, version, pick_pool_value(bookingAccountNames));
+  const contact = refresh_booking_account_fields(bearerToken, version, form, date, account);
+  const booked = save_booking(bearerToken, version, form, spaceTable, date, description, account, contact);
+
+  const stamp = read_event_functions(bearerToken, version, space, account, booked.evtId, booked.addedRowKey, encUserId, windowVersion);
+  const funcTable = stage_event_function(
+    bearerToken,
+    version,
+    date,
+    space,
+    account,
+    booked.evtId,
+    booked.addedRowKey,
+    encUserId,
+    windowVersion,
+    format_retrieve_stamp(stamp),
+  );
+  save_event_function(
+    bearerToken,
+    version,
+    funcTable,
+    `k6-t11-function-${__VU}${iter}${epoch}`,
+    space,
+    account,
+    booked.evtId,
+    booked.addedRowKey,
+    encUserId,
+    windowVersion,
+    epoch,
+  );
+
+  const order = add_service_order(session, booked.evtId);
+  console.log(`[VU ${__VU}] Booked "${description}" (${booked.evtId}) with service order ${order}`);
+}

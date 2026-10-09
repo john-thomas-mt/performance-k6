@@ -14,6 +14,39 @@ import {
 } from '../utils/exports/data.exp.ts';
 import { EventRow, ServiceOrderRow, ServiceOrderSaveResult } from '../utils/exports/types.exp.ts';
 
+export const serviceOrderColumns = {
+  orderNbr: 'ER100_ORD_NBR',
+  soSearch: 'ER100_SO_SEARCH',
+  rowKey: 'cROW_KEY',
+  orgCode: 'ER100_ORG_CODE',
+  ordAcct: 'ER100_ORD_ACCT',
+  billTo: 'ER100_BILL_TO_CUST',
+  evtId: 'ER100_EVT_ID',
+  funcId: 'ER100_FUNC_ID',
+  btoContact: 'ER100_NG_BTO_CONTACT',
+  ordContact: 'ER100_NG_ORD_CONTACT',
+  reqContact: 'ER100_NG_REQ_CONTACT',
+  salesPer: 'ER100_ORD_ACCT_REP',
+  orderType: 'ER100_ORD_TYPE',
+  priceList: 'ER100_PRICE_LIST',
+  reqCust: 'ER100_REQ_CUST',
+  resPhase: 'ER100_RES_PHASE',
+  shipTo: 'ER100_SHIPTO_ACCT',
+  shipToContact: 'ER100_SHIPTO_CONT',
+  evtDesig: 'OrderEvent_EV200_EVT_DESIGNATION',
+  acctClass: 'OrderAccount_EV870_CLASS',
+  evtStatus: 'OrderEvent_EV200_EVT_STATUS',
+  status: 'ER100_NEW_STS',
+  invoice: 'ER100_INVOICE',
+  exhibitorId: 'ER100_EXHIBITOR_ID',
+  occurrence: 'ER100_OCCURRENCE',
+  eventSuiteId: 'ER100_EVENT_SUITE_ID',
+  ordCatSeq: 'ER100_ORD_CAT_SEQ',
+  acctName: 'OrderAccount_EV870_NAME',
+  funcDesc: 'OrderFunc_EV700_FUNC_DESC',
+  updDateIso: 'ER100_UPD_DATE_ISO',
+};
+
 export function load_service_orders(token: string, version: string, event: EventRow, name = 'LoadServiceOrders'): ServiceOrderRow[] {
   const res = http.post(`${config.baseUrl}/api/USIDataGridServer/GetInitialData2`, JSON.stringify(serviceOrdersGridPayload(event)), {
     headers: build_headers(token, version),
@@ -29,42 +62,8 @@ export function load_service_orders(token: string, version: string, event: Event
     return [];
   }
 
-  return parse_grid_rows(
-    res,
-    {
-      orderNbr: 'ER100_ORD_NBR',
-      soSearch: 'ER100_SO_SEARCH',
-      rowKey: 'cROW_KEY',
-      orgCode: 'ER100_ORG_CODE',
-      ordAcct: 'ER100_ORD_ACCT',
-      billTo: 'ER100_BILL_TO_CUST',
-      evtId: 'ER100_EVT_ID',
-      funcId: 'ER100_FUNC_ID',
-      btoContact: 'ER100_NG_BTO_CONTACT',
-      ordContact: 'ER100_NG_ORD_CONTACT',
-      reqContact: 'ER100_NG_REQ_CONTACT',
-      salesPer: 'ER100_ORD_ACCT_REP',
-      orderType: 'ER100_ORD_TYPE',
-      priceList: 'ER100_PRICE_LIST',
-      reqCust: 'ER100_REQ_CUST',
-      resPhase: 'ER100_RES_PHASE',
-      shipTo: 'ER100_SHIPTO_ACCT',
-      shipToContact: 'ER100_SHIPTO_CONT',
-      evtDesig: 'OrderEvent_EV200_EVT_DESIGNATION',
-      acctClass: 'OrderAccount_EV870_CLASS',
-      evtStatus: 'OrderEvent_EV200_EVT_STATUS',
-      status: 'ER100_NEW_STS',
-      invoice: 'ER100_INVOICE',
-      exhibitorId: 'ER100_EXHIBITOR_ID',
-      occurrence: 'ER100_OCCURRENCE',
-      eventSuiteId: 'ER100_EVENT_SUITE_ID',
-      ordCatSeq: 'ER100_ORD_CAT_SEQ',
-      acctName: 'OrderAccount_EV870_NAME',
-      funcDesc: 'OrderFunc_EV700_FUNC_DESC',
-      updDateIso: 'ER100_UPD_DATE_ISO',
-    },
-    name,
-    (tables) => tables.find((t) => t.TransportDataColumns.some((c) => c.ColumnName === 'ER100_ORD_NBR')),
+  return parse_grid_rows(res, serviceOrderColumns, name, (tables) =>
+    tables.find((t) => t.TransportDataColumns.some((c) => c.ColumnName === 'ER100_ORD_NBR')),
   );
 }
 

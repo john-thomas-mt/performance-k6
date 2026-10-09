@@ -1,12 +1,17 @@
 // Cross-check a finished NeoLoad → k6 port against its recording — the evidence half of the
-// neoload-port-review skill. Zero traffic: it reads the NeoLoad tree, the project's variables/ and
+// perf-4-journey-review and perf-2-seed-review skills. Zero traffic: it reads the NeoLoad tree, the project's variables/ and
 // populations, and the k6 source, and prints one compact report of OK / FLAG / INFO lines per area
 // (steps, spine coverage and lean-path order, fidelity tiers, correlation, token-literal leaks and transport
 // tables column by column, test-data names, variables/pools, the seed against its data-script VU, SLA, wiring). The
 // reviewer judges only the FLAG lines — it never re-derives what this already checked.
 //
 // Usage:
-//   node .claude/scripts/neoload-port-review.cjs "<VU tree dir>" source/flows/<journey>.flow.ts
+//   node .claude/scripts/neoload-port-review.cjs "<VU tree dir>" source/flows/<journey>.flow.ts [--only <ids> | --skip <ids>]
+//
+// --only / --skip take comma-separated section ids, matched exactly (`6` does not select `6b`). Every section
+// still runs, so shared state is unchanged; a muted section prints nothing and its FLAGs are left out of the
+// tally. The journey review runs `--skip 6b`, the seed review `--only 6b`. With `--only 6b` the flow may not
+// exist yet (a seed ported before its journey): pass the journey's VU tree dir and the flow path it will have.
 //
 // Deterministic and read-only. Zip extraction shells out to `unzip` (git-bash / any *nix).
 
@@ -16,16 +21,29 @@ const crypto = require('crypto');
 const { findProjectRoot, loadDefs, resolveDef, refsInTree, poolValues, commonPrefix } = require('./neoload-vars.cjs');
 const { readTree, recordedRequest, alignTokens, attr, openTag, vuXmlPath } = require('./neoload-tree.cjs');
 
-const [treeArg, flowArg] = process.argv.slice(2);
-if (!treeArg || !flowArg || !fs.existsSync(flowArg)) {
+const argv = process.argv.slice(2);
+const sectionFilter = (name) => {
+  const i = argv.indexOf(name);
+  if (i < 0) return null;
+  const ids = (argv[i + 1] || '').split(',').filter(Boolean);
+  argv.splice(i, 2);
+  return ids;
+};
+const onlyIds = sectionFilter('--only');
+const skipIds = sectionFilter('--skip');
+const [treeArg, flowArg] = argv;
+const seedOnly = !!onlyIds && onlyIds.every((id) => id === '6b');
+const flowExists = !!flowArg && fs.existsSync(flowArg);
+if (!treeArg || !flowArg || (!flowExists && !seedOnly) || (onlyIds && skipIds) || [onlyIds, skipIds].some((l) => l && !l.length)) {
   console.error(
-    'usage: node .claude/scripts/neoload-port-review.cjs "<VU tree dir | NeoLoad project root>" source/flows/<journey>.flow.ts',
+    'usage: node .claude/scripts/neoload-port-review.cjs "<VU tree dir | NeoLoad project root>" source/flows/<journey>.flow.ts [--only <ids> | --skip <ids>]',
   );
   process.exit(1);
 }
 // Given the project root instead of a VU, pick the VU from the flow's step prefix (T001_AccountCreation →
 // uid "T01_AccountCreation (x.y)"), preferring the version its pool modules were generated from.
 const resolveVu = (projectRoot) => {
+  if (!flowExists) return null;
   const flow = fs.readFileSync(flowArg, 'utf8');
   // the step name can run to several segments and differ from the VU uid (T003_ViewContact_ServiceOrders_01 →
   // uid "T03_ViewContact_ServiceOrder (26.3)"; single-step T006_Badge_Report → uid "T06_BadgeReport (26.3)"),
@@ -60,7 +78,7 @@ if (!treeDir) {
   console.error(`could not resolve a VU for ${flowArg} under ${treeArg}/team/vus — pass the VU tree dir`);
   process.exit(1);
 }
-for (const p of [treeDir, vuXmlPath(treeDir), flowArg]) {
+for (const p of [treeDir, vuXmlPath(treeDir), ...(flowExists ? [flowArg] : [])]) {
   if (!fs.existsSync(p)) {
     console.error(`not found: ${p}`);
     process.exit(1);
@@ -73,13 +91,20 @@ if (!root) {
 }
 
 let flags = 0;
-const ok = (s) => console.log(`  OK    ${s}`);
+let muted = false;
+const selects = (ids, id) => ids.includes(id);
+const say = (s) => muted || console.log(s);
+const ok = (s) => say(`  OK    ${s}`);
 const flag = (s) => {
-  flags++;
-  console.log(`  FLAG  ${s}`);
+  if (!muted) flags++;
+  say(`  FLAG  ${s}`);
 };
-const info = (s) => console.log(`  INFO  ${s}`);
-const section = (s) => console.log(`\n${s}`);
+const info = (s) => say(`  INFO  ${s}`);
+const section = (s) => {
+  const id = (s.match(/^(\d+[a-z]?)\./) || [])[1] || '';
+  muted = onlyIds ? !selects(onlyIds, id) : skipIds ? selects(skipIds, id) : false;
+  say(`\n${s}`);
+};
 const read = (p) => fs.readFileSync(p, 'utf8');
 const rel = (p) => path.relative(process.cwd(), p).replace(/\\/g, '/');
 const norm = (s) => s.replace(/\r\n/g, '\n').replace(/\s+$/, '');
@@ -102,7 +127,7 @@ const bodyFrom = (text, start) => {
   return text.slice(start);
 };
 const index = new Map();
-// source/seeds too: section 6 follows a seed's default function through the same wrappers and builders. k6's
+// source/seeds too: section 6b follows a seed's default function through the same wrappers and builders. k6's
 // lifecycle names (setup, options) are left out: every seed and spec has its own, and a comment's "setup()" would
 // otherwise reach one
 const LIFECYCLE = new Set(['setup', 'teardown', 'handleSummary', 'options']);
@@ -194,10 +219,12 @@ const count = (arr) => arr.reduce((m, x) => m.set(x, (m.get(x) || 0) + 1), new M
 const tree = readTree(treeDir);
 const vuHead = openTag(tree.vuXml, 'virtual-user');
 const vuUid = attr(vuHead, 'uid');
-const flowText = read(flowArg);
+const flowText = flowExists ? read(flowArg) : '';
 const journeyFn = (flowText.match(/export function (\w+_journey)\s*\(/) || [])[1];
 const scenario = journeyFn ? journeyFn.replace(/_journey$/, '') : null;
-console.log(`=== NEOLOAD PORT REVIEW: ${vuUid} → ${rel(flowArg)} (${journeyFn || 'no *_journey export'}) ===`);
+console.log(
+  `=== NEOLOAD PORT REVIEW: ${vuUid} → ${rel(flowArg)} (${flowExists ? journeyFn || 'no *_journey export' : 'not written yet, seed only'}) ===`,
+);
 
 // ---- 1. steps ↔ groups --------------------------------------------------------------------------
 section('1. STEPS ↔ k6 GROUPS  (NeoLoad container order vs step-name strings in the flow)');
@@ -256,7 +283,7 @@ for (const s of stepPos) {
     leanSeq = reachSeq(slice, new Set(), stripGuarded);
     stepLean.set(s.name, lean);
   }
-  console.log(
+  say(
     `  [${s.name}]  spine ${[...nl.values()].reduce((a, b) => a + b, 0)} · chrome ${[...chrome.values()].reduce((a, b) => a + b, 0)} · static/telemetry ${drops}`,
   );
   const tier = uiTier.get((s.name.match(/_(\d+)_/) || [])[1]) || new Map();
@@ -545,7 +572,7 @@ section('4. TOKEN-LITERAL LEAKS  (a recorded ${…} value still hardcoded in the
 // seed run (a shared events.api.ts imports copy-event's savePayload)
 const journeyEntry = journeyFn && index.get(journeyFn);
 const journeyReached = journeyEntry ? reach(journeyEntry.body).seen : new Set(allReached);
-const scopedText = [{ f: path.resolve(flowArg), lines: read(flowArg).split('\n'), offset: 0 }];
+const scopedText = [{ f: path.resolve(flowArg), lines: flowText.split('\n'), offset: 0 }];
 const unitNames = new Set();
 const addUnit = (name) => {
   const e = index.get(name);
@@ -1067,7 +1094,7 @@ for (const d of versionDirs) {
 }
 
 // ---- 6. seed / data-script ---------------------------------------------------------------------
-section('6. SEED  (paired data-script VU via test-data population, DataWrite file chaining, seed-prefixed pools)');
+section('6. SEED DISCOVERY  (does the journey need seeded records, and how it finds them: setup discovery or an in-flow grid pick)');
 const popsDir = path.join(root, 'team', 'populations');
 const pops = fs.readdirSync(popsDir).map((f) => {
   const xml = read(path.join(popsDir, f));
@@ -1109,8 +1136,13 @@ for (const f of usedFiles)
 tdPops.forEach((p) => info(`test-data population ${p.f} → ${p.splits.join(', ')}`));
 chained.forEach((c) => info(`DataWrite chain: ${c}`));
 seedPrefixed.forEach((s) => info(`seed-prefixed pool: ${s}`));
+const NO_SEED =
+  'no seed needed — no test-data population names this VU, no DataWrite writes a file it reads, no pool shares a generated prefix';
+const SEED_SECTION = '6b. SEED vs DATA SCRIPT  (the seed against the data-script VU: writes, loops, saved tables, pools, seed probe)';
 if (!dataScripts.length && !chained.length && !seedPrefixed.length) {
-  ok('no seed needed — no test-data population names this VU, no DataWrite writes a file it reads, no pool shares a generated prefix');
+  ok(NO_SEED);
+  section(SEED_SECTION);
+  ok(NO_SEED);
 } else {
   const heads = fs.readdirSync(vusDir).filter((f) => f.endsWith('.xml'));
   const treeOf = (uid) => {
@@ -1128,7 +1160,6 @@ if (!dataScripts.length && !chained.length && !seedPrefixed.length) {
       }),
     ),
   ];
-  dsUids.filter((uid) => !treeOf(uid)).forEach((uid) => flag(`data-script VU ${uid}: tree not found under team/vus`));
 
   // where NeoLoad's own data run left its records: one variables/ file per version, mapped to an env by
   // P_Performance_Sites. An env with no file has none of them, so the k6 seed is its only source
@@ -1142,20 +1173,22 @@ if (!dataScripts.length && !chained.length && !seedPrefixed.length) {
     .readdirSync(path.join(root, 'variables'))
     .filter((d) => /^version_/.test(d))
     .map((d) => d.replace('version_', ''));
-  for (const { name, file } of seedPrefixedVars) {
-    const vm = (file || '').replace(/\\/g, '/').match(/variables\/version_([\d_]+)\/P_\1_(.+)$/);
-    if (!vm) continue;
-    const has = versions.filter((v) => fs.existsSync(path.join(root, 'variables', `version_${v}`, `P_${v}_${vm[2]}`)));
-    const label = (v) => `${v} → ${envOf(v) ?? '?'}`;
-    info(
-      `${name}: NeoLoad's data run left records on ${has.map(label).join(', ') || 'no env'}; none on ${
-        versions
-          .filter((v) => !has.includes(v))
-          .map(label)
-          .join(', ') || 'no env'
-      }. Seed those; on the others, search one exact name from the file before reseeding`,
-    );
-  }
+  const reportNeoLoadRecords = () => {
+    for (const { name, file } of seedPrefixedVars) {
+      const vm = (file || '').replace(/\\/g, '/').match(/variables\/version_([\d_]+)\/P_\1_(.+)$/);
+      if (!vm) continue;
+      const has = versions.filter((v) => fs.existsSync(path.join(root, 'variables', `version_${v}`, `P_${v}_${vm[2]}`)));
+      const label = (v) => `${v} → ${envOf(v) ?? '?'}`;
+      info(
+        `${name}: NeoLoad's data run left records on ${has.map(label).join(', ') || 'no env'}; none on ${
+          versions
+            .filter((v) => !has.includes(v))
+            .map(label)
+            .join(', ') || 'no env'
+        }. Seed those; on the others, search one exact name from the file before reseeding`,
+      );
+    }
+  };
 
   // how many records NeoLoad sizes a data script's output at (team/data-distribution), and how many rows its
   // per-version variables/ files hold now. /seed reads this line to size a `neoload` count
@@ -1218,7 +1251,15 @@ if (!dataScripts.length && !chained.length && !seedPrefixed.length) {
       `seed prefix '${v}' ${id && Number(id) === tNum ? 'carries' : 'does not carry'} the consuming journey's id (k6-t${tNum}-<what>)`,
     );
   }
-  // with no discovery prefix to follow, the seed is the one whose config prefix carries this journey's test id
+
+  section(SEED_SECTION);
+  dsUids.filter((uid) => !treeOf(uid)).forEach((uid) => flag(`data-script VU ${uid}: tree not found under team/vus`));
+  reportNeoLoadRecords();
+  if (keys.length && !seedFiles.size)
+    flag(
+      `no source/seeds script names its records with the discovery prefix (section 6), so no seed is compared with ${dsUids.join(', ')}`,
+    );
+  // with no discovery prefix to follow (or no flow yet), the seed is the one whose config prefix carries this journey's test id
   if (!keys.length) {
     for (const s of seeds) {
       const own = [...new Set([...s.text.matchAll(/\bconfig\.(\w+)/g)].map((m) => m[1]))].filter((k) =>
@@ -1515,4 +1556,5 @@ if (scenario) {
 for (const m of poolModules.filter((p) => p.exportName && new RegExp(`\\b${p.exportName}\\b`).test(flowText)))
   (has('source/utils/exports/data.exp.ts', path.basename(m.f)) ? ok : flag)(`data.exp.ts exports ${path.basename(m.f)}`);
 
-console.log(`\n=== ${flags} FLAG(s) ===`);
+const scope = onlyIds ? ` in section(s) ${onlyIds.join(', ')}` : skipIds ? `, section(s) ${skipIds.join(', ')} skipped` : '';
+console.log(`\n=== ${flags} FLAG(s)${scope} ===`);
