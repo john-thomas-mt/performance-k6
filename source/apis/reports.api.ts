@@ -15,6 +15,7 @@ import {
   orgSourceGridPayload,
   eventRevenueMetricReportPayload,
   spaceUtilizationReportPayload,
+  opportunityConversionReportPayload,
 } from '../utils/exports/data.exp.ts';
 import {
   ReportSaveResult,
@@ -24,6 +25,7 @@ import {
   ReportDateRange,
   EventRevenueMetricReportResult,
   SpaceUtilizationReportResult,
+  OpportunityConversionReportResult,
 } from '../utils/exports/types.exp.ts';
 
 export function open_report_master_list(token: string, version: string, name = 'OpenReportMasterList') {
@@ -284,5 +286,25 @@ export function run_space_utilization_report(apiJwt: string, range: ReportDateRa
       `[VU ${__VU}] run_space_utilization_report failed for ${range.startDate}..${range.endDate} — HTTP ${res.status}: ${body_text(res).slice(0, 500)}`,
     );
     fail('run_space_utilization_report did not succeed');
+  }
+}
+
+export function run_opportunity_conversion_report(apiJwt: string, range: ReportDateRange, name = 'RunOpportunityConversionReport') {
+  const res = http.put(`${config.baseUrl}/api/v1/Reports/10/6165/RunReport`, JSON.stringify(opportunityConversionReportPayload(range)), {
+    headers: public_api_headers(apiJwt),
+    tags: { name },
+    timeout: '1h',
+  });
+  const isJson = res.status === 200 && (res.headers['Content-Type']?.includes('application/json') ?? false);
+  const report = isJson ? (res.json() as OpportunityConversionReportResult) : null;
+  const ok = check(res, {
+    [`${name}: status is 200`]: (r) => r.status === 200,
+    [`${name}: report data present`]: () => Boolean(report?.ReportData),
+  });
+  if (!ok) {
+    console.error(
+      `[VU ${__VU}] run_opportunity_conversion_report failed for ${range.startDate}..${range.endDate} — HTTP ${res.status}: ${body_text(res).slice(0, 500)}`,
+    );
+    fail('run_opportunity_conversion_report did not succeed');
   }
 }

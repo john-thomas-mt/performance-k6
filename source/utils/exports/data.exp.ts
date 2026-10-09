@@ -41,6 +41,7 @@ export * from '../../data/payloads/badges/badge-report.data.ts';
 export * from '../../data/payloads/general-ledger/detail-report.data.ts';
 export * from '../../data/payloads/reports/event-revenue-metric.data.ts';
 export * from '../../data/payloads/reports/space-utilization.data.ts';
+export * from '../../data/payloads/reports/opportunity-conversion.data.ts';
 export * from '../../data/chrome/t30-crystal-report.chrome.ts';
 export * from '../../data/static/t30-crystal-report.static.ts';
 export * from '../../data/transport/t30-crystal-report.transport.ts';
@@ -154,6 +155,9 @@ export * from '../../data/transport/t17-event-revenue-metric-report.transport.ts
 export * from '../../data/chrome/t18-space-utilization-report.chrome.ts';
 export * from '../../data/static/t18-space-utilization-report.static.ts';
 export * from '../../data/transport/t18-space-utilization-report.transport.ts';
+export * from '../../data/chrome/t19-opportunity-conversion-report.chrome.ts';
+export * from '../../data/static/t19-opportunity-conversion-report.static.ts';
+export * from '../../data/transport/t19-opportunity-conversion-report.transport.ts';
 export * from '../../data/chrome/t1-lead-account.chrome.ts';
 export * from '../../data/static/t1-lead-account.static.ts';
 export * from '../../data/transport/t1-lead-account.transport.ts';

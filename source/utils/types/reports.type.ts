@@ -36,3 +36,5 @@ export type EventRevenueMetricReportResult = {
 };
 
 export type SpaceUtilizationReportResult = EventRevenueMetricReportResult;
+
+export type OpportunityConversionReportResult = EventRevenueMetricReportResult;

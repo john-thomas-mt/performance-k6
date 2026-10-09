@@ -68,6 +68,9 @@ const JOURNEY_SPINE = {
   't18-space-utilization-report': {
     '/api/v1/Reports/10/6150/RunReport': ['01'],
   },
+  't19-opportunity-conversion-report': {
+    '/api/v1/Reports/10/6165/RunReport': ['01'],
+  },
   't2-book-event': {
     '/api/USIDataGridServer/GetGridData2': ['08', '10'],
     '/api/GenericDetailServer/GetInitialData2': ['06'],

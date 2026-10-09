@@ -36,6 +36,8 @@ import {
   eventRevenueMetricReportThresholds,
   space_utilization_report_journey,
   spaceUtilizationReportThresholds,
+  opportunity_conversion_report_journey,
+  opportunityConversionReportThresholds,
   loginThresholds,
 } from '../utils/exports/flows.exp.ts';
 import { pick_user, fetch_server_version, decrypt_users, decrypt_api_credentials } from '../utils/exports/helpers.exp.ts';
@@ -73,6 +75,7 @@ const allScenarios: { [scenario: string]: Scenario } = {
   detail_general_ledger_report: once('detail_general_ledger_report'),
   event_revenue_metric_report: once('event_revenue_metric_report', '4h'),
   space_utilization_report: once('space_utilization_report', '4h'),
+  opportunity_conversion_report: once('opportunity_conversion_report', '4h'),
 };
 
 const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
@@ -93,6 +96,7 @@ const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
   detail_general_ledger_report: detailGeneralLedgerReportThresholds,
   event_revenue_metric_report: eventRevenueMetricReportThresholds,
   space_utilization_report: spaceUtilizationReportThresholds,
+  opportunity_conversion_report: opportunityConversionReportThresholds,
 };
 
 const selected = __ENV.SCENARIO;
@@ -103,7 +107,14 @@ if (selected && !allScenarios[selected]) {
 const soPoolScenarios = new Set(['copy_service_orders']);
 const needsSoPool = !selected || soPoolScenarios.has(selected);
 const needsPlanPool = !selected || selected === 'payment_plan';
-const apiCredentialScenarios = new Set(['payment_receipt_report', 'badge_report', 'detail_general_ledger_report', 'event_revenue_metric_report', 'space_utilization_report']);
+const apiCredentialScenarios = new Set([
+  'payment_receipt_report',
+  'badge_report',
+  'detail_general_ledger_report',
+  'event_revenue_metric_report',
+  'space_utilization_report',
+  'opportunity_conversion_report',
+]);
 const needsApiCredentials = !selected || apiCredentialScenarios.has(selected);
 
 const activeThresholds: { [metric: string]: string[] } = selected
@@ -206,4 +217,8 @@ export function event_revenue_metric_report(data: SmokeSetup) {
 
 export function space_utilization_report(data: SmokeSetup) {
   space_utilization_report_journey(data);
+}
+
+export function opportunity_conversion_report(data: SmokeSetup) {
+  opportunity_conversion_report_journey(data);
 }
