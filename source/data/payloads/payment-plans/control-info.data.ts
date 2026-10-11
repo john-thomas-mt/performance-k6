@@ -3,8 +3,8 @@ import { PaymentPlanOrderRow, TransportTable } from '../../../utils/exports/type
 
 /* Captured Service Orders GetControlInfo (window 4 / EM8066). The browser echoes the selected grid row back
    as a 62-column table: the grid's own columns minus ER100_TRANS_SOURCE, renumbered, plus four client-computed
-   columns that mirror cells of the row. The 440 beside the row key is the recorded row-level control id. */
-export const paymentPlanOrderControlInfoPayload = (row: PaymentPlanOrderRow) => [
+   columns that mirror cells of the row. The id beside the row key is the grid column the user clicked: 440 in the payment-plan recording, 622 (ER100_ORD_TOT) in the edit-service-orders one. */
+export const paymentPlanOrderControlInfoPayload = (row: PaymentPlanOrderRow, controlId = 440) => [
   '10',
   4,
   0,
@@ -25,7 +25,7 @@ export const paymentPlanOrderControlInfoPayload = (row: PaymentPlanOrderRow) => 
     { Key: 'MenuContextObjectID', Value: 0 },
   ],
   { TransportDataTables: [paymentPlanControlInfoTable(row)] },
-  { [`10|${row.orderNbr}`]: [440] },
+  { [`10|${row.orderNbr}`]: [controlId] },
   [2753],
   11,
 ];

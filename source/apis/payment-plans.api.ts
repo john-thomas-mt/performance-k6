@@ -95,8 +95,14 @@ export function read_payment_plan_orders(token: string, version: string, eventKe
   return rows.filter((row) => row.orderNbr !== '');
 }
 
-export function get_payment_plan_order_control_info(token: string, version: string, row: PaymentPlanOrderRow, name = 'GetControlInfo') {
-  post_plan('USIDataGridServer/GetControlInfo', paymentPlanOrderControlInfoPayload(row), token, version, name);
+export function get_payment_plan_order_control_info(
+  token: string,
+  version: string,
+  row: PaymentPlanOrderRow,
+  name = 'GetControlInfo',
+  controlId?: number,
+) {
+  post_plan('USIDataGridServer/GetControlInfo', paymentPlanOrderControlInfoPayload(row, controlId), token, version, name);
 }
 
 export function open_payment_plan_order(token: string, version: string, row: ServiceOrderRow, name = 'OpenPaymentPlanOrder') {

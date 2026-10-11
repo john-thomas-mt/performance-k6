@@ -3,6 +3,7 @@ import {
   discover_service_order_pool,
   discover_payment_plan_pool,
   discover_copy_paste_function_pool,
+  discover_edit_service_order_pool,
   copy_event_journey,
   copyEventThresholds,
   copy_service_orders_journey,
@@ -41,6 +42,8 @@ import {
   opportunityConversionReportThresholds,
   copy_paste_event_function_journey,
   copyPasteEventFunctionThresholds,
+  edit_service_orders_journey,
+  editServiceOrdersThresholds,
   loginThresholds,
 } from '../utils/exports/flows.exp.ts';
 import { pick_user, fetch_server_version, decrypt_users, decrypt_api_credentials } from '../utils/exports/helpers.exp.ts';
@@ -48,6 +51,7 @@ import { commonThresholds, config } from '../utils/exports/config.exp.ts';
 import { SmokeSetup } from '../utils/exports/types.exp.ts';
 import { userCredentials, publicApiCredentials } from '../utils/exports/data.exp.ts';
 import { roomDiagramFiles } from '../data/uploads/events/room-diagrams.index.ts';
+import { sampleDocument } from '../data/uploads/service-orders/sample-document.index.ts';
 
 const VUS = Number(__ENV.VUS) || 1;
 const ITERS = Number(__ENV.ITERS) || 1;
@@ -80,6 +84,7 @@ const allScenarios: { [scenario: string]: Scenario } = {
   space_utilization_report: once('space_utilization_report', '4h'),
   opportunity_conversion_report: once('opportunity_conversion_report', '4h'),
   copy_paste_event_function: once('copy_paste_event_function', '2h'),
+  edit_service_orders: once('edit_service_orders'),
 };
 
 const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
@@ -102,6 +107,7 @@ const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
   space_utilization_report: spaceUtilizationReportThresholds,
   opportunity_conversion_report: opportunityConversionReportThresholds,
   copy_paste_event_function: copyPasteEventFunctionThresholds,
+  edit_service_orders: editServiceOrdersThresholds,
 };
 
 const selected = __ENV.SCENARIO;
@@ -113,6 +119,7 @@ const soPoolScenarios = new Set(['copy_service_orders']);
 const needsSoPool = !selected || soPoolScenarios.has(selected);
 const needsPlanPool = !selected || selected === 'payment_plan';
 const needsCopyPastePool = !selected || selected === 'copy_paste_event_function';
+const needsEditOrderPool = !selected || selected === 'edit_service_orders';
 const apiCredentialScenarios = new Set([
   'payment_receipt_report',
   'badge_report',
@@ -151,11 +158,12 @@ export async function setup() {
   const soPool = needsSoPool ? discover_service_order_pool(version, users[0]) : [];
   const planPool = needsPlanPool ? discover_payment_plan_pool(version, users[0]) : [];
   const copyPastePool = needsCopyPastePool ? discover_copy_paste_function_pool(version, users[0]) : [];
+  const editOrderPool = needsEditOrderPool ? discover_edit_service_order_pool(version, users[0]) : [];
   console.log(`Server version: ${version}`);
   if (needsSoPool) {
     console.log(`Smoke: ${soPool.length} seeded service order(s) discovered`);
   }
-  return { version, users, soPool, planPool, copyPastePool, apiCredentials };
+  return { version, users, soPool, planPool, copyPastePool, editOrderPool, apiCredentials };
 }
 
 export function copy_event(data: SmokeSetup) {
@@ -232,4 +240,8 @@ export function opportunity_conversion_report(data: SmokeSetup) {
 
 export function copy_paste_event_function(data: SmokeSetup) {
   copy_paste_event_function_journey(pick_user(data.users), data);
+}
+
+export function edit_service_orders(data: SmokeSetup) {
+  edit_service_orders_journey(pick_user(data.users), data, sampleDocument);
 }

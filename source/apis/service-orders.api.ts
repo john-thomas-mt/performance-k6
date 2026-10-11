@@ -2,7 +2,14 @@ import http from 'k6/http';
 import { check, fail } from 'k6';
 import { b64encode } from 'k6/encoding';
 import { config } from '../utils/exports/config.exp.ts';
-import { build_headers, body_text, parse_grid_rows } from '../utils/exports/helpers.exp.ts';
+import {
+  build_headers,
+  body_text,
+  parse_grid_rows,
+  find_transport_table,
+  get_cell,
+  coerce_transport_types,
+} from '../utils/exports/helpers.exp.ts';
 import {
   serviceOrdersGridPayload,
   eventServiceOrdersRefreshPayload,
@@ -11,8 +18,35 @@ import {
   copyServiceOrdersFormPayload,
   copyServiceOrdersSavePayload,
   serviceOrderControlInfoPayload,
+  serviceOrderEditOpenPayload,
+  serviceOrderEditReopenPayload,
+  serviceOrderEditItemsFormPayload,
+  serviceOrderEditDocumentFormPayload,
+  serviceOrderEditFieldsPayload,
+  serviceOrderEditDocumentFieldsPayload,
+  serviceOrderEditHeaderSavePayload,
+  serviceOrderCloseSavePayload,
+  serviceOrderEditDataPayload,
+  serviceOrderEditLinesGridPayload,
+  serviceOrderEditLinesSearchPayload,
+  serviceOrderEditItemsGridPayload,
+  serviceOrderEditItemsSearchPayload,
+  serviceOrderEditLinesReadPayload,
+  serviceOrderEditDocumentsGridPayload,
+  serviceOrderEditDocumentsSearchPayload,
+  serviceOrderEditDocumentsReadPayload,
+  serviceOrderEditItemsSavePayload,
+  serviceOrderEditDocumentSavePayload,
 } from '../utils/exports/data.exp.ts';
-import { EventRow, ServiceOrderRow, ServiceOrderSaveResult } from '../utils/exports/types.exp.ts';
+import {
+  EventRow,
+  ServiceOrderDocumentFields,
+  ServiceOrderFormBag,
+  ServiceOrderItemsForm,
+  ServiceOrderRow,
+  ServiceOrderSaveResult,
+  TransportTable,
+} from '../utils/exports/types.exp.ts';
 
 export const serviceOrderColumns = {
   orderNbr: 'ER100_ORD_NBR',
@@ -102,16 +136,16 @@ export function create_service_order(token: string, version: string, encUserId: 
   return addedKey.split('|')[1];
 }
 
-export function cache_document_file(token: string, version: string, fileName: string, fileContent: ArrayBuffer) {
+export function cache_document_file(token: string, version: string, fileName: string, fileContent: ArrayBuffer, name = 'CacheFiles') {
   const res = http.post(
     `${config.baseUrl}/api/GenericServer/CacheFiles`,
     JSON.stringify(cacheFilesPayload(fileName, b64encode(fileContent))),
-    { headers: build_headers(token, version), tags: { name: 'CacheFiles' } },
+    { headers: build_headers(token, version), tags: { name } },
   );
 
   const ok = check(res, {
-    'CacheFiles: status is 201': (r) => r.status === 201,
-    'CacheFiles: returns a cached file ref': (r) => {
+    [`${name}: status is 201`]: (r) => r.status === 201,
+    [`${name}: returns a cached file ref`]: (r) => {
       try {
         return typeof (r.json() as string[][])[0][0] === 'string';
       } catch {
@@ -220,4 +254,427 @@ export function save_service_order_copy(token: string, version: string, encUserI
   }
 
   return (res.json() as ServiceOrderSaveResult[])[0].AddedRowKeys ?? [];
+}
+
+function post_order_window(endpoint: string, payload: unknown, token: string, version: string, name: string) {
+  const res = http.post(`${config.baseUrl}/api/${endpoint}`, JSON.stringify(payload), {
+    headers: build_headers(token, version),
+    tags: { name },
+  });
+  if (!check(res, { [`${name}: status is 201`]: (r) => r.status === 201 })) {
+    console.error(`[VU ${__VU}] ${name} failed — HTTP ${res.status}: ${body_text(res).slice(0, 300)}`);
+    fail(`${name} did not return 201`);
+  }
+  return res;
+}
+
+function assert_order_saved(res: ReturnType<typeof post_order_window>, name: string) {
+  const saved = (() => {
+    try {
+      return (res.json() as ServiceOrderSaveResult[])[0];
+    } catch {
+      return undefined;
+    }
+  })();
+  if (!check(saved, { [`${name}: ResultValue is 0 (success)`]: (r) => r?.ResultValue === 0 })) {
+    console.error(`[VU ${__VU}] ${name} failed — ResultValue ${saved?.ResultValue}: ${body_text(res).slice(0, 400)}`);
+    fail(`${name} did not succeed`);
+  }
+  return saved;
+}
+
+function opened_order_header(res: ReturnType<typeof post_order_window>, row: ServiceOrderRow, name: string) {
+  const header = find_transport_table(res, 'ER100_ORD_TOT', name);
+  if (!check(header, { [`${name}: opens the order`]: (t) => get_cell(t, 'ER100_ORD_NBR') === row.orderNbr })) {
+    console.error(`[VU ${__VU}] ${name} failed — order ${row.orderNbr} not in the response`);
+    fail(`${name}: order ${row.orderNbr} not opened`);
+  }
+  return coerce_transport_types(header);
+}
+
+export function open_service_order_for_edit(
+  token: string,
+  version: string,
+  row: ServiceOrderRow,
+  wdwid: string,
+  refreshKey: number,
+  name = 'OpenServiceOrderForEdit',
+) {
+  const res = post_order_window(
+    'GenericDetailServer/GetInitialData2',
+    serviceOrderEditOpenPayload(row, wdwid, refreshKey),
+    token,
+    version,
+    name,
+  );
+  return opened_order_header(res, row, name);
+}
+
+export function reopen_service_order_after_items(
+  token: string,
+  version: string,
+  row: ServiceOrderRow,
+  wdwid: string,
+  refreshKey: number,
+  name = 'ReopenServiceOrderAfterItems',
+) {
+  const res = post_order_window(
+    'GenericDetailServer/GetInitialData2',
+    serviceOrderEditReopenPayload(row, wdwid, refreshKey),
+    token,
+    version,
+    name,
+  );
+  return opened_order_header(res, row, name);
+}
+
+export function refresh_service_order_edit_fields(
+  token: string,
+  version: string,
+  row: ServiceOrderRow,
+  eventDesc: string,
+  header: TransportTable,
+  wdwid: string,
+  refreshKey: number,
+  name = 'HandleServiceOrderEditFields',
+) {
+  post_order_window(
+    'GenericDetailServer/HandleDependentFields2',
+    serviceOrderEditFieldsPayload(row, eventDesc, coerce_transport_types(header), wdwid, refreshKey),
+    token,
+    version,
+    name,
+  );
+}
+
+export function save_service_order_header(
+  token: string,
+  version: string,
+  row: ServiceOrderRow,
+  eventDesc: string,
+  header: TransportTable,
+  orderDate: number,
+  wdwid: string,
+  refreshKey: number,
+  name = 'SaveServiceOrderHeader',
+) {
+  const res = post_order_window(
+    'GenericDetailServer/Save2',
+    serviceOrderEditHeaderSavePayload(row, eventDesc, coerce_transport_types(header), orderDate, wdwid, refreshKey),
+    token,
+    version,
+    name,
+  );
+  assert_order_saved(res, name);
+}
+
+export function save_service_order_close(
+  token: string,
+  version: string,
+  row: ServiceOrderRow,
+  eventDesc: string,
+  header: TransportTable,
+  orderDate: number,
+  wdwid: string,
+  refreshKey: number,
+  name = 'SaveServiceOrderClose',
+) {
+  const res = post_order_window(
+    'GenericDetailServer/Save2',
+    serviceOrderCloseSavePayload(row, eventDesc, coerce_transport_types(header), orderDate, wdwid, refreshKey),
+    token,
+    version,
+    name,
+  );
+  assert_order_saved(res, name);
+}
+
+export function read_service_order_data(
+  token: string,
+  version: string,
+  row: ServiceOrderRow,
+  wdwid: string,
+  refreshKey: number,
+  name = 'ReadServiceOrderData',
+) {
+  post_order_window('GenericDetailServer/GetData2', serviceOrderEditDataPayload(row, wdwid, refreshKey), token, version, name);
+}
+
+export function open_service_order_lines_grid(
+  token: string,
+  version: string,
+  row: ServiceOrderRow,
+  wdwid: string,
+  refreshKey: number,
+  name = 'OpenServiceOrderLinesGrid',
+) {
+  post_order_window('USIDataGridServer/GetInitialData2', serviceOrderEditLinesGridPayload(row, wdwid, refreshKey), token, version, name);
+}
+
+export function open_service_order_lines_search(
+  token: string,
+  version: string,
+  row: ServiceOrderRow,
+  wdwid: string,
+  refreshKey: number,
+  name = 'OpenServiceOrderLinesSearch',
+) {
+  post_order_window(
+    'GenericSearchServer/GetInitialData2',
+    serviceOrderEditLinesSearchPayload(row, wdwid, refreshKey),
+    token,
+    version,
+    name,
+  );
+}
+
+export function read_service_order_lines(
+  token: string,
+  version: string,
+  row: ServiceOrderRow,
+  wdwid: string,
+  refreshKey: number,
+  name = 'ReadServiceOrderLines',
+) {
+  post_order_window('USIDataGridServer/GetGridData2', serviceOrderEditLinesReadPayload(row, wdwid, refreshKey), token, version, name);
+}
+
+export function open_service_order_items_form(
+  token: string,
+  version: string,
+  row: ServiceOrderRow,
+  wdwid: string,
+  refreshKey: number,
+  name = 'OpenServiceOrderItemsForm',
+) {
+  const res = post_order_window(
+    'GenericDetailServer/GetInitialData2',
+    serviceOrderEditItemsFormPayload(row, wdwid, refreshKey),
+    token,
+    version,
+    name,
+  );
+  const table = find_transport_table(res, 'cCUSTOM_FIELD_2161', name);
+  let bag: ServiceOrderFormBag = {};
+  try {
+    const rawBag = (res.json() as unknown[])[7];
+    bag = typeof rawBag === 'string' ? (JSON.parse(rawBag) as ServiceOrderFormBag) : {};
+  } catch {
+    bag = {};
+  }
+  const form = { startDate: bag.StartDate ?? '', endDate: bag.EndDate ?? '', table: coerce_transport_types(table) };
+  if (!check(form, { [`${name}: returns the form dates`]: (f) => f.startDate !== '' && f.endDate !== '' })) {
+    console.error(`[VU ${__VU}] ${name} failed — no StartDate/EndDate for order ${row.orderNbr}`);
+    fail(`${name}: no form dates`);
+  }
+  return form;
+}
+
+export function read_service_order_add_items(
+  token: string,
+  version: string,
+  row: ServiceOrderRow,
+  startDate: string,
+  endDate: string,
+  wdwid: string,
+  refreshKey: number,
+  name = 'ReadServiceOrderAddItems',
+) {
+  const res = post_order_window(
+    'USIDataGridServer/GetInitialData2',
+    serviceOrderEditItemsGridPayload(row, startDate, endDate, wdwid, refreshKey),
+    token,
+    version,
+    name,
+  );
+  const table = find_transport_table(res, 'CC716_DESC', name);
+  if (!check(table, { [`${name}: returns items to add`]: (t) => t.TransportDataRows.length > 0 })) {
+    console.error(`[VU ${__VU}] ${name} failed — no items for order ${row.orderNbr} (${startDate}-${endDate})`);
+    fail(`${name}: no items to add`);
+  }
+  return table;
+}
+
+export function open_service_order_items_search(
+  token: string,
+  version: string,
+  row: ServiceOrderRow,
+  startDate: string,
+  endDate: string,
+  wdwid: string,
+  refreshKey: number,
+  name = 'OpenServiceOrderItemsSearch',
+) {
+  post_order_window(
+    'GenericSearchServer/GetInitialData2',
+    serviceOrderEditItemsSearchPayload(row, startDate, endDate, wdwid, refreshKey),
+    token,
+    version,
+    name,
+  );
+}
+
+export function save_service_order_items(
+  token: string,
+  version: string,
+  row: ServiceOrderRow,
+  form: ServiceOrderItemsForm,
+  item: TransportTable,
+  quantity: number,
+  wdwid: string,
+  refreshKey: number,
+  name = 'SaveServiceOrderItems',
+) {
+  const res = post_order_window(
+    'GenericDetailServer/Save2',
+    serviceOrderEditItemsSavePayload(
+      row,
+      coerce_transport_types(form.table),
+      coerce_transport_types(item),
+      quantity,
+      form.startDate,
+      form.endDate,
+      wdwid,
+      refreshKey,
+    ),
+    token,
+    version,
+    name,
+  );
+  assert_order_saved(res, name);
+}
+
+export function open_service_order_documents_grid(
+  token: string,
+  version: string,
+  row: ServiceOrderRow,
+  wdwid: string,
+  refreshKey: number,
+  name = 'OpenServiceOrderDocumentsGrid',
+) {
+  post_order_window(
+    'USIDataGridServer/GetInitialData2',
+    serviceOrderEditDocumentsGridPayload(row, wdwid, refreshKey),
+    token,
+    version,
+    name,
+  );
+}
+
+export function open_service_order_documents_search(
+  token: string,
+  version: string,
+  row: ServiceOrderRow,
+  wdwid: string,
+  refreshKey: number,
+  name = 'OpenServiceOrderDocumentsSearch',
+) {
+  post_order_window(
+    'GenericSearchServer/GetInitialData2',
+    serviceOrderEditDocumentsSearchPayload(row, wdwid, refreshKey),
+    token,
+    version,
+    name,
+  );
+}
+
+export function open_service_order_document_form(
+  token: string,
+  version: string,
+  row: ServiceOrderRow,
+  fileKey: string,
+  fileName: string,
+  wdwid: string,
+  refreshKey: number,
+  name = 'OpenServiceOrderDocumentForm',
+) {
+  post_order_window(
+    'GenericDetailServer/GetInitialData2',
+    serviceOrderEditDocumentFormPayload(row, fileKey, fileName, wdwid, refreshKey),
+    token,
+    version,
+    name,
+  );
+}
+
+export function refresh_service_order_document_fields(
+  token: string,
+  version: string,
+  row: ServiceOrderRow,
+  docDesc: string,
+  fileKey: string,
+  fileName: string,
+  wdwid: string,
+  refreshKey: number,
+  name = 'HandleServiceOrderDocumentFields',
+) {
+  const res = post_order_window(
+    'GenericDetailServer/HandleDependentFields2',
+    serviceOrderEditDocumentFieldsPayload(row, docDesc, fileKey, fileName, wdwid, refreshKey),
+    token,
+    version,
+    name,
+  );
+  const table = find_transport_table(res, 'MM446_DOC_DESC', name);
+  const doc = {
+    docDesc: get_cell(table, 'MM446_DOC_DESC'),
+    fileName: get_cell(table, 'cDOC_FILE_NAME'),
+    fileKey: get_cell(table, 'cFILE_KEY'),
+    evFunc: get_cell(table, 'MM446_EV_FUNC'),
+  };
+  if (
+    !check(doc, {
+      [`${name}: returns the document row`]: (d) => d.docDesc !== '' && d.fileName !== '' && d.fileKey !== '' && d.evFunc !== '',
+    })
+  ) {
+    console.error(`[VU ${__VU}] ${name} failed — ${JSON.stringify(doc)}`);
+    fail(`${name}: incomplete document row`);
+  }
+  return doc;
+}
+
+export function save_service_order_document(
+  token: string,
+  version: string,
+  row: ServiceOrderRow,
+  doc: ServiceOrderDocumentFields,
+  wdwid: string,
+  refreshKey: number,
+  name = 'SaveServiceOrderDocument',
+) {
+  const res = post_order_window(
+    'GenericDetailServer/Save2',
+    serviceOrderEditDocumentSavePayload(row, doc, wdwid, refreshKey),
+    token,
+    version,
+    name,
+  );
+  const saved = assert_order_saved(res, name);
+  if (!check(saved, { [`${name}: adds the document row`]: (r) => Array.isArray(r?.AddedRowKeys) && r.AddedRowKeys.length > 0 })) {
+    console.error(`[VU ${__VU}] ${name} failed — no document row key returned`);
+    fail(`${name}: no document row added`);
+  }
+}
+
+export function read_service_order_documents(
+  token: string,
+  version: string,
+  row: ServiceOrderRow,
+  wdwid: string,
+  refreshKey: number,
+  name = 'ReadServiceOrderDocuments',
+) {
+  const res = post_order_window(
+    'USIDataGridServer/GetGridData2',
+    serviceOrderEditDocumentsReadPayload(row, wdwid, refreshKey),
+    token,
+    version,
+    name,
+  );
+  const echoed = /RefreshDependentKey\\+":(\d+)/.exec(body_text(res))?.[1];
+  if (!check(echoed, { [`${name}: echoes the refresh key`]: (k) => k !== undefined })) {
+    console.error(`[VU ${__VU}] ${name} failed — no RefreshDependentKey in ${body_text(res).slice(0, 200)}`);
+    fail(`${name}: no refresh key returned`);
+  }
+  return Number(echoed);
 }

@@ -18,3 +18,4 @@ export * from '../../flows/t16-copy-paste-event-function.flow.ts';
 export * from '../../flows/t17-event-revenue-metric-report.flow.ts';
 export * from '../../flows/t18-space-utilization-report.flow.ts';
 export * from '../../flows/t19-opportunity-conversion-report.flow.ts';
+export * from '../../flows/t20-edit-service-orders.flow.ts';
