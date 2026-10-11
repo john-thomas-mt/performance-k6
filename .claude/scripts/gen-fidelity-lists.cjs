@@ -167,6 +167,17 @@ const JOURNEY_SPINE = {
     '/api/GenericDetailServer/AccessServerUI': ['05'],
     '/api/GenericDetailServer/HandleDependentFields2': ['06', '08'],
   },
+  't20-edit-service-orders': {
+    '/api/GenericListServer/GetInitialData2': ['03', '11'],
+    '/api/USIDataGridServer/GetInitialData2': ['03', '07', '08', '09', '11'],
+    '/api/GenericSearchServer/GetInitialData2': ['04', '07', '08', '09'],
+    '/api/USISearchComboServer/SaveRecentlyUsed': ['04'],
+    '/api/GenericSearchServer/HandleDependentFields2': ['04'],
+    '/api/USIDataGridServer/GetGridData2': ['04', '08', '10'],
+    '/api/GenericDetailServer/GetInitialData2': ['05', '07', '08', '09'],
+    '/api/GenericDetailServer/HandleDependentFields2': ['06', '10'],
+    '/api/GenericDetailServer/GetData2': ['06'],
+  },
 };
 // per-journey, per-request spine: individual requests scripted as wrappers on a path whose other requests in
 // the same step stay chrome (contact-service-order step 04 fires 15 GetObjectColumns, only the object-1659 one
