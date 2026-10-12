@@ -1,11 +1,12 @@
 ---
 name: seed
-description: Top up a journey's seed data on one env of the version matrix — switch env, size the target (a number, or `neoload` to match the rows NeoLoad stored for that version), run source/seeds/<feature>.seed.ts, which counts the k6 records already there and creates only the shortfall, report what it found and created, and restore the authoring env. Use to provision an env after a snapshot reset, before a load run, or when a run fails with "no seed data". Sends traffic.
+description: Top up a journey's seed data on one env of the version matrix — switch env, size the target (a number, or `neoload` to match the rows NeoLoad stored for that version), run source/seeds/<feature>.seed.ts, which counts the k6 records already there and creates only the shortfall, report what it found and created, and restore the authoring env. `--all` does this for every seed in source/seeds/ in one sweep, topping each up until it reaches its target. Use to provision an env after a snapshot reset, before a load run, or when a run fails with "no seed data". Sends traffic.
 ---
 
 # Seed an env
 
 `/seed <env> <journey | seed> [count | +n] [--probe]`
+`/seed <env> --all [neoload] [--probe]` — every seed in one sweep (§7)
 
 - `<env>` — a member of the `ReleaseVersion` union in `source/utils/types/config.type.ts` (`main` or a released
   segment). Anything else stops the skill with the live list.
@@ -22,6 +23,9 @@ writes, so re-running `/seed` is always safe.
   seed creates records (`perf-1-seed-port`, which passes the seed name since the journey isn't in `smoke.spec.ts`
   yet): a top-up on an env that already holds enough would create none.
 - `--probe` — run the seed's probe afterwards (§5).
+- `--all` — provision every seed under `source/seeds/` on the env, each to its own target, and re-run any that fall
+  short (§7). It takes no `[count]` or `+n`: a count means one thing per seed, and `+n` on every seed would pile
+  records on.
 
 **This sends write traffic to the env (VPN required).** Invoking the skill is the go-ahead, but state the env,
 seed and target in one line before the first request, and give a rough duration for a target above 20.
@@ -68,11 +72,13 @@ k6 run --quiet -e SEED_COUNT=<n> source/seeds/<feature>.seed.ts > temp/claude/re
 ## 4. Judge the run
 
 - Read the setup line `"<prefix>" …: <found> found, target <n>, creating <shortfall>`. `iterations` always equals
-  the target, since iterations past the shortfall return at once, so count the `Booked "…"` lines instead.
-- Clean: the `Booked` lines equal the shortfall, `checks` 100%, `http_req_failed` 0, no `ERRO`. A shortfall of
+  the target, since iterations past the shortfall return at once, so count the seed's own created-record lines
+  (`Booked "…"`, `Received purchase order …`; each seed words its own) instead.
+- Clean: the created lines equal the shortfall, `checks` 100%, `http_req_failed` 0, no `ERRO`. A shortfall of
   0 is clean with no writes.
-- Short: fewer `Booked` lines than the shortfall (a timeout or a failed iteration). Re-run `/seed` with the same
-  target: it counts again and creates only what is still missing.
+- Short: fewer created lines than the shortfall (a timeout, a dropped connection or a failed iteration). Re-run
+  `/seed` with the same target: it counts again and creates only what is still missing. The re-run's `found`
+  is the reliable tally, since a failed iteration can leave a part-built record the finder doesn't count.
 - Failed in `setup()`: the usual VPN, passphrase or cold-pool causes. Nothing was created.
 - A write fails with `Security Restriction: "… restricted by access privilege: <privilege>"`: the env's test users
   lack that privilege. It's an env permission gap, not a script bug, so don't retry. Report the privilege named,
@@ -91,3 +97,58 @@ Always run a bare `npm run setup` afterwards, even when the run failed, so the n
 
 Report one line per seed run: env → resolved version, seed, found / created / target, duration, probe result
 if run, and the log path.
+
+## 7. Sweep every seed (`--all`)
+
+Provisions the whole env for a load run in one pass. §2 steps 1–3 and the §6 restore happen **once** for the
+sweep, not once per seed.
+
+1. **List the seeds.** `source/seeds/*.seed.ts` is the authoritative list, so a new seed is picked up without
+   editing this skill. Every seed sizes itself.
+2. **Size each one.** Run each seed with **no** `-e SEED_COUNT`, so its file's own default target applies (the
+   full-load size, set against the flow's share in `neoload.spec.ts`). With `neoload`, find each seed's journey
+   (the flow that reads the same `k6-t<id>-` config key) and take its target from §2 step 4; a seed with no
+   journey or no NeoLoad rows keeps its default, and the report says so.
+3. **Say what's coming** in one line before the first request: env, the seeds and their targets, and a rough
+   duration (a from-empty sweep of six seeds took about 15 minutes plus top-ups; an env already at target is a few
+   minutes of count reads).
+4. **Run the seeds one after another, never in parallel.** Every run reads the shared `temp/setup.json`, and many
+   sessions as `usiadmin` on one env at once risk the same-account serialization guard. Write one scratch script,
+   `temp/claude/scratchpad/seed-all-<env>.sh`, and launch it with Bash `run_in_background`. The work is waiting
+   on k6, so no subagent is needed. It restores `main` in a `trap`, so an aborted sweep still restores:
+
+   ```bash
+   #!/bin/bash
+   cd /c/momentus-projects/performance-k6
+   trap 'npm run setup >/dev/null 2>&1; echo "DONE $(tr -d "\n " < temp/setup.json)" >> temp/claude/reports/seed-all-<env>.status' EXIT
+   npm run setup -- --env <env> >/dev/null 2>&1
+   for seed in <feature> <feature> …; do
+     prev=-1
+     for pass in 1 2 3 4; do
+       log=temp/claude/reports/seed-$seed-<env>-pass$pass.log
+       K6_SETUP_TIMEOUT=180s k6 run --quiet source/seeds/$seed.seed.ts > $log 2>&1
+       line=$(grep -m1 -oE ': [0-9]+ [a-z ]*found, (target [0-9]+|adding), creating [0-9]+' $log)
+       found=$(echo "$line" | grep -oE '[0-9]+' | head -1)
+       creating=$(echo "$line" | sed -E 's/.*creating ([0-9]+)/\1/')
+       echo "$seed pass$pass found=$found creating=$creating" >> temp/claude/reports/seed-all-<env>.status
+       [ -z "$line" ] && break
+       [ "$creating" = "0" ] && break
+       [ "$found" -le "$prev" ] && break
+       prev=$found
+     done
+   done
+   ```
+
+   A pass that reports `creating 0` confirms the seed is at target. Any pass that created records is followed by
+   another, which counts again and creates only what is still missing, to a cap of 4 passes.
+5. **Stop retrying a seed that isn't converging.** A pass whose `found` didn't rise over the last one, a pass with
+   no setup line (it failed in `setup()`), and a `Security Restriction` write (§4) all end that seed's passes;
+   the sweep moves on to the next seed. Don't retry the same failure for the sake of the cap: report the most
+   common `ERRO` line for the seed instead.
+6. **Judge per seed** as in §4, using the last pass: at target (a pass reported `creating 0`), short by `n`
+   (target minus the last `found`), or blocked (the privilege named). Records a failed iteration left half-built
+   (a purchase order approved and issued but never received) stay in the env until a snapshot reset; name them.
+7. **Probe (only with `--probe`).** After the sweep, run each seed's `source/probes/<feature>-seed.probe.ts` per
+   §5. A seed with no probe is skipped; each probe needs NeoLoad's records on the env.
+8. **Report one table**: seed, target, found at the start, passes run, final found, status, and the log paths.
+   Confirm `temp/setup.json` is back on `main` before reporting.

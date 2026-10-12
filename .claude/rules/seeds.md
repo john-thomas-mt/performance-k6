@@ -23,7 +23,7 @@ Seed scripts bulk-create the prerequisite data a journey needs to already exist.
 - Insert transactions need a runtime-unique key per record (`runToken`, e.g. `ER100_SO_SEARCH`) — see `rules/scripting.md`.
 
 ## Running a seed
-- Run a seed with the `/seed <env> <journey | seed> [count]` skill: it switches env, sizes the count (`neoload` matches the rows NeoLoad stored for that version, read from the `seed target` line of `neoload-port-review.cjs`), runs the seed and restores the authoring env.
+- Run a seed with the `/seed <env> <journey | seed> [count]` skill: it switches env, sizes the count (`neoload` matches the rows NeoLoad stored for that version, read from the `seed target` line of `neoload-port-review.cjs`), runs the seed and restores the authoring env. `/seed <env> --all` does the same for every seed in this folder, one after another, topping each up until a pass reports nothing left to create; use it to provision an env before a load run.
 - Prove a newly ported or changed seed with a small batch of new records (`/seed main <feature> +3`, so an env that already holds k6 records still gets fresh ones), and confirm its finder counts them under the new prefix. That run belongs to `/perf-1-seed-port`, ahead of the journey. The journey's ladder (`/perf-3-journey-port`) then starts with a plain top-up (`/seed main <journey>`) and confirms the journey ran on seeded records (its `discover_*` count, or the grid row it picks carrying the seed's prefix). A ladder that passes on records left by NeoLoad doesn't prove the wiring. Both send traffic, so tell the user first.
 - Then run the seed probe on an env that still holds NeoLoad's records, after seeding that env, and act on each mismatch (`rules/probes.md`).
 
