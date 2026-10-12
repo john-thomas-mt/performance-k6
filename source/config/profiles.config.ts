@@ -9,14 +9,16 @@ const profiles: { [profile: string]: Profile } = {
   },
   'neoload': {
     stages: [
-      { duration: '5m', target: 10 },
-      { duration: '35m', target: 10 },
+      { duration: '5m', target: 100 },
+      { duration: '50m', target: 100 },
+      { duration: '5m', target: 0 },
     ],
   },
   'neoload-smoke': {
     stages: [
-      { duration: '2m', target: 10 },
-      { duration: '8m', target: 10 },
+      { duration: '2m', target: 100 },
+      { duration: '6m', target: 100 },
+      { duration: '2m', target: 0 },
     ],
   },
 };
