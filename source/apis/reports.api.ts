@@ -28,6 +28,8 @@ import {
   OpportunityConversionReportResult,
 } from '../utils/exports/types.exp.ts';
 
+const XLSX_MIME_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
 export function open_report_master_list(token: string, version: string, name = 'OpenReportMasterList') {
   const res = http.post(`${config.baseUrl}/api/GenericListServer/GetInitialData2`, JSON.stringify(reportMasterListPayload()), {
     headers: build_headers(token, version),
@@ -259,6 +261,7 @@ export function run_event_revenue_metric_report(apiJwt: string, range: ReportDat
   const report = isJson ? (res.json() as EventRevenueMetricReportResult) : null;
   const ok = check(res, {
     [`${name}: status is 200`]: (r) => r.status === 200,
+    [`${name}: report is an Excel file`]: () => report?.MimeType === XLSX_MIME_TYPE,
     [`${name}: report data present`]: () => Boolean(report?.ReportData),
   });
   if (!ok) {
@@ -279,6 +282,7 @@ export function run_space_utilization_report(apiJwt: string, range: ReportDateRa
   const report = isJson ? (res.json() as SpaceUtilizationReportResult) : null;
   const ok = check(res, {
     [`${name}: status is 200`]: (r) => r.status === 200,
+    [`${name}: report is an Excel file`]: () => report?.MimeType === XLSX_MIME_TYPE,
     [`${name}: report data present`]: () => Boolean(report?.ReportData),
   });
   if (!ok) {
@@ -299,6 +303,7 @@ export function run_opportunity_conversion_report(apiJwt: string, range: ReportD
   const report = isJson ? (res.json() as OpportunityConversionReportResult) : null;
   const ok = check(res, {
     [`${name}: status is 200`]: (r) => r.status === 200,
+    [`${name}: report is an Excel file`]: () => report?.MimeType === XLSX_MIME_TYPE,
     [`${name}: report data present`]: () => Boolean(report?.ReportData),
   });
   if (!ok) {
