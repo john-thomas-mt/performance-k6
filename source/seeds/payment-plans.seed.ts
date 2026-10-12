@@ -30,7 +30,7 @@ import { SeedSetup, SeedSession } from '../utils/exports/types.exp.ts';
 import { bookingAccountNames, bookingSpaces, random_future_date } from '../utils/exports/data.exp.ts';
 
 const SEED_ADD = __ENV.SEED_ADD ? Number(__ENV.SEED_ADD) : undefined;
-const SEED_COUNT = SEED_ADD ?? Number(__ENV.SEED_COUNT || 100);
+const SEED_COUNT = SEED_ADD ?? Number(__ENV.SEED_COUNT || 150);
 const SEED_VUS = Number(__ENV.SEED_VUS || 10);
 const SERVICE_ORDER_OBJECT_ID = 456;
 
