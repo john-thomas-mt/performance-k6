@@ -20,6 +20,7 @@ if (!file || !exportName) {
 const helperStub = {
   today_midnight_utc: () => 0,
   major_minor: () => '0.0',
+  format_retrieve_stamp: () => '1970-01-01 00:00:00',
 };
 
 const cache = new Map();

@@ -62,6 +62,15 @@ const JOURNEY_SPINE = {
   't6-badge-report': {
     '/api/v1/Reports/10/6044/RunReport': ['01'],
   },
+  't17-event-revenue-metric-report': {
+    '/api/v1/Reports/10/6168/RunReport': ['01'],
+  },
+  't18-space-utilization-report': {
+    '/api/v1/Reports/10/6150/RunReport': ['01'],
+  },
+  't19-opportunity-conversion-report': {
+    '/api/v1/Reports/10/6165/RunReport': ['01'],
+  },
   't2-book-event': {
     '/api/USIDataGridServer/GetGridData2': ['08', '10'],
     '/api/GenericDetailServer/GetInitialData2': ['06'],
@@ -74,6 +83,13 @@ const JOURNEY_SPINE = {
   't34-copy-service-orders': {
     '/api/USIDataGridServer/GetGridData2': ['04', '07'],
     '/api/GenericDetailServer/GetInitialData2': ['06'],
+  },
+  't16-copy-paste-event-function': {
+    '/api/GenericListServer/GetInitialData2': ['07'],
+    '/api/USIDataGridServer/GetInitialData2': ['03', '07'],
+    '/api/USIDataGridServer/GetGridData2': ['04', '06'],
+    '/api/GenericDetailServer/GetInitialData2': ['04', '05'],
+    '/api/GenericDetailServer/GetData2': ['06'],
   },
   't30-crystal-report': {
     '/api/GenericListServer/GetInitialData2': ['03', '10'],
@@ -151,6 +167,17 @@ const JOURNEY_SPINE = {
     '/api/GenericDetailServer/AccessServerUI': ['05'],
     '/api/GenericDetailServer/HandleDependentFields2': ['06', '08'],
   },
+  't20-edit-service-orders': {
+    '/api/GenericListServer/GetInitialData2': ['03', '11'],
+    '/api/USIDataGridServer/GetInitialData2': ['03', '07', '08', '09', '11'],
+    '/api/GenericSearchServer/GetInitialData2': ['04', '07', '08', '09'],
+    '/api/USISearchComboServer/SaveRecentlyUsed': ['04'],
+    '/api/GenericSearchServer/HandleDependentFields2': ['04'],
+    '/api/USIDataGridServer/GetGridData2': ['04', '08', '10'],
+    '/api/GenericDetailServer/GetInitialData2': ['05', '07', '08', '09'],
+    '/api/GenericDetailServer/HandleDependentFields2': ['06', '10'],
+    '/api/GenericDetailServer/GetData2': ['06'],
+  },
 };
 // per-journey, per-request spine: individual requests scripted as wrappers on a path whose other requests in
 // the same step stay chrome (contact-service-order step 04 fires 15 GetObjectColumns, only the object-1659 one
@@ -168,6 +195,7 @@ const JOURNEY_SPINE_REQUESTS = {
     { path: '/api/ObjectColumnCacheServer/GetObjectColumns', step: '06', body: '[456,' },
     { path: '/api/ObjectColumnCacheServer/GetObjectColumns', step: '08', body: '[2556,' },
   ],
+  't16-copy-paste-event-function': [{ path: '/api/USIDataGridServer/GetInitialData2', step: '04', body: '["10",5451,23,' }],
   't9-purchase-orders': [{ path: '/api/ObjectColumnCacheServer/GetObjectColumns', step: '03', body: '[81,' }],
   't10-voucher-processing': [
     { path: '/api/ObjectColumnCacheServer/GetObjectColumns', step: '03', body: '[1138,' },

@@ -2,6 +2,8 @@ import { Options, Scenario } from 'k6/options';
 import {
   discover_service_order_pool,
   discover_payment_plan_pool,
+  discover_copy_paste_function_pool,
+  discover_edit_service_order_pool,
   copy_event_journey,
   copyEventThresholds,
   copy_service_orders_journey,
@@ -32,6 +34,16 @@ import {
   launchAndLoginThresholds,
   detail_general_ledger_report_journey,
   detailGeneralLedgerReportThresholds,
+  event_revenue_metric_report_journey,
+  eventRevenueMetricReportThresholds,
+  space_utilization_report_journey,
+  spaceUtilizationReportThresholds,
+  opportunity_conversion_report_journey,
+  opportunityConversionReportThresholds,
+  copy_paste_event_function_journey,
+  copyPasteEventFunctionThresholds,
+  edit_service_orders_journey,
+  editServiceOrdersThresholds,
   loginThresholds,
 } from '../utils/exports/flows.exp.ts';
 import { pick_user, fetch_server_version, decrypt_users, decrypt_api_credentials } from '../utils/exports/helpers.exp.ts';
@@ -39,15 +51,17 @@ import { commonThresholds, config } from '../utils/exports/config.exp.ts';
 import { SmokeSetup } from '../utils/exports/types.exp.ts';
 import { userCredentials, publicApiCredentials } from '../utils/exports/data.exp.ts';
 import { roomDiagramFiles } from '../data/uploads/events/room-diagrams.index.ts';
+import { sampleDocument } from '../data/uploads/service-orders/sample-document.index.ts';
 
 const VUS = Number(__ENV.VUS) || 1;
 const ITERS = Number(__ENV.ITERS) || 1;
 
-const once = (exec: string): Scenario => ({
+const once = (exec: string, maxDuration?: string): Scenario => ({
   executor: 'per-vu-iterations',
   vus: VUS,
   iterations: ITERS,
   exec,
+  maxDuration,
 });
 
 const allScenarios: { [scenario: string]: Scenario } = {
@@ -66,6 +80,11 @@ const allScenarios: { [scenario: string]: Scenario } = {
   payment_plan: once('payment_plan'),
   launch_and_login: once('launch_and_login'),
   detail_general_ledger_report: once('detail_general_ledger_report'),
+  event_revenue_metric_report: once('event_revenue_metric_report', '4h'),
+  space_utilization_report: once('space_utilization_report', '4h'),
+  opportunity_conversion_report: once('opportunity_conversion_report', '4h'),
+  copy_paste_event_function: once('copy_paste_event_function', '2h'),
+  edit_service_orders: once('edit_service_orders'),
 };
 
 const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
@@ -84,6 +103,11 @@ const allThresholds: { [scenario: string]: { [metric: string]: string[] } } = {
   payment_plan: paymentPlanThresholds,
   launch_and_login: launchAndLoginThresholds,
   detail_general_ledger_report: detailGeneralLedgerReportThresholds,
+  event_revenue_metric_report: eventRevenueMetricReportThresholds,
+  space_utilization_report: spaceUtilizationReportThresholds,
+  opportunity_conversion_report: opportunityConversionReportThresholds,
+  copy_paste_event_function: copyPasteEventFunctionThresholds,
+  edit_service_orders: editServiceOrdersThresholds,
 };
 
 const selected = __ENV.SCENARIO;
@@ -94,7 +118,16 @@ if (selected && !allScenarios[selected]) {
 const soPoolScenarios = new Set(['copy_service_orders']);
 const needsSoPool = !selected || soPoolScenarios.has(selected);
 const needsPlanPool = !selected || selected === 'payment_plan';
-const apiCredentialScenarios = new Set(['payment_receipt_report', 'badge_report', 'detail_general_ledger_report']);
+const needsCopyPastePool = !selected || selected === 'copy_paste_event_function';
+const needsEditOrderPool = !selected || selected === 'edit_service_orders';
+const apiCredentialScenarios = new Set([
+  'payment_receipt_report',
+  'badge_report',
+  'detail_general_ledger_report',
+  'event_revenue_metric_report',
+  'space_utilization_report',
+  'opportunity_conversion_report',
+]);
 const needsApiCredentials = !selected || apiCredentialScenarios.has(selected);
 
 const activeThresholds: { [metric: string]: string[] } = selected
@@ -124,11 +157,13 @@ export async function setup() {
   const version = fetch_server_version();
   const soPool = needsSoPool ? discover_service_order_pool(version, users[0]) : [];
   const planPool = needsPlanPool ? discover_payment_plan_pool(version, users[0]) : [];
+  const copyPastePool = needsCopyPastePool ? discover_copy_paste_function_pool(version, users[0]) : [];
+  const editOrderPool = needsEditOrderPool ? discover_edit_service_order_pool(version, users[0]) : [];
   console.log(`Server version: ${version}`);
   if (needsSoPool) {
     console.log(`Smoke: ${soPool.length} seeded service order(s) discovered`);
   }
-  return { version, users, soPool, planPool, apiCredentials };
+  return { version, users, soPool, planPool, copyPastePool, editOrderPool, apiCredentials };
 }
 
 export function copy_event(data: SmokeSetup) {
@@ -189,4 +224,24 @@ export function launch_and_login(data: SmokeSetup) {
 
 export function detail_general_ledger_report(data: SmokeSetup) {
   detail_general_ledger_report_journey(data);
+}
+
+export function event_revenue_metric_report(data: SmokeSetup) {
+  event_revenue_metric_report_journey(data);
+}
+
+export function space_utilization_report(data: SmokeSetup) {
+  space_utilization_report_journey(data);
+}
+
+export function opportunity_conversion_report(data: SmokeSetup) {
+  opportunity_conversion_report_journey(data);
+}
+
+export function copy_paste_event_function(data: SmokeSetup) {
+  copy_paste_event_function_journey(pick_user(data.users), data);
+}
+
+export function edit_service_orders(data: SmokeSetup) {
+  edit_service_orders_journey(pick_user(data.users), data, sampleDocument);
 }

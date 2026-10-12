@@ -16,12 +16,20 @@ export const bookingSavePayload = (
   account: string,
   contact: string,
 ) => {
+  /* The browser fills every alternate name from the description and the requester from the account and
+     contact before saving (the HandleDependentFields2 answers), so a save that leaves them out stores blanks. */
   for (const col of [
     'EV200_EVT_DESC',
     'EV200_ALT_EVT_DESC',
     'EV200_ALT_EVT_DESC2',
     'EV200_ALT_EVT_DESC3',
     'EV200_ALT_EVT_DESC4',
+    'EV200_ALT_EVT_DESC5',
+    'EV200_ALT_LEGAL_NAME',
+    'EV200_ALT_LEGAL_NAME2',
+    'EV200_ALT_LEGAL_NAME3',
+    'EV200_ALT_LEGAL_NAME4',
+    'EV200_ALT_LEGAL_NAME5',
     'EV200_EVT_LEGAL_NAME',
   ]) {
     set_cell(header, col, description);
@@ -29,8 +37,10 @@ export const bookingSavePayload = (
   set_cell(header, 'EV200_EVT_ABBREV_NAME', description.slice(0, 20));
   set_cell(header, 'EV200_CUST_NBR', account);
   set_cell(header, 'EV200_BILLTO_ACCT', account);
+  set_cell(header, 'EV200_REQ_ACCT_CODE', account);
   set_cell(header, 'EV200_NG_EVT_CONTACT', contact);
   set_cell(header, 'EV200_NG_BILLTO_CONTACT', contact);
+  set_cell(header, 'EV200_REQ_CNTCT_CODE', contact);
   set_cell(header, 'EV200_EVT_SEARCH', '*EVTYR');
   header.TableName = `${Date.now()}`;
   /* The child table is linked to its change-tracking entry by name: it must equal the
@@ -90,7 +100,6 @@ export const functionSavePayload = (
      older than the row and needs no timezone-sensitive string render. */
   set_cell(table, 'cRETRIEVE_STAMP', stamp);
   set_cell(table, 'EV700_FUNC_DESC', funcDesc);
-  set_cell(table, 'EV700_FUNC_SEARCH', funcDesc.toUpperCase());
   /* The app flags the row dirty when the description is typed over the staged default; without it the
      save is treated as unchanged. */
   set_cell(table, 'cDESC_CHANGED', true);

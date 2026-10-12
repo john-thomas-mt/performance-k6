@@ -1,4 +1,5 @@
-import { SetupData, User } from './common.type.ts';
+import { SetupData, TransportTable, User } from './common.type.ts';
+import { EventRow } from './events.type.ts';
 
 export type ServiceOrderRow = {
   orderNbr: string;
@@ -33,10 +34,26 @@ export type ServiceOrderRow = {
   updDateIso: string;
 };
 
-export type DocumentFields = {
+export type ServiceOrderDocumentFields = {
   fileKey: string;
   fileName: string;
   docDesc: string;
+  evFunc: string;
+};
+
+export type ServiceOrderItemsForm = {
+  startDate: string;
+  endDate: string;
+  table: TransportTable;
+};
+
+export type ServiceOrderDocumentFixture = {
+  name: string;
+  content: ArrayBuffer;
+};
+
+export type EditServiceOrderSetup = SetupData & {
+  editOrderPool: EventRow[];
 };
 
 export type ServiceOrderSaveResult = {

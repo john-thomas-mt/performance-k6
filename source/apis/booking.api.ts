@@ -184,6 +184,31 @@ export function save_booking(
   return { addedRowKey, evtId: addedRowKey.split('|')[1] };
 }
 
+function post_function_grid(
+  token: string,
+  version: string,
+  space: string,
+  account: string,
+  evtId: string,
+  addedRowKey: string,
+  encUserId: string,
+  windowVersion: string,
+  name: string,
+) {
+  const res = http.post(
+    `${config.baseUrl}/api/USIDataGridServer/GetGridData2`,
+    JSON.stringify(functionGridPayload(space, account, evtId, addedRowKey, encUserId, windowVersion)),
+    { headers: build_headers(token, version), tags: { name } },
+  );
+
+  const ok = check(res, { [`${name}: status is 201`]: (r) => r.status === 201 });
+  if (!ok) {
+    console.error(`[VU ${__VU}] ${name} failed — HTTP ${res.status}`);
+    fail(`${name} did not succeed`);
+  }
+  return res;
+}
+
 export function read_event_functions(
   token: string,
   version: string,
@@ -195,20 +220,35 @@ export function read_event_functions(
   windowVersion: string,
   name = 'ReadEventFunctions',
 ) {
-  const res = http.post(
-    `${config.baseUrl}/api/USIDataGridServer/GetGridData2`,
-    JSON.stringify(functionGridPayload(space, account, evtId, addedRowKey, encUserId, windowVersion)),
-    { headers: build_headers(token, version), tags: { name } },
-  );
-
-  const ok = check(res, { [`${name}: status is 201`]: (r) => r.status === 201 });
-  if (!ok) {
-    console.error(`[VU ${__VU}] read_event_functions failed — HTTP ${res.status}`);
-    fail('read_event_functions did not succeed');
-  }
-
+  const res = post_function_grid(token, version, space, account, evtId, addedRowKey, encUserId, windowVersion, name);
   const rows = parse_grid_rows(res, { stamp: 'cRETRIEVE_STAMP' }, name);
   return rows[0]?.stamp ?? '';
+}
+
+export function read_event_function_rows(
+  token: string,
+  version: string,
+  space: string,
+  account: string,
+  evtId: string,
+  addedRowKey: string,
+  encUserId: string,
+  windowVersion: string,
+  name = 'ReadEventFunctionRows',
+) {
+  const res = post_function_grid(token, version, space, account, evtId, addedRowKey, encUserId, windowVersion, name);
+  return parse_grid_rows(
+    res,
+    {
+      desc: 'EV700_FUNC_DESC',
+      funcType: 'EV700_FUNC_TYPE',
+      funcClass: 'EV700_FUNC_CLASS',
+      statusCode: 'EV700_STATUS_CODE',
+      altDesc: 'EV700_ALT_FUNC_DESC',
+      funcSearch: 'EV700_FUNC_SEARCH',
+    },
+    name,
+  );
 }
 
 export function stage_event_function(

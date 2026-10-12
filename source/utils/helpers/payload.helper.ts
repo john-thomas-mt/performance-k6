@@ -1,4 +1,4 @@
-import { TransportTable } from '../exports/types.exp.ts';
+import { ReportDateRange, TransportTable } from '../exports/types.exp.ts';
 
 export function today_midnight_utc() {
   const d = new Date();
@@ -57,3 +57,14 @@ export const save2_envelope = (
   table: TransportTable,
   changeTracking: object = save2CreateChangeTracking,
 ) => [...head, windowBag, changeTracking, { TransportDataTables: [table] }, { TransportDataTables: [] }, save2Refresh];
+
+export function random_date_range(minSpanDays = 1, maxSpanDays = 365): ReportDateRange {
+  const now = new Date();
+  const fiveYearsAgo = Date.UTC(now.getUTCFullYear() - 5, now.getUTCMonth(), now.getUTCDate());
+  const end = new Date(now.getTime() - Math.random() * (now.getTime() - fiveYearsAgo));
+  const spanDays = Math.floor(Math.random() * (maxSpanDays - minSpanDays + 1)) + minSpanDays;
+  const start = new Date(end.getTime() - spanDays * 86400000);
+  const format = (d: Date) =>
+    `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+  return { startDate: format(start), endDate: format(end) };
+}
