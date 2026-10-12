@@ -24,14 +24,23 @@ import {
   issue_purchase_order,
   open_purchase_order_receive_fields,
   receive_purchase_order,
+  search_voucher_supplier,
+  count_seeded_voucher_po_lines,
 } from '../utils/exports/apis.exp.ts';
 import { fetch_server_version, decrypt_seed_users, pick_user, pick_pool_value } from '../utils/exports/helpers.exp.ts';
 import { config } from '../utils/exports/config.exp.ts';
-import { PurchaseOrderContext, PurchaseOrderItemCells, SeedSetup, SeedSession } from '../utils/exports/types.exp.ts';
+import {
+  PurchaseOrderContext,
+  PurchaseOrderItemCells,
+  SeedSetup,
+  SeedSession,
+  User,
+  VoucherProcessingWindows,
+} from '../utils/exports/types.exp.ts';
 import { purchaseOrders, dataScriptVoucherProcessing } from '../utils/exports/data.exp.ts';
 
 const SEED_ADD = __ENV.SEED_ADD ? Number(__ENV.SEED_ADD) : undefined;
-const SEED_COUNT = SEED_ADD ?? Number(__ENV.SEED_COUNT || 50);
+const SEED_COUNT = SEED_ADD ?? Number(__ENV.SEED_COUNT || 60);
 const SEED_VUS = Number(__ENV.SEED_VUS || 10);
 const PURCHASE_ORDER_OBJECT_ID = 81;
 
@@ -53,13 +62,33 @@ export async function setup() {
   }
   const users = await decrypt_seed_users(config.seedUsers, cryptoKey);
   const version = fetch_server_version();
-  const shortfall = SEED_COUNT;
+  const existing = count_voucherable_orders(users[0], version);
+  const shortfall = SEED_ADD ?? Math.max(0, SEED_COUNT - existing);
 
   console.log(`Server version: ${version}`);
   console.log(
-    `Creating ${shortfall} "${config.seedVoucherPrefix}" purchase order(s), each approved, issued and received in full, with ${SEED_VUS} VU(s), each on its own session`,
+    `"${config.seedVoucherPrefix}" voucherable purchase orders: ${existing} found, ${SEED_ADD === undefined ? `target ${SEED_COUNT}` : 'adding'}, creating ${shortfall} (each approved, issued and received in full) with ${SEED_VUS} VU(s), each on its own session`,
   );
   return { version, users, shortfall };
+}
+
+function count_voucherable_orders(user: User, version: string) {
+  const { bearerToken } = login_to_events(user, version);
+  const windows: VoucherProcessingWindows = {
+    listWdwid: 'AP9000000',
+    batchAddWdwid: 'AP9000001',
+    batchEditWdwid: 'AP9000002',
+    voucherAddWdwid: 'AP9000003',
+    voucherEditWdwid: 'AP9000004',
+    poSelectWdwid: 'AP9000005',
+    postWdwid: 'AP9000006',
+  };
+  let count = 0;
+  for (const supplierName of new Set(dataScriptVoucherProcessing)) {
+    const { key } = search_voucher_supplier(bearerToken, version, supplierName, 'CountVoucherSupplier');
+    count += count_seeded_voucher_po_lines(bearerToken, version, windows, '0', key);
+  }
+  return count;
 }
 
 let vuSession: SeedSession | null = null;
