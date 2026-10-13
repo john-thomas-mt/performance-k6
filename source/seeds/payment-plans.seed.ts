@@ -57,7 +57,7 @@ export async function setup() {
     bearerToken,
     version,
     config.seedPaymentPlanPrefix,
-    { events: 'CountSeedEvents', orders: 'CountSeedOrders' },
+    'CountSeedEvents',
     SEED_ADD === undefined ? SEED_COUNT : undefined,
   ).length;
   const shortfall = SEED_ADD ?? Math.max(0, SEED_COUNT - existing);

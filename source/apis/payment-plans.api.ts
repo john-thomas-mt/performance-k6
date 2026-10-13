@@ -12,6 +12,7 @@ import {
   paymentPlanEventRecentPayload,
   paymentPlanEventFieldsPayload,
   paymentPlanOrdersGridPayload,
+  paymentPlanUnplannedOrdersGridPayload,
   paymentPlanOrderControlInfoPayload,
   paymentPlanOrderDetailPayload,
   paymentPlanAccessPayload,
@@ -94,6 +95,26 @@ export function read_payment_plan_orders(token: string, version: string, eventKe
     return { ...(fields as ServiceOrderRow), table };
   });
   return rows.filter((row) => row.orderNbr !== '');
+}
+
+export function read_unplanned_payment_plan_events(
+  token: string,
+  version: string,
+  eventPrefix: string,
+  name = 'ReadUnplannedPaymentPlanEvents',
+) {
+  const res = post_plan('USIDataGridServer/GetGridData2', paymentPlanUnplannedOrdersGridPayload(eventPrefix), token, version, name);
+  const grid = find_transport_table(res, 'ER100_ORD_NBR', name);
+  const events: PaymentPlanEvent[] = [];
+  const seen = new Set<string>();
+  for (const row of grid.TransportDataRows) {
+    const table = { TransportDataColumns: grid.TransportDataColumns, TransportDataRows: [row] };
+    const key = get_cell(table, 'ER100_EVT_ID');
+    if (key === '' || get_cell(table, 'ER100_PAY_PLAN_ID') !== '0' || seen.has(key)) continue;
+    seen.add(key);
+    events.push({ key, desc: get_cell(table, 'OrderEvent_EV200_EVT_DESC') });
+  }
+  return events;
 }
 
 export function get_payment_plan_order_control_info(

@@ -1,4 +1,10 @@
-export const paymentPlanOrdersGridPayload = (eventKey: string) => [
+export const paymentPlanOrdersGridPayload = (eventKey: string) => ordersGridPayload([ordersGridFilter(1, 2753, 'IN', 0, eventKey)]);
+
+/* The server applies column filters the window doesn't offer: 5522 is the order's event description (OrderEvent_EV200_EVT_DESC) and 1603 is ER100_PAY_PLAN_ID. Filtering on both returns only the prefixed events' orders still without a plan in one read, where the event combo refuses a broad prefix once too many events match (416). */
+export const paymentPlanUnplannedOrdersGridPayload = (eventPrefix: string) =>
+  ordersGridPayload([ordersGridFilter(0, 5522, 'LIKE', 3, eventPrefix), ordersGridFilter(0, 1603, '=', 0, '0')]);
+
+const ordersGridPayload = (searchFilters: OrdersGridFilter[]) => [
   '10',
   4,
   0,
@@ -303,31 +309,7 @@ export const paymentPlanOrdersGridPayload = (eventKey: string) => [
     ResultsLimit: 0,
     ResultsTime: 1,
     SearchDesc: 'All Service Orders',
-    SearchFilters: [
-      {
-        ConvertedToUserDisplayTimeZone: false,
-        CustomXML: '',
-        EnterUserID: '',
-        FilterType: 1,
-        ForceUnparameterized: false,
-        ID: -1,
-        LikeType: 0,
-        ObjectColumnID: 2753,
-        ObjectID: 4,
-        Operand: 'IN',
-        Operand2: '',
-        SearchID: 269,
-        ThemeID: 0,
-        ToUpper: 'N',
-        TrailingOperand: 'AND',
-        UpdateUserID: '',
-        UsedInList: false,
-        UsedInList2: false,
-        UserID: '',
-        Value: eventKey,
-        Value2: '',
-      },
-    ],
+    SearchFilters: searchFilters,
     ThemeID: 0,
     USIID: 511,
     UpdateUserID: 'USISETTING',
@@ -343,3 +325,29 @@ export const paymentPlanOrdersGridPayload = (eventKey: string) => [
   false,
   '',
 ];
+
+type OrdersGridFilter = ReturnType<typeof ordersGridFilter>;
+
+const ordersGridFilter = (filterType: number, columnId: number, operand: string, likeType: number, value: string) => ({
+  ConvertedToUserDisplayTimeZone: false,
+  CustomXML: '',
+  EnterUserID: '',
+  FilterType: filterType,
+  ForceUnparameterized: false,
+  ID: -1,
+  LikeType: likeType,
+  ObjectColumnID: columnId,
+  ObjectID: 4,
+  Operand: operand,
+  Operand2: '',
+  SearchID: 269,
+  ThemeID: 0,
+  ToUpper: 'N',
+  TrailingOperand: 'AND',
+  UpdateUserID: '',
+  UsedInList: false,
+  UsedInList2: false,
+  UserID: '',
+  Value: value,
+  Value2: '',
+});
