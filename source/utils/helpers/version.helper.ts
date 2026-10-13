@@ -5,6 +5,7 @@ import { body_text } from './response.helper.ts';
 export function fetch_server_version() {
   const res = http.get(`${config.baseUrl}/app85.cshtml`, {
     tags: { name: 'FetchServerVersion' },
+    timeout: config.requestTimeout,
   });
 
   if (res.status !== 200) {
@@ -24,7 +25,7 @@ export function major_minor(version: string) {
 }
 
 export function fetch_bundle_versions() {
-  const res = http.get(`${config.baseUrl}/app85.cshtml`, { tags: { name: 'AppShell' } });
+  const res = http.get(`${config.baseUrl}/app85.cshtml`, { tags: { name: 'AppShell' }, timeout: config.requestTimeout });
   const html = body_text(res);
   const grab = (marker: string) => {
     const idx = html.indexOf(marker);

@@ -43,6 +43,7 @@ function post_plan(endpoint: string, payload: unknown, token: string, version: s
   const res = http.post(`${config.baseUrl}/api/${endpoint}`, JSON.stringify(payload), {
     headers: build_headers(token, version),
     tags: { name },
+    timeout: config.requestTimeout,
   });
   if (!check(res, { [`${name}: status is 201`]: (r) => r.status === 201 })) {
     console.error(`[VU ${__VU}] ${name} failed — HTTP ${res.status}: ${body_text(res).slice(0, 300)}`);

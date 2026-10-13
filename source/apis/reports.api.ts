@@ -34,6 +34,7 @@ export function open_report_master_list(token: string, version: string, name = '
   const res = http.post(`${config.baseUrl}/api/GenericListServer/GetInitialData2`, JSON.stringify(reportMasterListPayload()), {
     headers: build_headers(token, version),
     tags: { name },
+    timeout: config.requestTimeout,
   });
   const ok = check(res, { [`${name}: status is 201`]: (r) => r.status === 201 });
   if (!ok) {
@@ -46,6 +47,7 @@ export function read_report_master_grid(token: string, version: string, name = '
   const res = http.post(`${config.baseUrl}/api/USIDataGridServer/GetInitialData2`, JSON.stringify(reportMasterGridPayload()), {
     headers: build_headers(token, version),
     tags: { name },
+    timeout: config.requestTimeout,
   });
   const ok = check(res, { [`${name}: status is 201`]: (r) => r.status === 201 });
   if (!ok) {
@@ -58,7 +60,7 @@ export function open_add_report_form(token: string, version: string, detailWdwid
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/GetInitialData2`,
     JSON.stringify(addReportFormPayload(detailWdwid, editWdwid)),
-    { headers: build_headers(token, version), tags: { name: 'OpenAddReportForm' } },
+    { headers: build_headers(token, version), tags: { name: 'OpenAddReportForm' }, timeout: config.requestTimeout },
   );
   const ok = check(res, { 'OpenAddReportForm: status is 201': (r) => r.status === 201 });
   if (!ok) {
@@ -80,7 +82,7 @@ export function save_crystal_report(
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/Save2`,
     JSON.stringify(crystalReportSavePayload(reportName, reportId, srcName, scope, detailWdwid, editWdwid)),
-    { headers: build_headers(token, version), tags: { name: 'SaveCrystalReport' } },
+    { headers: build_headers(token, version), tags: { name: 'SaveCrystalReport' }, timeout: config.requestTimeout },
   );
 
   const ok = check(res, {
@@ -120,7 +122,7 @@ export function open_report_lists_search(token: string, version: string, editWdw
   const res = http.post(
     `${config.baseUrl}/api/GenericSearchServer/GetInitialData2`,
     JSON.stringify(reportListsSearchPayload(editWdwid, reportSeq)),
-    { headers: build_headers(token, version), tags: { name: 'OpenReportListsSearch' } },
+    { headers: build_headers(token, version), tags: { name: 'OpenReportListsSearch' }, timeout: config.requestTimeout },
   );
   const ok = check(res, { 'OpenReportListsSearch: status is 201': (r) => r.status === 201 });
   if (!ok) {
@@ -133,7 +135,7 @@ export function read_report_lists_grid(token: string, version: string, editWdwid
   const res = http.post(
     `${config.baseUrl}/api/USIDataGridServer/GetInitialData2`,
     JSON.stringify(reportListsGridPayload(editWdwid, reportSeq)),
-    { headers: build_headers(token, version), tags: { name: 'ReadReportListsGrid' } },
+    { headers: build_headers(token, version), tags: { name: 'ReadReportListsGrid' }, timeout: config.requestTimeout },
   );
   const ok = check(res, { 'ReadReportListsGrid: status is 201': (r) => r.status === 201 });
   if (!ok) {
@@ -146,6 +148,7 @@ export function get_report_list_window(token: string, version: string, superboxW
   const res = http.get(`${config.baseUrl}/api/WindowServer/GetWindowInfo?astrWindowID=${superboxWdwid}`, {
     headers: build_headers(token, version),
     tags: { name: 'GetReportListWindowInfo' },
+    timeout: config.requestTimeout,
   });
   const ok = check(res, {
     'GetReportListWindowInfo: status is 201': (r) => r.status === 201,
@@ -168,7 +171,7 @@ export function open_report_list_superbox(token: string, version: string, ctx: R
   const res = http.post(
     `${config.baseUrl}/api/USIMultiSelectSuperBoxPageServer/GetInitialData`,
     JSON.stringify(reportListSuperboxPayload(ctx)),
-    { headers: build_headers(token, version), tags: { name: 'OpenReportListSuperbox' } },
+    { headers: build_headers(token, version), tags: { name: 'OpenReportListSuperbox' }, timeout: config.requestTimeout },
   );
   const ok = check(res, { 'OpenReportListSuperbox: status is 201': (r) => r.status === 201 });
   if (!ok) {
@@ -186,6 +189,7 @@ export function save_report_list(token: string, version: string, ctx: ReportList
   const res = http.post(`${config.baseUrl}/api/USIMultiSelectSuperBoxPageServer/save`, JSON.stringify(reportListSavePayload(ctx, chosen)), {
     headers: build_headers(token, version),
     tags: { name: 'SaveReportList' },
+    timeout: config.requestTimeout,
   });
   const ok = check(res, {
     'SaveReportList: status is 201': (r) => r.status === 201,
@@ -213,7 +217,7 @@ export function open_org_source_search(token: string, version: string, editWdwid
   const res = http.post(
     `${config.baseUrl}/api/GenericSearchServer/GetInitialData2`,
     JSON.stringify(orgSourceSearchPayload(editWdwid, reportSeq)),
-    { headers: build_headers(token, version), tags: { name: 'OpenOrgSourceSearch' } },
+    { headers: build_headers(token, version), tags: { name: 'OpenOrgSourceSearch' }, timeout: config.requestTimeout },
   );
   const ok = check(res, { 'OpenOrgSourceSearch: status is 201': (r) => r.status === 201 });
   if (!ok) {
@@ -226,7 +230,7 @@ export function read_org_source_grid(token: string, version: string, editWdwid: 
   const res = http.post(
     `${config.baseUrl}/api/USIDataGridServer/GetInitialData2`,
     JSON.stringify(orgSourceGridPayload(editWdwid, reportSeq)),
-    { headers: build_headers(token, version), tags: { name: 'ReadOrgSourceGrid' } },
+    { headers: build_headers(token, version), tags: { name: 'ReadOrgSourceGrid' }, timeout: config.requestTimeout },
   );
   const ok = check(res, { 'ReadOrgSourceGrid: status is 201': (r) => r.status === 201 });
   if (!ok) {
@@ -243,6 +247,7 @@ export function report_application_unloading(token: string, version: string, nam
   const res = http.get(`${config.baseUrl}/api/GenericServer/ApplicationUnloading`, {
     headers: build_headers(token, version),
     tags: { name },
+    timeout: config.requestTimeout,
   });
   const ok = check(res, { [`${name}: status is 201`]: (r) => r.status === 201 });
   if (!ok) {
@@ -255,7 +260,7 @@ export function run_event_revenue_metric_report(apiJwt: string, range: ReportDat
   const res = http.put(`${config.baseUrl}/api/v1/Reports/10/6168/RunReport`, JSON.stringify(eventRevenueMetricReportPayload(range)), {
     headers: public_api_headers(apiJwt),
     tags: { name },
-    timeout: '1h',
+    timeout: config.requestTimeout,
   });
   const isJson = res.status === 200 && (res.headers['Content-Type']?.includes('application/json') ?? false);
   const report = isJson ? (res.json() as EventRevenueMetricReportResult) : null;
@@ -276,7 +281,7 @@ export function run_space_utilization_report(apiJwt: string, range: ReportDateRa
   const res = http.put(`${config.baseUrl}/api/v1/Reports/10/6150/RunReport`, JSON.stringify(spaceUtilizationReportPayload(range)), {
     headers: public_api_headers(apiJwt),
     tags: { name },
-    timeout: '1h',
+    timeout: config.requestTimeout,
   });
   const isJson = res.status === 200 && (res.headers['Content-Type']?.includes('application/json') ?? false);
   const report = isJson ? (res.json() as SpaceUtilizationReportResult) : null;
@@ -297,7 +302,7 @@ export function run_opportunity_conversion_report(apiJwt: string, range: ReportD
   const res = http.put(`${config.baseUrl}/api/v1/Reports/10/6165/RunReport`, JSON.stringify(opportunityConversionReportPayload(range)), {
     headers: public_api_headers(apiJwt),
     tags: { name },
-    timeout: '1h',
+    timeout: config.requestTimeout,
   });
   const isJson = res.status === 200 && (res.headers['Content-Type']?.includes('application/json') ?? false);
   const report = isJson ? (res.json() as OpportunityConversionReportResult) : null;

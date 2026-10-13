@@ -10,6 +10,7 @@ function post_sign_in(username: string, password: string, version: string) {
   const res = http.post(`${config.baseUrl}/api/GenericServer/SignIn`, JSON.stringify([username, password, '', false, '', '', [], '1']), {
     headers: build_headers(null, version),
     tags: { name: 'SignIn' },
+    timeout: config.requestTimeout,
   });
 
   const ok = check(res, {
@@ -56,6 +57,7 @@ export function sign_out(token: string, version: string, name = 'SignOut') {
   const res = http.get(`${config.baseUrl}/api/GenericServer/ApplicationUnloading`, {
     headers: build_headers(token, version),
     tags: { name },
+    timeout: config.requestTimeout,
   });
   check(res, { [`${name}: status is 200 or 201`]: (r) => r.status === 200 || r.status === 201 });
 }

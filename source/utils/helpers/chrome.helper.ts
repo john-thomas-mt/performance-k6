@@ -5,7 +5,7 @@ import { build_headers } from './headers.helper.ts';
 import { version_at_least } from './version.helper.ts';
 import { ChromeRequest, StaticRequest } from '../exports/types.exp.ts';
 
-type BatchReq = [string, string, string | null, { headers: { [header: string]: string }; tags: { name: string } }];
+type BatchReq = [string, string, string | null, { headers: { [header: string]: string }; tags: { name: string }; timeout: string }];
 
 const apply_subs = (s: string, subs: { [token: string]: string }) =>
   s.replace(/\$\{([^}]+)\}/g, (m, key: string) => (key in subs ? subs[key] : m));
@@ -25,7 +25,7 @@ function fire_batch(token: string, version: string, pages: ChromeRequest[][], su
         skipped.push(r.path);
         continue;
       }
-      batch.push([r.method, `${config.baseUrl}${path}`, body, { headers, tags: { name: tag } }]);
+      batch.push([r.method, `${config.baseUrl}${path}`, body, { headers, tags: { name: tag }, timeout: config.requestTimeout }]);
     }
     if (batch.length === 0) continue;
     for (const resp of Object.values(http.batch(batch))) statuses.push(resp.status);
@@ -52,7 +52,12 @@ export function fire_static_assets(pages: StaticRequest[][]) {
   const statuses: number[] = [];
   for (const page of pages) {
     if (page.length === 0) continue;
-    const batch = page.map((r): BatchReq => ['GET', `${config.baseUrl}${r.path}`, null, { headers, tags: { name: 'StaticAsset' } }]);
+    const batch = page.map((r): BatchReq => [
+      'GET',
+      `${config.baseUrl}${r.path}`,
+      null,
+      { headers, tags: { name: 'StaticAsset' }, timeout: config.requestTimeout },
+    ]);
     for (const resp of Object.values(http.batch(batch))) statuses.push(resp.status);
   }
   if (statuses.length === 0) return;

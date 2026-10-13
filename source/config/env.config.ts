@@ -41,6 +41,7 @@ export const config = {
   env,
   baseUrl: `https://${urlPrefix}.ungerboeck.${path}/${env}`,
   salesAiUrl,
+  requestTimeout: '300s',
   seedEventPrefix: 'k6-t34-booking-event',
   seedInvoiceEventPrefix: 'k6-t8-booking-event',
   seedVoucherPrefix: 'k6-t10-purchase-order',

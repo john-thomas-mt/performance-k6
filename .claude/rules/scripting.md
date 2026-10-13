@@ -17,10 +17,10 @@ each folder's own rule file (`rules/apis.md`, `rules/flows.md`, `rules/helpers.m
 - URLs are built from `config` values — never hardcode hosts or versions in a wrapper; the sales-ai `tenantId` is correlated from the session JWT (see Correlation), not `config`
 
 ## Timeouts
-- k6 times out each request at **60s** by default, which fails it as `HTTP 0` / `request timeout`. A wrapper whose endpoint can legitimately run longer sets `timeout` on that one request only, never globally (e.g. `run_event_revenue_metric_report` uses `'1h'` because the report took from 30s to 17m on PERF)
+- Every `http.*` call (and every `http.batch` request tuple) carries `timeout: config.requestTimeout` (`'300s'`). k6's own default is **60s**, which fails a slower request as `HTTP 0` / `request timeout`; NeoLoad's controller times out every request at 300s (`runtime.so.timeout` / `runtime.connection.timeout` = 300000 in `controller.properties`, with no per-request override in the project), so one shared value keeps k6 at parity. Never set a per-request override: a longer timeout lets a slow report run past the point where NeoLoad gives up, which inflates its average and shifts every later iteration (the S24 event revenue report averaged 493s in k6 vs 138s in NeoLoad under a `'1h'` override)
 - `timeout: 0` does **not** mean unlimited in k6 1.1.x: the request fails at once with `HTTP 0`. Use a large explicit value instead
 - A `504 Gateway Time-out` HTML page arriving after a fixed time (17m0s on PERF) comes from the gateway/ALB, not from k6. Raising the k6 timeout won't fix it; report it as a performance finding
-- The scenario must outlive the slow request too: pair the request `timeout` with a scenario `maxDuration` (see `rules/tests.md`, Execution shape)
+- A scenario sized past k6's 10m `maxDuration` default needs its ceiling raised (smoke's `-e MAX_DURATION=`; see `rules/tests.md`, Execution shape)
 
 ## Correlation — never hardcode dynamic values
 Every value the server generates must be extracted at runtime from a prior response:

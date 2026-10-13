@@ -9,6 +9,7 @@ export function run_badge_report(apiJwt: string, row: BadgeReportRow, name = 'Ru
   const res = http.put(`${config.baseUrl}/api/v1/Reports/10/6044/RunReport`, JSON.stringify(badgeReportPayload(row)), {
     headers: public_api_headers(apiJwt),
     tags: { name },
+    timeout: config.requestTimeout,
   });
   const isJson = res.status === 200 && (res.headers['Content-Type']?.includes('application/json') ?? false);
   const report = isJson ? (res.json() as BadgeReportResult) : null;
