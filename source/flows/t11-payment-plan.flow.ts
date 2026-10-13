@@ -10,6 +10,7 @@ import {
   save_payment_plan_recent_event,
   handle_payment_plan_event_fields,
   read_payment_plan_orders,
+  read_unplanned_payment_plan_events,
   get_payment_plan_order_control_info,
   open_payment_plan_order,
   access_payment_plan_order,
@@ -43,7 +44,7 @@ import {
 } from '../utils/exports/helpers.exp.ts';
 import { paymentPlanChrome, paymentPlanStatic, paymentPlanTransport } from '../utils/exports/data.exp.ts';
 import { config } from '../utils/exports/config.exp.ts';
-import { User, PaymentPlanSetup, PaymentPlanEvent, PaymentPlanOrderRow, FidelityLevel } from '../utils/exports/types.exp.ts';
+import { User, PaymentPlanSetup, PaymentPlanOrderRow, FidelityLevel } from '../utils/exports/types.exp.ts';
 
 export const paymentPlanThresholds = {
   'http_req_duration{name:OpenPaymentPlanOrdersList}': ['avg<4000'],
@@ -79,31 +80,14 @@ function is_unplanned(row: PaymentPlanOrderRow) {
   return get_cell(row.table, 'ER100_PAY_PLAN_ID') === '0';
 }
 
-export function find_unplanned_payment_plan_events(
-  bearerToken: string,
-  version: string,
-  prefix: string,
-  tags: { events: string; orders: string },
-  limit = Infinity,
-) {
-  const unplanned: PaymentPlanEvent[] = [];
-  for (const event of search_payment_plan_events(bearerToken, version, prefix, tags.events)) {
-    if (unplanned.length >= limit) break;
-    if (read_payment_plan_orders(bearerToken, version, event.key, tags.orders).some(is_unplanned)) unplanned.push(event);
-  }
-  return unplanned;
+export function find_unplanned_payment_plan_events(bearerToken: string, version: string, prefix: string, name: string, limit = Infinity) {
+  return read_unplanned_payment_plan_events(bearerToken, version, prefix, name).slice(0, limit);
 }
 
 export function discover_payment_plan_pool(version: string, user: User) {
   const { bearerToken } = login_to_events(user, version);
   const prefix = config.seedPaymentPlanPrefix;
-  const pool = find_unplanned_payment_plan_events(
-    bearerToken,
-    version,
-    prefix,
-    { events: 'DiscoverPaymentPlanEvents', orders: 'DiscoverPaymentPlanOrders' },
-    POOL_EVENTS,
-  );
+  const pool = find_unplanned_payment_plan_events(bearerToken, version, prefix, 'DiscoverPaymentPlanEvents', POOL_EVENTS);
   console.log(`"${prefix}" events: ${pool.length} without a payment plan found`);
   if (pool.length === 0) {
     throw new Error(seed_gap_message('payment_plan', `no service order without a payment plan under "${prefix}" events`));
