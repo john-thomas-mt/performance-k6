@@ -90,15 +90,59 @@ if (totalShare !== 100) {
   throw new Error(`flowShares must total 100 (the population's VU split), got ${totalShare}`);
 }
 
-const share_of = (stage: Stage, share: number): Stage => ({
-  duration: stage.duration,
-  target: Math.round(((stage.target ?? 0) * share) / 100),
-});
+const UNIT_MS: { [unit: string]: number } = { ms: 1, s: 1000, m: 60000, h: 3600000 };
+
+const duration_ms = (duration: string) =>
+  [...duration.matchAll(/(\d+(?:\.\d+)?)(ms|h|m|s)/g)].reduce((sum, [, value, unit]) => sum + Number(value) * UNIT_MS[unit], 0);
+
+function interleaved_flows() {
+  const flows = Object.keys(flowShares);
+  const credit: { [exec: string]: number } = Object.fromEntries(flows.map((exec) => [exec, 0]));
+  return Array.from({ length: totalShare }, () => {
+    for (const exec of flows) credit[exec] += flowShares[exec];
+    const next = flows.reduce((best, exec) => (credit[exec] > credit[best] ? exec : best));
+    credit[next] -= totalShare;
+    return next;
+  });
+}
+
+const vuOrder = interleaved_flows();
+
+const flow_vus = (exec: string, total: number) =>
+  Math.floor(total / totalShare) * flowShares[exec] + vuOrder.slice(0, total % totalShare).filter((owner) => owner === exec).length;
+
+function staggered_stages(exec: string) {
+  const out: Stage[] = [];
+  let level = 0;
+  for (const stage of stages) {
+    const target = stage.target ?? 0;
+    if (target <= level) {
+      out.push({ duration: stage.duration, target: flow_vus(exec, target) });
+      level = target;
+      continue;
+    }
+    const stageMs = duration_ms(stage.duration);
+    const step = stageMs / (target - level);
+    let vus = flow_vus(exec, level);
+    let cursor = 0;
+    for (let slot = level; slot < target; slot++) {
+      if (vuOrder[slot % totalShare] !== exec) continue;
+      const at = Math.round((slot - level) * step);
+      if (at > cursor) out.push({ duration: `${at - cursor}ms`, target: vus });
+      vus += 1;
+      out.push({ duration: '0s', target: vus });
+      cursor = at;
+    }
+    if (stageMs > cursor) out.push({ duration: `${stageMs - cursor}ms`, target: vus });
+    level = target;
+  }
+  return out;
+}
 
 const scenario = (exec: string): Scenario => ({
   executor: 'ramping-vus',
   startVUs: 0,
-  stages: stages.map((stage) => share_of(stage, flowShares[exec])),
+  stages: staggered_stages(exec),
   gracefulRampDown: GRACEFUL_STOP,
   gracefulStop: GRACEFUL_STOP,
   exec,
