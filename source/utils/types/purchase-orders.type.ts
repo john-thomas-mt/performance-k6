@@ -1,4 +1,9 @@
 import { JSONObject } from 'k6';
+import { SeedSetup } from './service-orders.type.ts';
+
+export type PurchaseOrderSeedSetup = SeedSetup & {
+  supplierPlan: string[];
+};
 
 export type PurchaseOrderDefaults = {
   date: string;
