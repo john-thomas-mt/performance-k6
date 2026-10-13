@@ -105,10 +105,12 @@ sweep, not once per seed.
 
 1. **List the seeds.** `source/seeds/*.seed.ts` is the authoritative list, so a new seed is picked up without
    editing this skill. Every seed sizes itself.
-2. **Size each one.** Run each seed with **no** `-e SEED_COUNT`, so its file's own default target applies (the
-   full-load size, set against the flow's share in `neoload.spec.ts`). With `neoload`, find each seed's journey
-   (the flow that reads the same `k6-t<id>-` config key) and take its target from §2 step 4; a seed with no
-   journey or no NeoLoad rows keeps its default, and the report says so.
+2. **Size each one.** By default, run each seed with **no** `-e SEED_COUNT`, so its file's own default target
+   applies (the full-load size, set against the flow's share in `neoload.spec.ts`). With `neoload`, find each
+   seed's journey (the flow that reads the same `k6-t<id>-` config key), take its target from §2 step 4 and give
+   the script that seed as `<feature>:<count>`, which passes `-e SEED_COUNT=<count>` on every pass (the count is
+   a target, not an increment, so the same value is right each time). A seed with no journey or no NeoLoad rows
+   goes in bare, keeps its default, and the report says so.
 3. **Say what's coming** in one line before the first request: env, the seeds and their targets, and a rough
    duration (a from-empty sweep of six seeds took about 15 minutes plus top-ups; an env already at target is a few
    minutes of count reads).
@@ -122,15 +124,23 @@ sweep, not once per seed.
    cd /c/momentus-projects/performance-k6
    trap 'npm run setup >/dev/null 2>&1; echo "DONE $(tr -d "\n " < temp/setup.json)" >> temp/claude/reports/seed-all-<env>.status' EXIT
    npm run setup -- --env <env> >/dev/null 2>&1
-   for seed in <feature> <feature> …; do
+   for entry in <feature>[:<count>] <feature>[:<count>] …; do
+     seed=${entry%%:*}
+     count=${entry#*:}
+     size=()
+     [ "$count" != "$entry" ] && size=(-e SEED_COUNT=$count)
      prev=-1
      for pass in 1 2 3 4; do
        log=temp/claude/reports/seed-$seed-<env>-pass$pass.log
-       K6_SETUP_TIMEOUT=180s k6 run --quiet source/seeds/$seed.seed.ts > $log 2>&1
+       K6_SETUP_TIMEOUT=180s k6 run --quiet "${size[@]}" source/seeds/$seed.seed.ts > $log 2>&1
        line=$(grep -m1 -oE ': [0-9]+ [a-z ]*found, (target [0-9]+|adding), creating [0-9]+' $log)
        found=$(echo "$line" | grep -oE '[0-9]+' | head -1)
        creating=$(echo "$line" | sed -E 's/.*creating ([0-9]+)/\1/')
        echo "$seed pass$pass found=$found creating=$creating" >> temp/claude/reports/seed-all-<env>.status
+       if grep -q 'Security Restriction' $log; then
+         echo "$seed blocked: Security Restriction" >> temp/claude/reports/seed-all-<env>.status
+         break
+       fi
        [ -z "$line" ] && break
        [ "$creating" = "0" ] && break
        [ "$found" -le "$prev" ] && break
