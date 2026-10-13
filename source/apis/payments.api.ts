@@ -9,6 +9,7 @@ export function run_payment_receipt_report(apiJwt: string, row: PaymentReceiptRo
   const res = http.put(`${config.baseUrl}/api/v1/Reports/10/204/RunReport`, JSON.stringify(paymentReceiptReportPayload(row)), {
     headers: public_api_headers(apiJwt),
     tags: { name },
+    timeout: config.requestTimeout,
   });
   const isJson = res.status === 200 && (res.headers['Content-Type']?.includes('application/json') ?? false);
   const report = isJson ? (res.json() as PaymentReceiptReportResult) : null;

@@ -78,6 +78,7 @@ export function get_event_control_info(token: string, version: string, row: Even
   const res = http.post(`${config.baseUrl}/api/USIDataGridServer/GetControlInfo`, JSON.stringify(eventControlInfoPayload(row)), {
     headers: build_headers(token, version),
     tags: { name },
+    timeout: config.requestTimeout,
   });
 
   check(res, {
@@ -89,6 +90,7 @@ export function search_events(token: string, version: string, searchValue: strin
   const res = http.post(`${config.baseUrl}/api/USIDataGridServer/GetGridData2`, JSON.stringify(searchPayload(searchValue)), {
     headers: build_headers(token, version),
     tags: { name },
+    timeout: config.requestTimeout,
   });
 
   const ok = check(res, {
@@ -107,7 +109,7 @@ export function open_copy_form(token: string, version: string, encUserId: string
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/GetInitialData2`,
     JSON.stringify(copyFormPayload(encUserId, source, version, refreshKey)),
-    { headers: build_headers(token, version), tags: { name: 'OpenCopyForm' } },
+    { headers: build_headers(token, version), tags: { name: 'OpenCopyForm' }, timeout: config.requestTimeout },
   );
 
   const ok = check(res, {
@@ -147,7 +149,7 @@ export function save_event_copy(
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/Save2`,
     JSON.stringify(savePayload(encUserId, source, form, copy, version)),
-    { headers: build_headers(token, version), tags: { name: 'SaveEventCopy' } },
+    { headers: build_headers(token, version), tags: { name: 'SaveEventCopy' }, timeout: config.requestTimeout },
   );
 
   const ok = check(res, {
@@ -182,6 +184,7 @@ export function open_event_create_form(token: string, version: string, name = 'O
   const res = http.post(`${config.baseUrl}/api/GenericDetailServer/GetInitialData2`, JSON.stringify(eventCreateFormPayload()), {
     headers: build_headers(token, version),
     tags: { name },
+    timeout: config.requestTimeout,
   });
 
   const ok = check(res, {
@@ -200,6 +203,7 @@ export function create_event(token: string, version: string, table: TransportTab
   const res = http.post(`${config.baseUrl}/api/GenericDetailServer/Save2`, JSON.stringify(eventSavePayload(table, description)), {
     headers: build_headers(token, version),
     tags: { name },
+    timeout: config.requestTimeout,
   });
 
   const ok = check(res, {
@@ -234,6 +238,7 @@ export function open_event_detail(token: string, version: string, evtId: string,
   const res = http.post(`${config.baseUrl}/api/GenericDetailServer/GetInitialData2`, JSON.stringify(detailPayload(evtId)), {
     headers: build_headers(token, version),
     tags: { name: 'OpenEventDetail' },
+    timeout: config.requestTimeout,
   });
 
   const ok = check(res, {
@@ -268,7 +273,7 @@ export function open_event_document_form(
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/GetInitialData2`,
     JSON.stringify(eventDocumentFormPayload(ctx, fileKey, fileName, wdwid)),
-    { headers: build_headers(token, version), tags: { name: 'OpenEventDocumentForm' } },
+    { headers: build_headers(token, version), tags: { name: 'OpenEventDocumentForm' }, timeout: config.requestTimeout },
   );
 
   const ok = check(res, {
@@ -293,6 +298,7 @@ export function save_event_document(token: string, version: string, ctx: EventDo
   const res = http.post(`${config.baseUrl}/api/GenericDetailServer/Save2`, JSON.stringify(eventDocumentSavePayload(ctx, doc, wdwid)), {
     headers: build_headers(token, version),
     tags: { name: 'SaveEventDocument' },
+    timeout: config.requestTimeout,
   });
 
   const ok = check(res, {
@@ -320,11 +326,11 @@ export function save_event_document(token: string, version: string, ctx: EventDo
   }
 }
 
-function post_event_window(endpoint: string, payload: unknown, token: string, version: string, name: string, timeout?: string) {
+function post_event_window(endpoint: string, payload: unknown, token: string, version: string, name: string) {
   return http.post(`${config.baseUrl}/api/${endpoint}`, JSON.stringify(payload), {
     headers: build_headers(token, version),
     tags: { name },
-    ...(timeout ? { timeout } : {}),
+    timeout: config.requestTimeout,
   });
 }
 
@@ -440,7 +446,6 @@ export function paste_event_functions(
     token,
     version,
     name,
-    '1h',
   );
 
   const ok = check(res, {

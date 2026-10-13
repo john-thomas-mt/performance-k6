@@ -32,6 +32,7 @@ import { config } from '../utils/exports/config.exp.ts';
 import {
   PurchaseOrderContext,
   PurchaseOrderItemCells,
+  PurchaseOrderSeedSetup,
   SeedSetup,
   SeedSession,
   User,
@@ -40,16 +41,19 @@ import {
 import { purchaseOrders, dataScriptVoucherProcessing } from '../utils/exports/data.exp.ts';
 
 const SEED_ADD = __ENV.SEED_ADD ? Number(__ENV.SEED_ADD) : undefined;
-const SEED_COUNT = SEED_ADD ?? Number(__ENV.SEED_COUNT || 60);
+const SEED_COUNT = Number(__ENV.SEED_COUNT || 120);
 const SEED_VUS = Number(__ENV.SEED_VUS || 10);
 const PURCHASE_ORDER_OBJECT_ID = 81;
+const SUPPLIERS = [...new Set(dataScriptVoucherProcessing)];
+const PER_SUPPLIER_TARGET = Math.ceil(SEED_COUNT / SUPPLIERS.length);
+const MAX_ITERATIONS = SEED_ADD ?? PER_SUPPLIER_TARGET * SUPPLIERS.length;
 
 export const options: Options = {
   scenarios: {
     seed: {
       executor: 'shared-iterations',
-      vus: Math.min(SEED_VUS, SEED_COUNT),
-      iterations: SEED_COUNT,
+      vus: Math.min(SEED_VUS, MAX_ITERATIONS),
+      iterations: MAX_ITERATIONS,
       maxDuration: __ENV.SEED_MAX_DURATION || '4h',
     },
   },
@@ -63,13 +67,24 @@ export async function setup() {
   const users = await decrypt_seed_users(config.seedUsers, cryptoKey);
   const version = fetch_server_version();
   const existing = count_voucherable_orders(users[0], version);
-  const shortfall = SEED_ADD ?? Math.max(0, SEED_COUNT - existing);
+  const supplierPlan =
+    SEED_ADD === undefined ? top_up_plan(existing) : Array.from({ length: SEED_ADD }, (slot, i) => SUPPLIERS[i % SUPPLIERS.length]);
 
   console.log(`Server version: ${version}`);
   console.log(
-    `"${config.seedVoucherPrefix}" voucherable purchase orders: ${existing} found, ${SEED_ADD === undefined ? `target ${SEED_COUNT}` : 'adding'}, creating ${shortfall} (each approved, issued and received in full) with ${SEED_VUS} VU(s), each on its own session`,
+    `"${config.seedVoucherPrefix}" voucherable purchase order lines per supplier: ${SUPPLIERS.map((s) => `${s} ${existing[s]}`).join(', ')}; ${SEED_ADD === undefined ? `target ${PER_SUPPLIER_TARGET} each` : 'adding'}, creating ${supplierPlan.length} (each approved, issued and received in full) with ${SEED_VUS} VU(s), each on its own session`,
   );
-  return { version, users, shortfall };
+  return { version, users, shortfall: supplierPlan.length, supplierPlan };
+}
+
+function top_up_plan(existing: { [supplierName: string]: number }) {
+  const plan: string[] = [];
+  for (let round = 0; round < PER_SUPPLIER_TARGET; round++) {
+    for (const supplier of SUPPLIERS) {
+      if (existing[supplier] + round < PER_SUPPLIER_TARGET) plan.push(supplier);
+    }
+  }
+  return plan;
 }
 
 function count_voucherable_orders(user: User, version: string) {
@@ -83,12 +98,12 @@ function count_voucherable_orders(user: User, version: string) {
     poSelectWdwid: 'AP9000005',
     postWdwid: 'AP9000006',
   };
-  let count = 0;
-  for (const supplierName of new Set(dataScriptVoucherProcessing)) {
+  const counts: { [supplierName: string]: number } = {};
+  for (const supplierName of SUPPLIERS) {
     const { key } = search_voucher_supplier(bearerToken, version, supplierName, 'CountVoucherSupplier');
-    count += count_seeded_voucher_po_lines(bearerToken, version, windows, '0', key);
+    counts[supplierName] = count_seeded_voucher_po_lines(bearerToken, version, windows, '0', key);
   }
-  return count;
+  return counts;
 }
 
 let vuSession: SeedSession | null = null;
@@ -106,11 +121,11 @@ function seed_session(data: SeedSetup) {
   return vuSession;
 }
 
-export default function seed_purchase_orders(data: SeedSetup) {
-  if (exec.scenario.iterationInTest >= data.shortfall) return;
-  const { bearerToken, version, encUserId, windowVersion } = seed_session(data);
+export default function seed_purchase_orders(data: PurchaseOrderSeedSetup) {
   const iter = exec.scenario.iterationInTest;
-  const supplier = pick_pool_value(dataScriptVoucherProcessing);
+  if (iter >= data.shortfall) return;
+  const { bearerToken, version, encUserId, windowVersion } = seed_session(data);
+  const supplier = data.supplierPlan[iter];
   const item = pick_pool_value(purchaseOrders).ItemName;
   const description = `${config.seedVoucherPrefix}-${__VU}${iter}${Date.now()}`;
   const wdwBase = 9000000 + iter * 10;

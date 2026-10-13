@@ -26,6 +26,7 @@ function post_invoice(endpoint: string, payload: unknown, token: string, version
   const res = http.post(`${config.baseUrl}/api/${endpoint}`, JSON.stringify(payload), {
     headers: build_headers(token, version),
     tags: { name },
+    timeout: config.requestTimeout,
   });
   if (!check(res, { [`${name}: status is 201`]: (r) => r.status === 201 })) {
     console.error(`[VU ${__VU}] ${name} failed — HTTP ${res.status}: ${body_text(res).slice(0, 300)}`);
@@ -38,6 +39,7 @@ export function get_main_menu_data(token: string, version: string, name = 'GetMa
   const res = http.get(`${config.baseUrl}/api/MainMenuServer/GetMainMenuData?astrOrgCode=10&astrSearchTerm=&ablnInitialLoad=true`, {
     headers: build_headers(token, version),
     tags: { name },
+    timeout: config.requestTimeout,
   });
   if (!check(res, { [`${name}: status is 200 or 201`]: (r) => r.status === 200 || r.status === 201 })) {
     console.error(`[VU ${__VU}] ${name} failed — HTTP ${res.status}: ${body_text(res).slice(0, 300)}`);

@@ -8,6 +8,7 @@ export function signalr_negotiate(token: string, version: string, name = 'Signal
   const res = http.get(`${config.baseUrl}/signalr/negotiate?clientProtocol=2.1&connectionData=${connectionData}&_=${Date.now()}`, {
     headers: build_headers(token, version),
     tags: { name },
+    timeout: config.requestTimeout,
   });
   const match = /"ConnectionToken":"([^"]*)"/.exec(body_text(res));
   check(res, { [`${name}: connectionToken present`]: () => match !== null });

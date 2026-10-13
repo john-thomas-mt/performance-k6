@@ -56,12 +56,12 @@ import { sampleDocument } from '../data/uploads/service-orders/sample-document.i
 const VUS = Number(__ENV.VUS) || 1;
 const ITERS = Number(__ENV.ITERS) || 1;
 
-const once = (exec: string, maxDuration?: string): Scenario => ({
+const once = (exec: string): Scenario => ({
   executor: 'per-vu-iterations',
   vus: VUS,
   iterations: ITERS,
   exec,
-  maxDuration,
+  maxDuration: __ENV.MAX_DURATION,
 });
 
 const allScenarios: { [scenario: string]: Scenario } = {
@@ -80,10 +80,10 @@ const allScenarios: { [scenario: string]: Scenario } = {
   payment_plan: once('payment_plan'),
   launch_and_login: once('launch_and_login'),
   detail_general_ledger_report: once('detail_general_ledger_report'),
-  event_revenue_metric_report: once('event_revenue_metric_report', '4h'),
-  space_utilization_report: once('space_utilization_report', '4h'),
-  opportunity_conversion_report: once('opportunity_conversion_report', '4h'),
-  copy_paste_event_function: once('copy_paste_event_function', '2h'),
+  event_revenue_metric_report: once('event_revenue_metric_report'),
+  space_utilization_report: once('space_utilization_report'),
+  opportunity_conversion_report: once('opportunity_conversion_report'),
+  copy_paste_event_function: once('copy_paste_event_function'),
   edit_service_orders: once('edit_service_orders'),
 };
 

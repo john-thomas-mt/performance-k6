@@ -26,6 +26,7 @@ export function get_window_version(token: string, version: string, windowId: str
   const res = http.get(`${config.baseUrl}/api/WindowServer/GetWindowInfo?astrWindowID=${windowId}`, {
     headers: build_headers(token, version),
     tags: { name },
+    timeout: config.requestTimeout,
   });
 
   const ok = check(res, {
@@ -54,6 +55,7 @@ export function stage_booking_space(token: string, version: string, date: string
     {
       headers: build_headers(token, version),
       tags: { name },
+      timeout: config.requestTimeout,
     },
   );
 
@@ -70,6 +72,7 @@ export function open_booking_form(token: string, version: string, date: string, 
   const res = http.post(`${config.baseUrl}/api/GenericDetailServer/GetInitialData2`, JSON.stringify(bookingFormPayload(date)), {
     headers: build_headers(token, version),
     tags: { name },
+    timeout: config.requestTimeout,
   });
 
   const ok = check(res, { [`${name}: status is 201`]: (r) => r.status === 201 });
@@ -85,7 +88,7 @@ export function search_booking_account(token: string, version: string, account: 
   const res = http.post(
     `${config.baseUrl}/api/USISearchComboServer/GetDynamicSearchResults`,
     JSON.stringify(bookingAccountSearchPayload(account)),
-    { headers: build_headers(token, version), tags: { name } },
+    { headers: build_headers(token, version), tags: { name }, timeout: config.requestTimeout },
   );
   let key = '';
   try {
@@ -119,7 +122,7 @@ export function refresh_booking_account_fields(
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/HandleDependentFields2`,
     JSON.stringify(bookingAccountFieldsPayload(date, header)),
-    { headers: build_headers(token, version), tags: { name } },
+    { headers: build_headers(token, version), tags: { name }, timeout: config.requestTimeout },
   );
   if (!check(res, { [`${name}: status is 201`]: (r) => r.status === 201 })) {
     console.error(`[VU ${__VU}] refresh_booking_account_fields failed — HTTP ${res.status}: ${body_text(res).slice(0, 300)}`);
@@ -145,6 +148,7 @@ export function save_booking(
     {
       headers: build_headers(token, version),
       tags: { name },
+      timeout: config.requestTimeout,
     },
   );
 
@@ -198,7 +202,7 @@ function post_function_grid(
   const res = http.post(
     `${config.baseUrl}/api/USIDataGridServer/GetGridData2`,
     JSON.stringify(functionGridPayload(space, account, evtId, addedRowKey, encUserId, windowVersion)),
-    { headers: build_headers(token, version), tags: { name } },
+    { headers: build_headers(token, version), tags: { name }, timeout: config.requestTimeout },
   );
 
   const ok = check(res, { [`${name}: status is 201`]: (r) => r.status === 201 });
@@ -267,7 +271,7 @@ export function stage_event_function(
   const res = http.post(
     `${config.baseUrl}/api/USIDataGridServer/CreateNewRowsWithDefaultValues`,
     JSON.stringify(functionRowsPayload(date, space, account, evtId, addedRowKey, encUserId, windowVersion, stamp)),
-    { headers: build_headers(token, version), tags: { name } },
+    { headers: build_headers(token, version), tags: { name }, timeout: config.requestTimeout },
   );
 
   const ok = check(res, { [`${name}: status is 201`]: (r) => r.status === 201 });
@@ -296,7 +300,7 @@ export function save_event_function(
   const res = http.post(
     `${config.baseUrl}/api/USIDataGridServer/Save2`,
     JSON.stringify(functionSavePayload(table, funcDesc, space, account, evtId, addedRowKey, encUserId, windowVersion, stamp)),
-    { headers: build_headers(token, version), tags: { name } },
+    { headers: build_headers(token, version), tags: { name }, timeout: config.requestTimeout },
   );
 
   const ok = check(res, {

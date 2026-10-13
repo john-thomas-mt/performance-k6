@@ -85,6 +85,7 @@ export function load_service_orders(token: string, version: string, event: Event
   const res = http.post(`${config.baseUrl}/api/USIDataGridServer/GetInitialData2`, JSON.stringify(serviceOrdersGridPayload(event)), {
     headers: build_headers(token, version),
     tags: { name },
+    timeout: config.requestTimeout,
   });
 
   const ok = check(res, {
@@ -105,7 +106,7 @@ export function create_service_order(token: string, version: string, encUserId: 
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/Save2`,
     JSON.stringify(createServiceOrderPayload(encUserId, evtId, version)),
-    { headers: build_headers(token, version), tags: { name } },
+    { headers: build_headers(token, version), tags: { name }, timeout: config.requestTimeout },
   );
 
   const ok = check(res, {
@@ -140,7 +141,7 @@ export function cache_document_file(token: string, version: string, fileName: st
   const res = http.post(
     `${config.baseUrl}/api/GenericServer/CacheFiles`,
     JSON.stringify(cacheFilesPayload(fileName, b64encode(fileContent))),
-    { headers: build_headers(token, version), tags: { name } },
+    { headers: build_headers(token, version), tags: { name }, timeout: config.requestTimeout },
   );
 
   const ok = check(res, {
@@ -172,7 +173,7 @@ export function read_event_service_orders_grid(
   const res = http.post(
     `${config.baseUrl}/api/USIDataGridServer/GetGridData2`,
     JSON.stringify(eventServiceOrdersRefreshPayload(anchor, eventRowKey)),
-    { headers: build_headers(token, version), tags: { name } },
+    { headers: build_headers(token, version), tags: { name }, timeout: config.requestTimeout },
   );
 
   check(res, {
@@ -190,7 +191,7 @@ export function get_service_order_control_info(
   const res = http.post(
     `${config.baseUrl}/api/USIDataGridServer/GetControlInfo`,
     JSON.stringify(serviceOrderControlInfoPayload(rep, eventRowKey)),
-    { headers: build_headers(token, version), tags: { name } },
+    { headers: build_headers(token, version), tags: { name }, timeout: config.requestTimeout },
   );
 
   check(res, {
@@ -208,7 +209,7 @@ export function open_service_order_copy_form(
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/GetInitialData2`,
     JSON.stringify(copyServiceOrdersFormPayload(encUserId, orders, version, refreshKey)),
-    { headers: build_headers(token, version), tags: { name: 'OpenCopyServiceOrdersForm' } },
+    { headers: build_headers(token, version), tags: { name: 'OpenCopyServiceOrdersForm' }, timeout: config.requestTimeout },
   );
 
   const ok = check(res, {
@@ -226,7 +227,7 @@ export function save_service_order_copy(token: string, version: string, encUserI
   const res = http.post(
     `${config.baseUrl}/api/GenericDetailServer/Save2`,
     JSON.stringify(copyServiceOrdersSavePayload(encUserId, orders, version, refreshKey)),
-    { headers: build_headers(token, version), tags: { name: 'SaveServiceOrderCopy' } },
+    { headers: build_headers(token, version), tags: { name: 'SaveServiceOrderCopy' }, timeout: config.requestTimeout },
   );
 
   const ok = check(res, {
@@ -260,6 +261,7 @@ function post_order_window(endpoint: string, payload: unknown, token: string, ve
   const res = http.post(`${config.baseUrl}/api/${endpoint}`, JSON.stringify(payload), {
     headers: build_headers(token, version),
     tags: { name },
+    timeout: config.requestTimeout,
   });
   if (!check(res, { [`${name}: status is 201`]: (r) => r.status === 201 })) {
     console.error(`[VU ${__VU}] ${name} failed — HTTP ${res.status}: ${body_text(res).slice(0, 300)}`);
