@@ -22,13 +22,13 @@ Everything below describes `k6-tests-ci.yml`.
 Set in the queue dialog, so changing a run does not require a commit. All are dropdowns of allowed
 values except `k6Version`, which is free text so any release tag can be typed.
 
-| Parameter        | Default   | Notes                                                                                                                                                                                                                                                            |
-| ---------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `profile`        | `neoload` | `neoload` is the full 5m ramp + 35m sustain load model. `neoload-smoke` is the same 50-VU shape compressed to 2m + 8m, for validating the pipeline and the live dashboard without paying for a 40-minute run. Shapes live in `source/config/profiles.config.ts`. |
-| `releaseVersion` | `26_2`    | Mirrors the `ReleaseVersion` union in `source/utils/types/config.type.ts`. Extend both together at a branch cut, or the dropdown goes stale.                                                                                                                     |
-| `fidelity`       | `lean`    | Tier the journeys replay at (see `.claude/rules/fidelity.md`). `full` fires the UI-chrome and static-asset tiers around the correlated spine for the most realistic load, `ui` and `lean` step down from there.                                                  |
-| `pacing`         | `300`     | Seconds each iteration is paced to by `pace()` in `neoload.spec.ts`.                                                                                                                                                                                             |
-| `k6Version`      | `v2.0.0`  | Free text, so any release tag works, and `latest` is accepted for a deliberate "try the new k6" run. See [Why the k6 version is pinned](#why-the-k6-version-is-pinned).                                                                                          |
+| Parameter        | Default   | Notes                                                                                                                                                                                                                                                                                                                                          |
+| ---------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `profile`        | `neoload` | `neoload` is the full `S24_K6Comparison_100VU_26.3` model: 100 VUs split across 20 flows, 5m ramp + 50m sustain + 5m ramp-down. `neoload-smoke` is the same 100-VU shape compressed to 2m + 6m + 2m, for validating the pipeline and the live dashboard without paying for a 60-minute run. Shapes live in `source/config/profiles.config.ts`. |
+| `releaseVersion` | `26_2`    | Mirrors the `ReleaseVersion` union in `source/utils/types/config.type.ts`. Extend both together at a branch cut, or the dropdown goes stale.                                                                                                                                                                                                   |
+| `fidelity`       | `lean`    | Tier the journeys replay at (see `.claude/rules/fidelity.md`). `full` fires the UI-chrome and static-asset tiers around the correlated spine for the most realistic load, `ui` and `lean` step down from there.                                                                                                                                |
+| `pacing`         | `300`     | Seconds each iteration is paced to by `pace()` in `neoload.spec.ts`.                                                                                                                                                                                                                                                                           |
+| `k6Version`      | `v2.0.0`  | Free text, so any release tag works, and `latest` is accepted for a deliberate "try the new k6" run. See [Why the k6 version is pinned](#why-the-k6-version-is-pinned).                                                                                                                                                                        |
 
 ## Variables
 
@@ -206,8 +206,8 @@ agent until the next run overwrites it.
 
 ## Timeout budget
 
-`timeoutInMinutes: 60`. The `neoload` profile runs 5m ramp plus 35m sustain with no ramp-down, about
-40.5 minutes including graceful stop; `neoload-smoke` is about 10.5 minutes. The budget covers the
+`timeoutInMinutes: 90`. The `neoload` profile runs 5m ramp, 50m sustain and 5m ramp-down, about
+61 minutes including graceful stop; `neoload-smoke` is about 11 minutes. The budget covers the
 longer of the two plus `npm ci`, the fresh k6 download, graphing, publish and cleanup.
 
 ## Agent pool

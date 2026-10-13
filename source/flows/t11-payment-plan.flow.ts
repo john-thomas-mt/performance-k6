@@ -73,7 +73,7 @@ export const paymentPlanThresholds = {
 
 type Subs = { [token: string]: string };
 
-const POOL_EVENTS = Number(__ENV.POOL_EVENTS || 100);
+const POOL_EVENTS = Number(__ENV.POOL_EVENTS || 150);
 
 function is_unplanned(row: PaymentPlanOrderRow) {
   return get_cell(row.table, 'ER100_PAY_PLAN_ID') === '0';

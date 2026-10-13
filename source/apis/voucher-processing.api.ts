@@ -418,6 +418,38 @@ export function open_voucher_po_lines_form(
   return initial_data_table(res, name);
 }
 
+function po_lines_total(res: ReturnType<typeof post_voucher>) {
+  const total = json_at(res, 9);
+  return typeof total === 'number' ? total : 0;
+}
+
+function post_po_lines_grid(
+  token: string,
+  version: string,
+  windows: VoucherProcessingWindows,
+  voucher: string,
+  supplierKey: string,
+  totalCount: number,
+  name: string,
+) {
+  const res = post_voucher(
+    'USIDataGridServer/GetGridData2',
+    voucherPoLinesGridDataPayload(windows, voucher, supplierKey, totalCount, config.seedVoucherPrefix),
+    token,
+    version,
+    name,
+  );
+  const table = find_transport_table(res, 'cROW_KEY', name);
+  const columns = table.TransportDataColumns.map((c) => c.ColumnName);
+  const invoicedAt = String(columns.indexOf('cQTY_INVOICED'));
+  const rowKeyAt = String(columns.indexOf('cROW_KEY'));
+  const voucherable = table.TransportDataRows.filter((r) => {
+    const invoiced = Number(r.Values[invoicedAt]);
+    return !isNaN(invoiced) && invoiced !== 0 && r.Values[rowKeyAt] !== null && r.Values[rowKeyAt] !== undefined;
+  });
+  return { table, rowKeyAt, voucherable };
+}
+
 export function open_voucher_po_lines_grid(
   token: string,
   version: string,
@@ -433,12 +465,12 @@ export function open_voucher_po_lines_grid(
     version,
     name,
   );
-  const total = json_at(res, 9);
-  if (!check(total, { [`${name}: returns the PO line total`]: (t) => typeof t === 'number' && t > 0 })) {
-    console.error(`[VU ${__VU}] open_voucher_po_lines_grid failed — total ${JSON.stringify(total)}`);
+  const total = po_lines_total(res);
+  if (!check(total, { [`${name}: returns the PO line total`]: (t) => t > 0 })) {
+    console.error(`[VU ${__VU}] open_voucher_po_lines_grid failed — total ${total}`);
     fail(seed_gap_message('voucher_processing', `supplier ${supplierKey} has no purchase order lines to voucher`));
   }
-  return total as number;
+  return total;
 }
 
 export function read_voucher_po_lines(
@@ -451,24 +483,17 @@ export function read_voucher_po_lines(
   pickIndex: number,
   name = 'ReadVoucherPoLines',
 ) {
-  const res = post_voucher(
-    'USIDataGridServer/GetGridData2',
-    voucherPoLinesGridDataPayload(windows, voucher, supplierKey, totalCount),
-    token,
-    version,
-    name,
-  );
-  const table = find_transport_table(res, 'cROW_KEY', name);
-  const columns = table.TransportDataColumns.map((c) => c.ColumnName);
-  const invoicedAt = String(columns.indexOf('cQTY_INVOICED'));
-  const rowKeyAt = String(columns.indexOf('cROW_KEY'));
-  const voucherable = table.TransportDataRows.filter((r) => {
-    const invoiced = Number(r.Values[invoicedAt]);
-    return !isNaN(invoiced) && invoiced !== 0 && r.Values[rowKeyAt] !== null && r.Values[rowKeyAt] !== undefined;
-  });
+  const { table, rowKeyAt, voucherable } = post_po_lines_grid(token, version, windows, voucher, supplierKey, totalCount, name);
   if (!check(voucherable, { [`${name}: finds a PO line to voucher`]: (rows) => rows.length > 0 })) {
-    console.error(`[VU ${__VU}] read_voucher_po_lines failed — ${table.TransportDataRows.length} lines, none with an invoiceable quantity`);
-    fail(seed_gap_message('voucher_processing', `supplier ${supplierKey} has no invoiceable purchase order line`));
+    console.error(
+      `[VU ${__VU}] read_voucher_po_lines failed — ${table.TransportDataRows.length} "${config.seedVoucherPrefix}" lines, none with an invoiceable quantity`,
+    );
+    fail(
+      seed_gap_message(
+        'voucher_processing',
+        `supplier ${supplierKey} has no invoiceable "${config.seedVoucherPrefix}" purchase order line`,
+      ),
+    );
   }
   const row = voucherable[pickIndex % voucherable.length];
   const line: VoucherPurchaseOrderLine = {
@@ -476,6 +501,26 @@ export function read_voucher_po_lines(
     rowKey: String(row.Values[rowKeyAt]),
   };
   return line;
+}
+
+export function count_seeded_voucher_po_lines(
+  token: string,
+  version: string,
+  windows: VoucherProcessingWindows,
+  voucher: string,
+  supplierKey: string,
+  name = 'CountVoucherPoLines',
+) {
+  const init = post_voucher(
+    'USIDataGridServer/GetInitialData2',
+    voucherPoLinesGridInitPayload(windows, voucher, supplierKey),
+    token,
+    version,
+    `${name}Init`,
+  );
+  const total = po_lines_total(init);
+  if (total === 0) return 0;
+  return post_po_lines_grid(token, version, windows, voucher, supplierKey, total, name).voucherable.length;
 }
 
 export function open_voucher_po_lines_search(

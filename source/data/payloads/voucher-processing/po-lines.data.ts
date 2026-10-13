@@ -291,6 +291,7 @@ export const voucherPoLinesGridDataPayload = (
   voucher: string,
   supplierKey: string,
   totalCount: number,
+  descriptionPrefix: string,
 ) => [
   '10',
   89,
@@ -802,7 +803,11 @@ export const voucherPoLinesGridDataPayload = (
     ResultsLimit: 0,
     ResultsTime: 0,
     SearchDesc: '',
-    SearchFilters: [],
+    SearchFilters: [
+      poLinesFilter(1, 3404, 'IN', 0, supplierKey),
+      /* 33631 is the PO description (PurchaseOrder_PO100_DESC). The window offers no filter on it, but the server applies one, so only the seed's POs come back. */
+      poLinesFilter(0, 33631, 'LIKE', 3, descriptionPrefix),
+    ],
     ThemeID: 0,
     USIID: 11164,
     UpdateUserID: 'USISETTING',
@@ -818,6 +823,30 @@ export const voucherPoLinesGridDataPayload = (
   false,
   '',
 ];
+
+const poLinesFilter = (filterType: number, columnId: number, operand: string, likeType: number, value: string) => ({
+  FilterType: filterType,
+  ObjectColumnID: columnId,
+  ObjectID: 89,
+  Operand: operand,
+  LikeType: likeType,
+  ToUpper: 'N',
+  TrailingOperand: 'AND',
+  SearchID: 7644,
+  ID: -1,
+  Value: value,
+  Value2: '',
+  Operand2: '',
+  CustomXML: '',
+  EnterUserID: '',
+  UpdateUserID: '',
+  UserID: '',
+  ThemeID: 0,
+  ForceUnparameterized: false,
+  ConvertedToUserDisplayTimeZone: false,
+  UsedInList: false,
+  UsedInList2: false,
+});
 
 /* Search definition for the PO lines grid (object 89) in the selection window. */
 export const voucherPoLinesSearchPayload = (windows: VoucherProcessingWindows, voucher: string, supplierKey: string) => [
