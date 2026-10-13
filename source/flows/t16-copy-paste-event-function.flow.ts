@@ -30,11 +30,12 @@ import {
 } from '../utils/exports/helpers.exp.ts';
 import { copyPasteEventFunctionChrome, copyPasteEventFunctionStatic, copyPasteEventFunctionTransport } from '../utils/exports/data.exp.ts';
 import { config } from '../utils/exports/config.exp.ts';
-import { User, FidelityLevel, EventGridFunction, CopyPasteFunctionSetup } from '../utils/exports/types.exp.ts';
+import { User, FidelityLevel, EventGridFunction, EventRow, CopyPasteFunctionSetup } from '../utils/exports/types.exp.ts';
 import { login_to_events } from './login.flow.ts';
 
 const MIN_FUNCTIONS = 2;
 const ALL_FUNCTIONS_CHANCE = 0.25;
+const COPY_PASTE_POOL_SIZE = 70;
 
 export const copyPasteEventFunctionThresholds = {
   ...searchEventsThresholds,
@@ -49,14 +50,12 @@ export const copyPasteEventFunctionThresholds = {
   'http_req_duration{name:OpenEventsFilteredGrid}': ['avg<4000'],
 };
 
-export function discover_copy_paste_function_pool(version: string, user: User) {
+export function discover_copy_paste_function_pool(version: string, user: User, size = COPY_PASTE_POOL_SIZE) {
   const { bearerToken } = login_to_events(user, version);
   const prefix = config.seedCopyPasteFunctionPrefix;
-  const pool = search_events(bearerToken, version, prefix, 'DiscoverCopyPasteFunctionEvent')
-    .filter((e) => e.desc.startsWith(prefix))
-    .sort((a, b) => Number(b.evtId) - Number(a.evtId));
-  console.log(`"${prefix}" events: ${pool.length} found`);
-  if (pool.length === 0) throw new Error(seed_gap_message('copy_paste_event_function', `no events under "${prefix}"`));
+  const pool = find_unused_copy_paste_events(bearerToken, version, size, 'DiscoverCopyPasteFunctionEvent');
+  console.log(`"${prefix}" events: ${pool.length} unused found`);
+  if (pool.length === 0) throw new Error(seed_gap_message('copy_paste_event_function', `no unused events under "${prefix}"`));
   return pool;
 }
 
@@ -72,10 +71,42 @@ function chrome_and_static(token: string, version: string, level: FidelityLevel,
   }
 }
 
-function select_functions(functions: EventGridFunction[]) {
-  const ids = functions
-    .filter((f) => f.desc.includes(`${config.seedCopyPasteFunctionDescPrefix}-`) && f.funcId !== '')
-    .map((f) => f.funcId);
+function own_function_rows(functions: EventGridFunction[]) {
+  const prefix = `${config.seedCopyPasteFunctionDescPrefix}-`;
+  return functions.filter((f) => f.desc.startsWith(prefix) && f.funcId !== '');
+}
+
+export function is_unused_event(functions: EventGridFunction[]) {
+  const own = own_function_rows(functions);
+  return own.length > 0 && new Set(own.map((f) => f.desc)).size === own.length;
+}
+
+export function find_unused_copy_paste_events(token: string, version: string, limit: number, searchName = 'CountSeedEvents') {
+  const prefix = config.seedCopyPasteFunctionPrefix;
+  const events = search_events(token, version, prefix, searchName)
+    .filter((e) => e.desc.startsWith(prefix))
+    .sort((a, b) => Number(b.evtId) - Number(a.evtId));
+  const unused: EventRow[] = [];
+  for (const event of events) {
+    if (unused.length >= limit) break;
+    const key = Date.now();
+    open_event_detail_from_row(token, version, event, key, 'CountUnusedEventOpen');
+    if (is_unused_event(read_event_functions_grid(token, version, event, key, 'CountUnusedEventGrid'))) unused.push(event);
+  }
+  return unused;
+}
+
+function own_function_ids(functions: EventGridFunction[]) {
+  const lowestIdByDesc = new Map<string, number>();
+  for (const f of own_function_rows(functions)) {
+    const id = Number(f.funcId);
+    const known = lowestIdByDesc.get(f.desc);
+    if (known === undefined || id < known) lowestIdByDesc.set(f.desc, id);
+  }
+  return Array.from(lowestIdByDesc.values()).map(String);
+}
+
+function select_functions(ids: string[]) {
   let selected = ids;
   if (ids.length > MIN_FUNCTIONS && Math.random() >= ALL_FUNCTIONS_CHANCE) {
     const count = MIN_FUNCTIONS + Math.floor(Math.random() * (ids.length - MIN_FUNCTIONS + 1));
@@ -151,7 +182,11 @@ export function copy_paste_event_function_journey(user: User, data: CopyPasteFun
   });
   think();
 
-  const functionIds = select_functions(functions);
+  const ownIds = own_function_ids(functions);
+  const functionIds = select_functions(ownIds);
+  console.log(
+    `[VU ${__VU}] event ${event.evtId} has ${functions.length} functions, ${ownIds.length} seeded, pasting ${functionIds === '' ? 0 : functionIds.split(',').length}`,
+  );
   if (functionIds === '') {
     check(null, { 'Event has seeded functions to paste': () => false });
     fail(

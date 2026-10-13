@@ -1,6 +1,6 @@
 import exec from 'k6/execution';
 import { Options } from 'k6/options';
-import { login_to_events } from '../utils/exports/flows.exp.ts';
+import { login_to_events, find_unused_copy_paste_events } from '../utils/exports/flows.exp.ts';
 import {
   get_window_version,
   stage_booking_space,
@@ -11,7 +11,6 @@ import {
   read_event_functions,
   stage_event_function,
   save_event_function,
-  search_events,
 } from '../utils/exports/apis.exp.ts';
 import {
   fetch_server_version,
@@ -49,14 +48,12 @@ export async function setup() {
   const users = await decrypt_seed_users(config.seedUsers, cryptoKey);
   const version = fetch_server_version();
   const { bearerToken } = login_to_events(users[0], version);
-  const existing = search_events(bearerToken, version, config.seedCopyPasteFunctionPrefix, 'CountSeedEvents').filter((e) =>
-    e.desc.startsWith(config.seedCopyPasteFunctionPrefix),
-  ).length;
+  const existing = find_unused_copy_paste_events(bearerToken, version, SEED_COUNT).length;
   const shortfall = SEED_ADD ?? Math.max(0, SEED_COUNT - existing);
 
   console.log(`Server version: ${version}`);
   console.log(
-    `"${config.seedCopyPasteFunctionPrefix}" events: ${existing} found, ${SEED_ADD === undefined ? `target ${SEED_COUNT}` : 'adding'}, creating ${shortfall}`,
+    `"${config.seedCopyPasteFunctionPrefix}" events: ${existing} unused found, ${SEED_ADD === undefined ? `target ${SEED_COUNT}` : 'adding'}, creating ${shortfall}`,
   );
   console.log(
     `Booking ${shortfall} event(s), each with ${MIN_FUNCTIONS}-${MAX_FUNCTIONS} added functions, with ${SEED_VUS} VU(s), each on its own session as a seed user from temp/seed-users.json`,

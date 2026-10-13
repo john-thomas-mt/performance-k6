@@ -55,6 +55,7 @@ import { sampleDocument } from '../data/uploads/service-orders/sample-document.i
 
 const VUS = Number(__ENV.VUS) || 1;
 const ITERS = Number(__ENV.ITERS) || 1;
+const SMOKE_COPY_PASTE_POOL_SIZE = VUS * ITERS;
 
 const once = (exec: string): Scenario => ({
   executor: 'per-vu-iterations',
@@ -157,7 +158,7 @@ export async function setup() {
   const version = fetch_server_version();
   const soPool = needsSoPool ? discover_service_order_pool(version, users[0]) : [];
   const planPool = needsPlanPool ? discover_payment_plan_pool(version, users[0]) : [];
-  const copyPastePool = needsCopyPastePool ? discover_copy_paste_function_pool(version, users[0]) : [];
+  const copyPastePool = needsCopyPastePool ? discover_copy_paste_function_pool(version, users[0], SMOKE_COPY_PASTE_POOL_SIZE) : [];
   const editOrderPool = needsEditOrderPool ? discover_edit_service_order_pool(version, users[0]) : [];
   console.log(`Server version: ${version}`);
   if (needsSoPool) {

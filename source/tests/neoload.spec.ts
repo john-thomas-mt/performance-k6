@@ -149,6 +149,7 @@ const scenario = (exec: string): Scenario => ({
 });
 
 export const options: Options = {
+  setupTimeout: '600s',
   scenarios: Object.fromEntries(Object.keys(flowShares).map((exec) => [exec, scenario(exec)])),
   thresholds: {
     ...commonThresholds,
