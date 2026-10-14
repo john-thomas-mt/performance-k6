@@ -30,6 +30,7 @@ const MIN_FUNCTIONS = 2;
 const MAX_FUNCTIONS = 10;
 
 export const options: Options = {
+  setupTimeout: '600s',
   scenarios: {
     seed: {
       executor: 'shared-iterations',

@@ -55,7 +55,9 @@ export function discover_copy_paste_function_pool(version: string, user: User, s
   const prefix = config.seedCopyPasteFunctionPrefix;
   const pool = find_unused_copy_paste_events(bearerToken, version, size, 'DiscoverCopyPasteFunctionEvent');
   console.log(`"${prefix}" events: ${pool.length} unused found`);
-  if (pool.length === 0) throw new Error(seed_gap_message('copy_paste_event_function', `no unused events under "${prefix}"`));
+  if (pool.length < size) {
+    throw new Error(seed_gap_message('copy_paste_event_function', `${pool.length} of ${size} unused events under "${prefix}"`));
+  }
   return pool;
 }
 

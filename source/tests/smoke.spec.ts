@@ -136,6 +136,7 @@ const activeThresholds: { [metric: string]: string[] } = selected
   : Object.values(allThresholds).reduce<{ [metric: string]: string[] }>((merged, t) => ({ ...merged, ...t }), {});
 
 export const options: Options = {
+  setupTimeout: '600s',
   scenarios: selected ? { [selected]: allScenarios[selected] } : allScenarios,
   thresholds: {
     ...commonThresholds,
